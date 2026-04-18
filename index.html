@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ระบบ Credit Note</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+/* ==========================================
+   DESIGN SYSTEM - Industrial Utility Theme
+   ========================================== */
+:root {
+  --bg:        #F2F0EB;
+  --bg2:       #E8E5DF;
+  --surface:   #FFFFFF;
+  --border:    #D0CBC0;
+  --border2:   #B8B2A8;
+  --text:      #1A1714;
+  --text2:     #5C5650;
+  --text3:     #8C8680;
+  --accent:    #C8380A;
+  --accent2:   #E84A18;
+  --accent-bg: #FFF1EC;
+  --blue:      #1A5276;
+  --blue-bg:   #EAF1F8;
+  --green:     #1A6B3C;
+  --green-bg:  #E8F5EE;
+  --yellow:    #7D5A00;
+  --yellow-bg: #FFF8E1;
+  --radius:    6px;
+  --shadow:    0 1px 4px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --font:      'IBM Plex Sans Thai', 'Sarabun', sans-serif;
+  --transition: 0.18s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 15px; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================
+   LAYOUT
+   ========================================== */
+.page { display: none; min-height: 100vh; }
+.page.active { display: block; }
+
+.app-header {
+  background: var(--text);
+  color: #FFF;
+  padding: 0 16px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.app-header .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.logo-mark {
+  width: 32px; height: 32px;
+  background: var(--accent);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-badge {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.7);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.role-chip {
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.65rem;
+  padding: 2px 7px;
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+/* ==========================================
+   COMPONENTS
+   ========================================== */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.card-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+
+.card-body { padding: 20px; }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: var(--radius);
+  border: none;
+  font-family: var(--font);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(200,56,10,0.3); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 1.5px solid var(--border2);
+}
+.btn-outline:hover { border-color: var(--text); background: var(--bg2); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text2);
+  padding: 6px 12px;
+}
+.btn-ghost:hover { background: var(--bg2); color: var(--text); }
+
+.btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+
+.btn-danger { background: #fff; color: var(--accent); border: 1.5px solid var(--accent); }
+.btn-danger:hover { background: var(--accent); color: #fff; }
+
+.btn-full { width: 100%; justify-content: center; }
+
+/* Status Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.badge-waiting { background: var(--yellow-bg); color: var(--yellow); }
+.badge-waiting::before { background: var(--yellow); }
+.badge-processing { background: var(--blue-bg); color: var(--blue); }
+.badge-processing::before { background: var(--blue); }
+.badge-done { background: var(--green-bg); color: var(--green); }
+.badge-done::before { background: var(--green); }
+
+/* Form */
+.form-group { margin-bottom: 18px; }
+.form-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.form-label span.required { color: var(--accent); margin-left: 3px; }
+
+.form-control {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  color: var(--text);
+  background: var(--surface);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  outline: none;
+}
+
+.form-control:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(200,56,10,0.10);
+}
+
+textarea.form-control { resize: vertical; min-height: 90px; }
+select.form-control { cursor: pointer; }
+
+/* Radio Group */
+.radio-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 10px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  transition: all var(--transition);
+  flex: 1;
+  min-width: 160px;
+}
+
+.radio-option:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.radio-option input { accent-color: var(--accent); }
+
+/* Table */
+.table-wrap { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+th {
+  background: var(--bg2);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text2);
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+tr:last-child td { border-bottom: none; }
+
+tr:hover td { background: var(--bg); }
+
+.table-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text3);
+  font-size: 0.9rem;
+}
+
+/* Search/Filter Bar */
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-bar .form-control {
+  flex: 1;
+  min-width: 160px;
+}
+
+/* Stats Row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  text-align: center;
+}
+
+.stat-card .stat-num {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.stat-card .stat-label {
+  font-size: 0.72rem;
+  color: var(--text3);
+  margin-top: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Alert */
+.alert {
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  margin-bottom: 16px;
+}
+
+.alert-error { background: #FEE8E8; color: #C0392B; border-left: 3px solid #C0392B; }
+.alert-success { background: var(--green-bg); color: var(--green); border-left: 3px solid var(--green); }
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(26,23,20,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.loading-box {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 28px 36px;
+  text-align: center;
+}
+
+.spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(26,23,20,0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  transform: translateY(10px);
+  transition: transform 0.2s;
+}
+
+.modal-overlay.open .modal { transform: translateY(0); }
+
+.modal-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+}
+
+.modal-title { font-weight: 700; font-size: 1rem; }
+.modal-body { padding: 20px; }
+.modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* Image Upload Zone */
+.upload-zone {
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  background: var(--bg);
+  position: relative;
+}
+
+.upload-zone:hover,
+.upload-zone.dragover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.upload-zone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.upload-zone .upload-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.upload-zone .upload-hint {
+  font-size: 0.8rem;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+.upload-preview {
+  margin-top: 12px;
+  display: none;
+}
+
+.upload-preview img {
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.upload-preview .preview-meta {
+  font-size: 0.78rem;
+  color: var(--text3);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.upload-uploading {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--blue-bg);
+  border-radius: var(--radius);
+  color: var(--blue);
+  font-size: 0.875rem;
+  margin-top: 10px;
+}
+
+.upload-done {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--green-bg);
+  border-radius: var(--radius);
+  color: var(--green);
+  font-size: 0.875rem;
+  margin-top: 10px;
+}
+
+.upload-done a {
+  color: var(--green);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+/* Image in detail view */
+.proof-image-wrap {
+  margin-top: 8px;
+}
+
+.proof-image-wrap img {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.proof-image-wrap a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: var(--blue);
+  margin-top: 6px;
+  text-decoration: none;
+}
+
+.proof-image-wrap a:hover { text-decoration: underline; }
+
+@media print {
+  body > *:not(.print-area) { display: none !important; }
+  .print-area { display: block !important; }
+  .print-doc {
+    font-family: 'Sarabun', sans-serif;
+    font-size: 12pt;
+    padding: 20mm;
+    color: #000;
+  }
+  .print-doc h2 { font-size: 16pt; text-align: center; margin-bottom: 8pt; }
+  .print-table { width: 100%; border-collapse: collapse; margin-top: 12pt; }
+  .print-table th, .print-table td { border: 1px solid #000; padding: 6pt 8pt; font-size: 10pt; }
+  .print-table th { background: #EEE; }
+}
+
+/* ==========================================
+   PAGE: LOGIN / REGISTER
+   ========================================== */
+#page-auth {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--text);
+  padding: 24px;
+}
+
+.auth-card {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+}
+
+.auth-logo {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.auth-logo-mark {
+  width: 60px; height: 60px;
+  background: var(--accent);
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 14px;
+}
+
+.auth-logo h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.auth-logo p {
+  font-size: 0.8rem;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+@media (max-width: 600px) {
+  .container { padding: 16px 12px; }
+  .card-body { padding: 14px; }
+  .card-header { padding: 12px 14px; }
+  .auth-card { padding: 28px 20px; }
+  th, td { padding: 10px 10px; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .modal-footer { flex-direction: column-reverse; }
+  .modal-footer .btn { width: 100%; justify-content: center; }
+}
+
+/* Section spacer */
+.section-gap { height: 20px; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.text-sm { font-size: 0.8rem; }
+.text-muted { color: var(--text3); }
+.font-mono { font-family: 'Courier New', monospace; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<!-- ==========================================
+     LOADING OVERLAY
+     ========================================== -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <p style="color:var(--text2);font-size:0.875rem;">กำลังโหลด...</p>
+  </div>
+</div>
+
+<!-- ==========================================
+     PAGE: AUTH (LOGIN / REGISTER)
+     ========================================== -->
+<div id="page-auth" class="page active">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-mark">CN</div>
+      <h1>ระบบ Credit Note</h1>
+      <p>Royal-D Thailand</p>
+    </div>
+
+    <!-- Login State -->
+    <div id="auth-login">
+      <p style="text-align:center;color:var(--text2);font-size:0.9rem;margin-bottom:20px;">กรุณาเข้าสู่ระบบผ่าน LINE เพื่อใช้งาน</p>
+      <button class="btn btn-primary btn-full" onclick="initLiff()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+        เข้าสู่ระบบด้วย LINE
+      </button>
+      <div id="auth-error" class="alert alert-error" style="display:none;margin-top:14px;"></div>
+    </div>
+
+    <!-- Register State -->
+    <div id="auth-register" style="display:none;">
+      <p style="color:var(--text2);font-size:0.875rem;margin-bottom:20px;">ยังไม่พบข้อมูลของคุณในระบบ กรุณาลงทะเบียน</p>
+      <div class="form-group">
+        <label class="form-label">ชื่อ <span class="required">*</span></label>
+        <input type="text" id="reg-firstname" class="form-control" placeholder="ชื่อจริง" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">นามสกุล <span class="required">*</span></label>
+        <input type="text" id="reg-lastname" class="form-control" placeholder="นามสกุล" />
+      </div>
+      <div id="reg-error" class="alert alert-error" style="display:none;"></div>
+      <button class="btn btn-primary btn-full" onclick="doRegister()">ลงทะเบียน</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     PAGE: USER DASHBOARD
+     ========================================== -->
+<div id="page-user" class="page">
+  <header class="app-header">
+    <div class="logo">
+      <div class="logo-mark">CN</div>
+      <span>Credit Note</span>
+    </div>
+    <div class="header-right">
+      <div class="user-badge">
+        <span id="header-username">-</span>
+        <span class="role-chip">USER</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Stats -->
+    <div class="stats-row" id="user-stats">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total">0</div>
+        <div class="stat-label">รายการทั้งหมด</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-waiting">0</div>
+        <div class="stat-label">รอของ</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-processing">0</div>
+        <div class="stat-label">กำลังดำเนินการ</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-done">0</div>
+        <div class="stat-label">เสร็จสิ้น</div>
+      </div>
+    </div>
+
+    <!-- CN List -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">รายการ CN ของฉัน</span>
+        <button class="btn btn-primary btn-sm" onclick="showPage('page-form')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          สร้างรายการใหม่
+        </button>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>เลขที่</th>
+                <th>วันที่</th>
+                <th>ประเภท</th>
+                <th>ลูกค้า</th>
+                <th>สถานะ</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="user-cn-table">
+              <tr><td colspan="6" class="table-empty">ไม่พบรายการ</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     PAGE: CREATE/EDIT CN FORM
+     ========================================== -->
+<div id="page-form" class="page">
+  <header class="app-header">
+    <div class="logo">
+      <button class="btn btn-ghost" onclick="goBack()" style="color:#fff;padding:4px 8px;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
+      <div class="logo-mark">CN</div>
+      <span id="form-page-title">สร้างรายการ CN</span>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">ข้อมูลการคืน/เปลี่ยนสินค้า</span>
+        <span id="form-cn-id" class="font-mono text-muted"></span>
+      </div>
+      <div class="card-body">
+        <div id="form-error" class="alert alert-error" style="display:none;"></div>
+
+        <div class="form-group">
+          <label class="form-label">บริษัท <span class="required">*</span></label>
+          <select id="f-company" class="form-control">
+            <option value="">-- เลือกบริษัท --</option>
+            <option value="บริษัท รอแยล-ดี (ไทยแลนด์)">บริษัท รอแยล-ดี (ไทยแลนด์)</option>
+            <option value="บริษัท อาร์ดี ดิสทริบิวชั่น">บริษัท อาร์ดี ดิสทริบิวชั่น</option>
+            <option value="อื่นๆ">อื่นๆ</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ประเภทใบแจ้ง <span class="required">*</span></label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="docType" value="ใบแจ้งคืนสินค้า" id="r-return" />
+              ใบแจ้งคืนสินค้า
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="docType" value="ใบแจ้งเปลี่ยนสินค้า" id="r-exchange" />
+              ใบแจ้งเปลี่ยนสินค้า
+            </label>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">ชื่อลูกค้า <span class="required">*</span></label>
+            <input type="text" id="f-customer" class="form-control" placeholder="ชื่อลูกค้า" />
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">จังหวัด / เขต <span class="required">*</span></label>
+            <input type="text" id="f-province" class="form-control" placeholder="จังหวัด" />
+          </div>
+        </div>
+        <div class="section-gap"></div>
+
+        <div class="form-group">
+          <label class="form-label">รายการสินค้า <span class="required">*</span></label>
+          <textarea id="f-items" class="form-control" rows="4" placeholder="ระบุรายการสินค้า ชื่อ จำนวน ราคา ฯลฯ"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">สาเหตุที่คืน / เปลี่ยน <span class="required">*</span></label>
+          <textarea id="f-reason" class="form-control" rows="3" placeholder="ระบุสาเหตุ"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ตัดบิลเลขที่ <span style="color:var(--text3);font-weight:400;">(ไม่บังคับ)</span></label>
+          <input type="text" id="f-billref" class="form-control" placeholder="เลขที่บิลอ้างอิง" />
+        </div>
+
+        <!-- Admin: Status Change + Image Upload -->
+        <div id="form-status-group" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">สถานะ</label>
+            <select id="f-status" class="form-control" onchange="onStatusChange(this.value)">
+              <option value="รอของ">รอของ</option>
+              <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+              <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+            </select>
+          </div>
+
+          <!-- Image Upload — แสดงเฉพาะเมื่อสถานะ = เสร็จสิ้น -->
+          <div id="upload-section" style="display:none;" class="form-group">
+            <label class="form-label">
+              หลักฐานการดำเนินการ
+              <span id="upload-required-mark" class="required">*</span>
+            </label>
+
+            <!-- Drop Zone -->
+            <div class="upload-zone" id="upload-zone"
+                 ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+              <input type="file" id="f-image" accept="image/jpeg,image/png,image/webp,image/gif"
+                     onchange="onFileSelected(event)" />
+              <span class="upload-icon">📎</span>
+              <div style="font-size:0.875rem;font-weight:600;color:var(--text2);">คลิกหรือลากไฟล์มาวางที่นี่</div>
+              <div class="upload-hint">รองรับ JPG, PNG, WEBP ขนาดไม่เกิน 5 MB</div>
+            </div>
+
+            <!-- Preview -->
+            <div class="upload-preview" id="upload-preview">
+              <img id="upload-preview-img" src="" alt="preview" />
+              <div class="preview-meta">
+                <span id="upload-preview-name"></span>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="clearImage()"
+                        style="color:var(--accent);padding:2px 8px;">✕ ลบ</button>
+              </div>
+            </div>
+
+            <!-- Uploading indicator -->
+            <div class="upload-uploading" id="upload-uploading">
+              <div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0;flex-shrink:0;"></div>
+              กำลังอัปโหลดไฟล์ไปยัง Google Drive...
+            </div>
+
+            <!-- Done indicator -->
+            <div class="upload-done" id="upload-done">
+              ✅ อัปโหลดสำเร็จ —
+              <a id="upload-done-link" href="#" target="_blank" rel="noopener">ดูไฟล์</a>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;">
+          <button class="btn btn-primary" onclick="saveCN()" style="flex:1;min-width:140px;justify-content:center;">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            บันทึก
+          </button>
+          <button class="btn btn-outline" onclick="goBack()" style="flex:1;min-width:120px;justify-content:center;">ยกเลิก</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     PAGE: ADMIN DASHBOARD
+     ========================================== -->
+<div id="page-admin" class="page">
+  <header class="app-header">
+    <div class="logo">
+      <div class="logo-mark">CN</div>
+      <span>Admin Panel</span>
+    </div>
+    <div class="header-right">
+      <div class="user-badge">
+        <span id="header-admin-username">-</span>
+        <span class="role-chip" style="background:#7D5A00;">ADMIN</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num" id="admin-stat-total">0</div>
+        <div class="stat-label">รายการทั้งหมด</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="admin-stat-waiting">0</div>
+        <div class="stat-label">รอของ</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="admin-stat-processing">0</div>
+        <div class="stat-label">ดำเนินการ</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="admin-stat-done">0</div>
+        <div class="stat-label">เสร็จสิ้น</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">รายการ CN ทั้งหมด</span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="printReport()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+            พิมพ์รายงาน
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="exportCSV()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Export CSV
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="filter-bar" style="margin-bottom:16px;">
+          <input type="text" id="filter-search" class="form-control" placeholder="ค้นหา ลูกค้า / ชื่อผู้ใช้..." oninput="filterAdmin()" />
+          <select id="filter-status" class="form-control" style="max-width:160px;" onchange="filterAdmin()">
+            <option value="">ทุกสถานะ</option>
+            <option value="รอของ">รอของ</option>
+            <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+            <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+          </select>
+          <input type="date" id="filter-date" class="form-control" style="max-width:160px;" onchange="filterAdmin()" />
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>เลขที่</th>
+                <th>วันที่</th>
+                <th>ผู้ทำรายการ</th>
+                <th>ประเภท</th>
+                <th>ลูกค้า</th>
+                <th>จังหวัด</th>
+                <th>สถานะ</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="admin-cn-table">
+              <tr><td colspan="8" class="table-empty">ไม่พบรายการ</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     MODAL: CN DETAIL / EDIT (Admin)
+     ========================================== -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">รายละเอียด CN</span>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- Print Area -->
+<div class="print-area" id="print-area"></div>
+
+<!-- ==========================================
+     JAVASCRIPT
+     ========================================== -->
+<script>
+// ==========================================
+// CONFIG — แก้ค่าเหล่านี้
+// ==========================================
+const CONFIG = {
+  GAS_URL:   'https://script.google.com/macros/s/AKfycbxUSKr0j62AFvyAQhyjoZgV9goduGfkBdWHFfhQT6n7fazHDKtUYlHWjD5v1XjoLGRF/exec',   // URL ของ GAS Web App
+  LIFF_ID:   'YOUR_LIFF_ID',            // LIFF ID จาก LINE Developers
+};
+
+// ==========================================
+// STATE
+// ==========================================
+let state = {
+  user: null,
+  lineProfile: null,
+  cnList: [],
+  editingId: null,
+  prevPage: null,
+};
+
+// Image upload state
+let imageState = {
+  file: null,        // File object
+  base64: null,      // base64 string (no prefix)
+  mimeType: null,
+  fileName: null,
+  uploadedUrl: null, // URL หลังอัปโหลดสำเร็จ (จาก Drive)
+  isUploading: false,
+};
+
+// ==========================================
+// UTILITIES
+// ==========================================
+function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function goBack() {
+  if (state.user?.role === 'Admin') showPage('page-admin');
+  else showPage('page-user');
+}
+
+function formatDate(iso) {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function statusBadge(status) {
+  const map = {
+    'รอของ': 'badge-waiting',
+    'กำลังดำเนินการ': 'badge-processing',
+    'เสร็จสิ้น': 'badge-done',
+  };
+  return `<span class="badge ${map[status] || ''}">${status}</span>`;
+}
+
+async function apiGet(params) {
+  const url = CONFIG.GAS_URL + '?' + new URLSearchParams(params);
+  const res = await fetch(url);
+  return res.json();
+}
+
+async function apiPost(body) {
+  const res = await fetch(CONFIG.GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+// ==========================================
+// LIFF / AUTH
+// ==========================================
+async function initLiff() {
+  showLoading();
+  try {
+    await liff.init({ liffId: CONFIG.LIFF_ID });
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return;
+    }
+    const profile = await liff.getProfile();
+    state.lineProfile = profile;
+    await checkUser(profile.userId);
+  } catch (err) {
+    hideLoading();
+    const el = document.getElementById('auth-error');
+    el.textContent = 'เกิดข้อผิดพลาด: ' + err.message;
+    el.style.display = 'block';
+  }
+}
+
+async function checkUser(lineUID) {
+  const data = await apiGet({ action: 'getUser', lineUID });
+  hideLoading();
+  if (data.found) {
+    state.user = data.user;
+    enterApp();
+  } else {
+    // Show register form
+    document.getElementById('auth-login').style.display = 'none';
+    document.getElementById('auth-register').style.display = 'block';
+  }
+}
+
+async function doRegister() {
+  const firstName = document.getElementById('reg-firstname').value.trim();
+  const lastName  = document.getElementById('reg-lastname').value.trim();
+  const errEl = document.getElementById('reg-error');
+  if (!firstName || !lastName) {
+    errEl.textContent = 'กรุณากรอกชื่อและนามสกุล';
+    errEl.style.display = 'block';
+    return;
+  }
+  showLoading();
+  const data = await apiPost({
+    action: 'register',
+    lineUID: state.lineProfile.userId,
+    firstName, lastName,
+  });
+  hideLoading();
+  if (data.success) {
+    state.user = data.user;
+    enterApp();
+  } else {
+    errEl.textContent = data.message || 'เกิดข้อผิดพลาด';
+    errEl.style.display = 'block';
+  }
+}
+
+function enterApp() {
+  if (state.user.role === 'Admin') {
+    document.getElementById('header-admin-username').textContent =
+      `${state.user.firstName} ${state.user.lastName}`;
+    showPage('page-admin');
+    loadAdminCN();
+  } else {
+    document.getElementById('header-username').textContent =
+      `${state.user.firstName} ${state.user.lastName}`;
+    showPage('page-user');
+    loadUserCN();
+  }
+}
+
+// ==========================================
+// USER DASHBOARD
+// ==========================================
+async function loadUserCN() {
+  showLoading();
+  const data = await apiGet({ action: 'getCNList', lineUID: state.user.lineUID, role: 'User' });
+  hideLoading();
+  if (!data.success) return;
+  state.cnList = data.records;
+  renderUserStats(data.records);
+  renderUserTable(data.records);
+}
+
+function renderUserStats(records) {
+  document.getElementById('stat-total').textContent = records.length;
+  document.getElementById('stat-waiting').textContent = records.filter(r => r.status === 'รอของ').length;
+  document.getElementById('stat-processing').textContent = records.filter(r => r.status === 'กำลังดำเนินการ').length;
+  document.getElementById('stat-done').textContent = records.filter(r => r.status === 'เสร็จสิ้น').length;
+}
+
+function renderUserTable(records) {
+  const tbody = document.getElementById('user-cn-table');
+  if (!records.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="table-empty">ยังไม่มีรายการ กดปุ่มสร้างรายการใหม่</td></tr>';
+    return;
+  }
+  tbody.innerHTML = records.map(r => `
+    <tr>
+      <td class="font-mono">${r.id}</td>
+      <td class="text-sm">${formatDate(r.createdAt)}</td>
+      <td class="text-sm">${r.docType}</td>
+      <td>${r.customerName}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="viewDetailUser('${r.id}')">ดู</button></td>
+    </tr>`).join('');
+}
+
+function viewDetailUser(id) {
+  const r = state.cnList.find(x => x.id === id);
+  if (!r) return;
+
+  const proofHtml = r.imageUrl
+    ? `<div>
+        <div class="form-label">รูปภาพหลักฐาน</div>
+        <div class="proof-image-wrap">
+          <img src="https://drive.google.com/thumbnail?id=${extractDriveId(r.imageUrl)}&sz=w400"
+               onerror="this.style.display='none'" alt="หลักฐาน" />
+          <a href="${r.imageUrl}" target="_blank" rel="noopener">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+            เปิดไฟล์ใน Google Drive
+          </a>
+        </div>
+      </div>`
+    : '';
+
+  openModal('รายละเอียด CN', `
+    <div style="display:grid;gap:12px;">
+      <div><div class="form-label">เลขที่</div><div class="font-mono">${r.id}</div></div>
+      <div><div class="form-label">วันที่</div><div>${formatDate(r.createdAt)}</div></div>
+      <div><div class="form-label">บริษัท</div><div>${r.company}</div></div>
+      <div><div class="form-label">ประเภท</div><div>${r.docType}</div></div>
+      <div><div class="form-label">ลูกค้า</div><div>${r.customerName}</div></div>
+      <div><div class="form-label">จังหวัด</div><div>${r.province}</div></div>
+      <div><div class="form-label">รายการสินค้า</div><div style="white-space:pre-wrap">${r.items}</div></div>
+      <div><div class="form-label">สาเหตุ</div><div style="white-space:pre-wrap">${r.reason}</div></div>
+      ${r.billRef ? `<div><div class="form-label">ตัดบิลเลขที่</div><div>${r.billRef}</div></div>` : ''}
+      <div><div class="form-label">สถานะ</div><div>${statusBadge(r.status)}</div></div>
+      ${proofHtml}
+    </div>
+  `, `<button class="btn btn-outline" onclick="closeModal()">ปิด</button>`);
+}
+
+// แยก File ID จาก Google Drive URL
+function extractDriveId(url) {
+  if (!url) return '';
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : '';
+}
+
+// ==========================================
+// CN FORM
+// ==========================================
+function showPage_form(editId = null) {
+  state.editingId = editId;
+
+  // Reset form fields
+  document.getElementById('f-company').value = '';
+  document.querySelectorAll('input[name="docType"]').forEach(r => r.checked = false);
+  document.getElementById('f-customer').value = '';
+  document.getElementById('f-province').value = '';
+  document.getElementById('f-items').value = '';
+  document.getElementById('f-reason').value = '';
+  document.getElementById('f-billref').value = '';
+  document.getElementById('form-cn-id').textContent = '';
+  document.getElementById('form-error').style.display = 'none';
+
+  // Reset image state และ UI ทุกครั้งที่เปิดฟอร์ม
+  clearImage();
+  document.getElementById('upload-section').style.display = 'none';
+
+  const isAdmin = state.user?.role === 'Admin';
+  document.getElementById('form-status-group').style.display = isAdmin && editId ? 'block' : 'none';
+
+  if (editId) {
+    document.getElementById('form-page-title').textContent = 'แก้ไขรายการ CN';
+    showLoading();
+    apiGet({ action: 'getCNDetail', id: editId }).then(data => {
+      hideLoading();
+      if (data.success) {
+        const r = data.record;
+        document.getElementById('f-company').value = r.company;
+        const radio = document.querySelector(`input[name="docType"][value="${r.docType}"]`);
+        if (radio) radio.checked = true;
+        document.getElementById('f-customer').value = r.customerName;
+        document.getElementById('f-province').value = r.province;
+        document.getElementById('f-items').value = r.items;
+        document.getElementById('f-reason').value = r.reason;
+        document.getElementById('f-billref').value = r.billRef || '';
+        document.getElementById('form-cn-id').textContent = r.id;
+
+        const currentStatus = r.status || 'รอของ';
+        document.getElementById('f-status').value = currentStatus;
+
+        // ถ้าสถานะเป็น เสร็จสิ้น และมี imageUrl อยู่แล้ว → แสดง upload section + done state
+        if (currentStatus === 'เสร็จสิ้น') {
+          document.getElementById('upload-section').style.display = 'block';
+          if (r.imageUrl) {
+            imageState.uploadedUrl = r.imageUrl;
+            showUploadDone(r.imageUrl);
+          }
+        }
+      }
+    });
+  } else {
+    document.getElementById('form-page-title').textContent = 'สร้างรายการ CN';
+  }
+
+  showPage('page-form');
+}
+
+// ==========================================
+// IMAGE UPLOAD HELPERS
+// ==========================================
+
+function onStatusChange(val) {
+  const section = document.getElementById('upload-section');
+  if (val === 'เสร็จสิ้น') {
+    section.style.display = 'block';
+    // ถ้าเคยอัปโหลดแล้ว แสดง done state
+    if (imageState.uploadedUrl) showUploadDone(imageState.uploadedUrl);
+  } else {
+    section.style.display = 'none';
+    // ล้าง upload state ถ้าเปลี่ยนกลับจาก เสร็จสิ้น
+    clearImage();
+  }
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.add('dragover');
+}
+
+function onDragLeave(e) {
+  document.getElementById('upload-zone').classList.remove('dragover');
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) processImageFile(file);
+}
+
+function onFileSelected(e) {
+  const file = e.target.files[0];
+  if (file) processImageFile(file);
+}
+
+function processImageFile(file) {
+  // ตรวจสอบประเภทและขนาด
+  if (!file.type.startsWith('image/')) {
+    alert('กรุณาเลือกไฟล์รูปภาพเท่านั้น');
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    alert('ไฟล์ใหญ่เกิน 5 MB กรุณาเลือกไฟล์ที่เล็กกว่า');
+    return;
+  }
+
+  imageState.file     = file;
+  imageState.mimeType = file.type;
+  imageState.fileName = `CN_${state.editingId || 'NEW'}_${Date.now()}.${file.type.split('/')[1]}`;
+  imageState.uploadedUrl = null;
+
+  // แสดง Preview ทันที
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const dataUrl = ev.target.result;
+    // แยก base64 (ตัด prefix "data:image/...;base64,")
+    imageState.base64 = dataUrl.split(',')[1];
+
+    // แสดง preview
+    document.getElementById('upload-preview-img').src = dataUrl;
+    document.getElementById('upload-preview-name').textContent =
+      `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    document.getElementById('upload-preview').style.display = 'block';
+    document.getElementById('upload-done').style.display = 'none';
+    document.getElementById('upload-uploading').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImage() {
+  imageState = { file: null, base64: null, mimeType: null, fileName: null, uploadedUrl: null, isUploading: false };
+  document.getElementById('f-image').value = '';
+  document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('upload-uploading').style.display = 'none';
+  document.getElementById('upload-done').style.display = 'none';
+}
+
+function showUploadDone(url) {
+  document.getElementById('upload-uploading').style.display = 'none';
+  const doneEl = document.getElementById('upload-done');
+  doneEl.style.display = 'flex';
+  document.getElementById('upload-done-link').href = url;
+}
+
+// อัปโหลดไฟล์ไป Drive แล้วคืน URL — เรียกก่อน updateCN
+async function uploadImageIfNeeded(cnId) {
+  if (!imageState.base64 || imageState.uploadedUrl) {
+    // ไม่มีไฟล์ใหม่ หรืออัปโหลดแล้ว
+    return imageState.uploadedUrl || null;
+  }
+
+  imageState.isUploading = true;
+  document.getElementById('upload-uploading').style.display = 'flex';
+  document.getElementById('upload-preview').style.display = 'none';
+
+  const data = await apiPost({
+    action:   'uploadImage',
+    base64:   imageState.base64,
+    mimeType: imageState.mimeType,
+    fileName: `CN_${cnId}_${Date.now()}.${imageState.mimeType.split('/')[1]}`,
+    cnId:     cnId,
+  });
+
+  imageState.isUploading = false;
+
+  if (data.success) {
+    imageState.uploadedUrl = data.imageUrl;
+    showUploadDone(data.imageUrl);
+    return data.imageUrl;
+  } else {
+    document.getElementById('upload-uploading').style.display = 'none';
+    throw new Error('อัปโหลดรูปภาพไม่สำเร็จ: ' + (data.message || ''));
+  }
+}
+
+// ==========================================
+// CN FORM - SAVE
+// ==========================================
+async function saveCN() {
+  const company  = document.getElementById('f-company').value;
+  const docType  = document.querySelector('input[name="docType"]:checked')?.value;
+  const customer = document.getElementById('f-customer').value.trim();
+  const province = document.getElementById('f-province').value.trim();
+  const items    = document.getElementById('f-items').value.trim();
+  const reason   = document.getElementById('f-reason').value.trim();
+  const billRef  = document.getElementById('f-billref').value.trim();
+  const status   = document.getElementById('f-status').value;
+
+  const errEl = document.getElementById('form-error');
+
+  if (!company || !docType || !customer || !province || !items || !reason) {
+    errEl.textContent = 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // ถ้า Admin เลือก "เสร็จสิ้น" ต้องมีรูปภาพหลักฐาน
+  const isAdmin = state.user?.role === 'Admin';
+  if (isAdmin && state.editingId && status === 'เสร็จสิ้น') {
+    const hasImage = imageState.base64 || imageState.uploadedUrl;
+    if (!hasImage) {
+      errEl.textContent = 'กรุณาอัปโหลดรูปภาพหลักฐานก่อนเปลี่ยนสถานะเป็น "เสร็จสิ้น"';
+      errEl.style.display = 'block';
+      document.getElementById('upload-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+  }
+
+  errEl.style.display = 'none';
+  showLoading();
+
+  try {
+    let data;
+    if (state.editingId) {
+      // อัปโหลดรูปก่อน (ถ้ามีและเป็น Admin เลือก เสร็จสิ้น)
+      let imageUrl = undefined;
+      if (isAdmin && status === 'เสร็จสิ้น') {
+        imageUrl = await uploadImageIfNeeded(state.editingId);
+      }
+
+      data = await apiPost({
+        action: 'updateCN',
+        id: state.editingId,
+        company, docType, customerName: customer, province, items, reason, billRef,
+        ...(isAdmin && { status }),
+        ...(imageUrl !== undefined && imageUrl !== null && { imageUrl }),
+      });
+    } else {
+      data = await apiPost({
+        action: 'createCN',
+        lineUID: state.user.lineUID,
+        company, docType, customerName: customer, province, items, reason, billRef,
+      });
+    }
+
+    hideLoading();
+
+    if (data.success) {
+      if (state.user.role === 'Admin') {
+        await loadAdminCN();
+        showPage('page-admin');
+      } else {
+        await loadUserCN();
+        showPage('page-user');
+      }
+    } else {
+      errEl.textContent = data.message || 'เกิดข้อผิดพลาด';
+      errEl.style.display = 'block';
+    }
+  } catch (err) {
+    hideLoading();
+    errEl.textContent = err.message || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ';
+    errEl.style.display = 'block';
+  }
+}
+
+// ==========================================
+// ADMIN DASHBOARD
+// ==========================================
+let allAdminRecords = [];
+
+async function loadAdminCN() {
+  showLoading();
+  const data = await apiGet({ action: 'getCNList', lineUID: state.user.lineUID, role: 'Admin' });
+  hideLoading();
+  if (!data.success) return;
+  allAdminRecords = data.records;
+  renderAdminStats(data.records);
+  renderAdminTable(data.records);
+}
+
+function renderAdminStats(records) {
+  document.getElementById('admin-stat-total').textContent = records.length;
+  document.getElementById('admin-stat-waiting').textContent = records.filter(r => r.status === 'รอของ').length;
+  document.getElementById('admin-stat-processing').textContent = records.filter(r => r.status === 'กำลังดำเนินการ').length;
+  document.getElementById('admin-stat-done').textContent = records.filter(r => r.status === 'เสร็จสิ้น').length;
+}
+
+function renderAdminTable(records) {
+  const tbody = document.getElementById('admin-cn-table');
+  if (!records.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="table-empty">ไม่พบรายการ</td></tr>';
+    return;
+  }
+  tbody.innerHTML = records.map(r => `
+    <tr>
+      <td class="font-mono">${r.id}</td>
+      <td class="text-sm">${formatDate(r.createdAt)}</td>
+      <td class="text-sm">${r.creatorName}</td>
+      <td class="text-sm">${r.docType}</td>
+      <td>${r.customerName}</td>
+      <td class="text-sm">${r.province}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-ghost btn-sm" onclick="adminEdit('${r.id}')">แก้ไข</button>
+          <button class="btn btn-danger btn-sm" onclick="adminDelete('${r.id}')">ลบ</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function filterAdmin() {
+  const search = document.getElementById('filter-search').value.toLowerCase();
+  const status = document.getElementById('filter-status').value;
+  const date   = document.getElementById('filter-date').value;
+
+  let filtered = allAdminRecords.filter(r => {
+    const matchSearch = !search ||
+      r.customerName.toLowerCase().includes(search) ||
+      r.creatorName.toLowerCase().includes(search) ||
+      r.id.toLowerCase().includes(search);
+    const matchStatus = !status || r.status === status;
+    const matchDate = !date || r.createdAt?.startsWith(date);
+    return matchSearch && matchStatus && matchDate;
+  });
+
+  renderAdminTable(filtered);
+}
+
+function adminEdit(id) {
+  closeModal();
+  showPage_form(id);
+}
+
+async function adminDelete(id) {
+  if (!confirm(`ต้องการลบรายการ ${id} ใช่หรือไม่?`)) return;
+  showLoading();
+  const data = await apiPost({ action: 'deleteCN', id });
+  hideLoading();
+  if (data.success) {
+    await loadAdminCN();
+  } else {
+    alert('เกิดข้อผิดพลาด: ' + (data.message || ''));
+  }
+}
+
+// ==========================================
+// MODAL
+// ==========================================
+function openModal(title, bodyHTML, footerHTML) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = bodyHTML;
+  document.getElementById('modal-footer').innerHTML = footerHTML || '';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ==========================================
+// EXPORT / PRINT
+// ==========================================
+function exportCSV() {
+  const headers = ['เลขที่', 'วันที่', 'ผู้ทำรายการ', 'ประเภท', 'ลูกค้า', 'จังหวัด', 'สถานะ'];
+  const rows = allAdminRecords.map(r => [
+    r.id, formatDate(r.createdAt), r.creatorName, r.docType, r.customerName, r.province, r.status
+  ].map(v => `"${v}"`).join(','));
+
+  const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `CN_Report_${new Date().toISOString().slice(0,10)}.csv`;
+  link.click();
+}
+
+function printReport() {
+  const rows = allAdminRecords.map(r => `
+    <tr>
+      <td>${r.id}</td>
+      <td>${formatDate(r.createdAt)}</td>
+      <td>${r.creatorName}</td>
+      <td>${r.docType}</td>
+      <td>${r.customerName}</td>
+      <td>${r.province}</td>
+      <td>${r.status}</td>
+    </tr>`).join('');
+
+  document.getElementById('print-area').innerHTML = `
+    <div class="print-doc">
+      <h2>รายงาน Credit Note</h2>
+      <p style="text-align:center;margin-bottom:12pt;">วันที่พิมพ์: ${new Date().toLocaleDateString('th-TH')}</p>
+      <table class="print-table">
+        <thead>
+          <tr><th>เลขที่</th><th>วันที่</th><th>ผู้ทำรายการ</th><th>ประเภท</th><th>ลูกค้า</th><th>จังหวัด</th><th>สถานะ</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  window.print();
+}
+
+// ==========================================
+// INIT
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+  hideLoading();
+  // Auto-init LIFF ถ้าต้องการ
+  // initLiff();
+});
+</script>
+</body>
+</html>
