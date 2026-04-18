@@ -1086,16 +1086,28 @@ function statusBadge(status) {
 }
 
 async function apiGet(params) {
+  // GAS GET request — ใช้ mode: 'no-cors' ไม่ได้อ่าน response
+  // ต้องใช้ callback=? (JSONP) หรือ redirect trick แต่วิธีที่ดีที่สุดคือ
+  // เพิ่ม ?callback=_ แล้วให้ GAS ตอบ JSONP
+  // ** วิธีนี้ใช้ fetch ธรรมดา + GAS ต้องตั้ง Access-Control-Allow-Origin ผ่าน ContentService **
+  // ปัญหา CORS ของ GAS GET จะหายไปเองเพราะ GAS doGet จะ redirect → ใช้ fetch แบบ follow redirect
   const url = CONFIG.GAS_URL + '?' + new URLSearchParams(params);
-  const res = await fetch(url);
+  const res = await fetch(url, { redirect: 'follow' });
   return res.json();
 }
 
 async function apiPost(body) {
+  // GAS POST มี CORS preflight ปัญหา → ใช้ no-cors + form submission workaround
+  // วิธีที่ถูกต้องและ reliable ที่สุดสำหรับ GitHub Pages → GAS คือ
+  // ส่งแบบ application/x-www-form-urlencoded (ไม่มี preflight) แล้วให้ GAS parse จาก e.postData
+  const formData = new URLSearchParams();
+  formData.append('payload', JSON.stringify(body));
+
   const res = await fetch(CONFIG.GAS_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: formData.toString(),
+    redirect: 'follow',
   });
   return res.json();
 }
@@ -1108,7 +1120,7 @@ async function initLiff() {
   try {
     await liff.init({ liffId: CONFIG.LIFF_ID });
     if (!liff.isLoggedIn()) {
-      liff.login();
+      liff.login(); // redirect — loading จะหายไปเองเพราะ page reload
       return;
     }
     const profile = await liff.getProfile();
@@ -1123,15 +1135,22 @@ async function initLiff() {
 }
 
 async function checkUser(lineUID) {
-  const data = await apiGet({ action: 'getUser', lineUID });
-  hideLoading();
-  if (data.found) {
-    state.user = data.user;
-    enterApp();
-  } else {
-    // Show register form
-    document.getElementById('auth-login').style.display = 'none';
-    document.getElementById('auth-register').style.display = 'block';
+  try {
+    const data = await apiGet({ action: 'getUser', lineUID });
+    hideLoading();
+    if (data.found) {
+      state.user = data.user;
+      enterApp();
+    } else {
+      document.getElementById('auth-login').style.display = 'none';
+      document.getElementById('auth-register').style.display = 'block';
+    }
+  } catch (err) {
+    hideLoading();
+    const el = document.getElementById('auth-error');
+    el.textContent = 'ไม่สามารถเชื่อมต่อระบบได้: ' + err.message;
+    el.style.display = 'block';
+    document.getElementById('auth-login').style.display = 'block';
   }
 }
 
@@ -1139,23 +1158,31 @@ async function doRegister() {
   const firstName = document.getElementById('reg-firstname').value.trim();
   const lastName  = document.getElementById('reg-lastname').value.trim();
   const errEl = document.getElementById('reg-error');
+  errEl.style.display = 'none';
+
   if (!firstName || !lastName) {
     errEl.textContent = 'กรุณากรอกชื่อและนามสกุล';
     errEl.style.display = 'block';
     return;
   }
   showLoading();
-  const data = await apiPost({
-    action: 'register',
-    lineUID: state.lineProfile.userId,
-    firstName, lastName,
-  });
-  hideLoading();
-  if (data.success) {
-    state.user = data.user;
-    enterApp();
-  } else {
-    errEl.textContent = data.message || 'เกิดข้อผิดพลาด';
+  try {
+    const data = await apiPost({
+      action: 'register',
+      lineUID: state.lineProfile.userId,
+      firstName, lastName,
+    });
+    hideLoading();
+    if (data.success) {
+      state.user = data.user;
+      enterApp();
+    } else {
+      errEl.textContent = data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่';
+      errEl.style.display = 'block';
+    }
+  } catch (err) {
+    hideLoading();
+    errEl.textContent = 'ไม่สามารถเชื่อมต่อระบบได้: ' + err.message;
     errEl.style.display = 'block';
   }
 }
@@ -1207,7 +1234,12 @@ function renderUserTable(records) {
       <td class="text-sm">${r.docType}</td>
       <td>${r.customerName}</td>
       <td>${statusBadge(r.status)}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="viewDetailUser('${r.id}')">ดู</button></td>
+      <td>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-ghost btn-sm" onclick="viewDetailUser('${r.id}')">ดู</button>
+          <button class="btn btn-ghost btn-sm" onclick='printCNForm(${JSON.stringify(r).replace(/'/g,"&#39;")})' title="ปริ้นท์ฟอร์ม">🖨</button>
+        </div>
+      </td>
     </tr>`).join('');
 }
 
@@ -1243,7 +1275,12 @@ function viewDetailUser(id) {
       <div><div class="form-label">สถานะ</div><div>${statusBadge(r.status)}</div></div>
       ${proofHtml}
     </div>
-  `, `<button class="btn btn-outline" onclick="closeModal()">ปิด</button>`);
+  `, `
+    <button class="btn btn-outline btn-sm" onclick='printCNForm(${JSON.stringify(r).replace(/'/g,"&#39;")})'>
+      🖨 ปริ้นท์ฟอร์ม CN
+    </button>
+    <button class="btn btn-outline" onclick="closeModal()">ปิด</button>
+  `);
 }
 
 // แยก File ID จาก Google Drive URL
@@ -1552,6 +1589,7 @@ function renderAdminTable(records) {
       <td>${statusBadge(r.status)}</td>
       <td>
         <div style="display:flex;gap:4px;">
+          <button class="btn btn-ghost btn-sm" onclick='printCNForm(${JSON.stringify(r).replace(/'/g,"&#39;")})' title="ปริ้นท์ฟอร์ม">🖨</button>
           <button class="btn btn-ghost btn-sm" onclick="adminEdit('${r.id}')">แก้ไข</button>
           <button class="btn btn-danger btn-sm" onclick="adminDelete('${r.id}')">ลบ</button>
         </div>
@@ -1626,6 +1664,308 @@ function exportCSV() {
   link.click();
 }
 
+// ปริ้นท์ฟอร์ม CN แบบเดียวกับเอกสารจริง (เรียกได้จากทั้ง Admin และ User)
+function printCNForm(record) {
+  const r = record;
+  const isReturn   = r.docType === 'ใบแจ้งคืนสินค้า';
+  const isExchange = r.docType === 'ใบแจ้งเปลี่ยนสินค้า';
+
+  // แยก items ออกเป็นแถว (แต่ละบรรทัดคือ 1 รายการ)
+  const itemLines = (r.items || '').split('\n').filter(l => l.trim());
+  // เติมให้ครบ 8 แถวเสมอ (ตามฟอร์มจริง)
+  while (itemLines.length < 8) itemLines.push('');
+
+  const itemRows = itemLines.map((line, i) => `
+    <tr>
+      <td class="cn-center">${i + 1}</td>
+      <td>${r.customerName || ''}</td>
+      <td>${r.province || ''}</td>
+      <td>${line}</td>
+      <td></td><td></td><td></td><td></td>
+    </tr>`).join('');
+
+  // แยก date
+  const dateObj = r.createdAt ? new Date(r.createdAt) : new Date();
+  const dd  = dateObj.getDate();
+  const mm  = dateObj.getMonth() + 1;
+  const yy  = dateObj.getFullYear() + 543; // พ.ศ.
+
+  const html = `
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<title>CN ${r.id}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
+  @page { size: A4; margin: 12mm 14mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Sarabun', sans-serif; font-size: 9.5pt; color: #000; background: #fff; }
+
+  .cn-wrap { width: 100%; }
+
+  /* Header */
+  .cn-header { display: flex; align-items: center; justify-content: center; margin-bottom: 4pt; position: relative; }
+  .cn-logo { position: absolute; left: 0; top: 0; }
+  .cn-logo img { height: 36pt; }
+  .cn-logo-placeholder {
+    width: 44pt; height: 36pt;
+    background: #1a6b1a;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 8pt;
+  }
+  .cn-company { text-align: center; font-size: 13pt; font-weight: 700; }
+
+  /* Type selector */
+  .cn-type-row {
+    display: flex;
+    justify-content: center;
+    gap: 32pt;
+    margin: 5pt 0 6pt;
+    font-size: 10.5pt;
+    font-weight: 700;
+  }
+  .cn-type-item {
+    display: flex; align-items: center; gap: 5pt;
+  }
+  .cn-circle {
+    width: 12pt; height: 12pt;
+    border: 1.5pt solid #000;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .cn-circle.filled { background: #000; }
+  .cn-circle.filled::after { content: ''; width: 6pt; height: 6pt; background: #fff; border-radius: 50%; }
+
+  /* Meta row */
+  .cn-meta { display: flex; justify-content: space-between; margin-bottom: 5pt; font-size: 9pt; }
+  .cn-meta-left { display: flex; flex-direction: column; gap: 2pt; }
+  .cn-meta-right { text-align: right; }
+  .cn-meta-right .cn-id { font-size: 10pt; font-weight: 700; }
+  .cn-meta-right .cn-date { font-size: 9pt; }
+  .cn-underline { border-bottom: 1pt solid #000; display: inline-block; min-width: 60pt; }
+
+  /* Main table */
+  .cn-table { width: 100%; border-collapse: collapse; margin-bottom: 4pt; }
+  .cn-table th, .cn-table td {
+    border: 0.75pt solid #555;
+    padding: 2.5pt 3pt;
+    font-size: 8.5pt;
+    vertical-align: middle;
+  }
+  .cn-table thead tr { background: #FFF9C4; }
+  .cn-table th { font-weight: 700; text-align: center; }
+  .cn-table td.cn-center { text-align: center; }
+
+  /* Colored rows */
+  .cn-table tbody tr:nth-child(odd)  { background: #FFFDE7; }
+  .cn-table tbody tr:nth-child(even) { background: #fff; }
+
+  /* Bottom section */
+  .cn-bottom { display: flex; gap: 8pt; margin-top: 5pt; }
+  .cn-bottom-left { flex: 1; }
+  .cn-bottom-right { flex: 1; }
+
+  .cn-reason-box {
+    border: 0.75pt solid #555;
+    padding: 4pt 6pt;
+    min-height: 28pt;
+    font-size: 8.5pt;
+    margin-bottom: 4pt;
+    background: #FFF3E0;
+  }
+  .cn-reason-label { font-weight: 700; font-size: 8.5pt; color: #B71C1C; margin-bottom: 2pt; }
+  .cn-bill-label { font-weight: 700; font-size: 8.5pt; color: #B71C1C; }
+  .cn-bill-val { font-size: 8.5pt; border-bottom: 0.75pt solid #555; min-width: 80pt; display: inline-block; }
+
+  /* Exchange section */
+  .cn-exchange-box {
+    border: 0.75pt solid #555;
+    padding: 4pt 6pt;
+    font-size: 8.5pt;
+  }
+  .cn-exchange-label { font-weight: 700; margin-bottom: 2pt; }
+
+  /* Warehouse incoming */
+  .cn-warehouse { margin-top: 5pt; font-size: 8.5pt; }
+  .cn-wh-row { display: flex; align-items: center; gap: 4pt; margin-bottom: 2pt; }
+  .cn-wh-circle { width: 9pt; height: 9pt; border: 1pt solid #000; border-radius: 50%; flex-shrink: 0; }
+  .cn-wh-line { flex: 1; border-bottom: 0.75pt solid #555; }
+
+  /* Signature section */
+  .cn-sign-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6pt 10pt;
+    margin-top: 8pt;
+    font-size: 8pt;
+  }
+  .cn-sign-box { display: flex; flex-direction: column; gap: 2pt; }
+  .cn-sign-line { border-bottom: 0.75pt solid #000; margin: 0 8pt; height: 14pt; }
+  .cn-sign-label { text-align: center; font-size: 7.5pt; }
+  .cn-sign-sub   { text-align: center; font-size: 7pt; color: #444; }
+  .cn-sign-date  { text-align: center; font-size: 7.5pt; }
+
+  .cn-remark-box { margin-top: 4pt; font-size: 8.5pt; }
+  .cn-remark-label { font-weight: 700; }
+
+  .cn-divider { border-top: 1.5pt solid #000; margin: 5pt 0; }
+</style>
+</head>
+<body>
+<div class="cn-wrap">
+
+  <!-- Company Header -->
+  <div class="cn-header">
+    <div class="cn-logo">
+      <div class="cn-logo-placeholder">ROYAL<br/>-D</div>
+    </div>
+    <div class="cn-company">บริษัท รอแยล-ดี (ไทยแลนด์)</div>
+  </div>
+
+  <!-- Form Type -->
+  <div class="cn-type-row">
+    <div class="cn-type-item">
+      <span class="cn-circle ${isReturn ? 'filled' : ''}"></span>
+      <span>ใบแจ้งคืนสินค้า</span>
+    </div>
+    <div class="cn-type-item">
+      <span class="cn-circle ${isExchange ? 'filled' : ''}"></span>
+      <span>ใบแจ้งเปลี่ยนสินค้า</span>
+    </div>
+  </div>
+
+  <!-- Meta -->
+  <div class="cn-meta">
+    <div class="cn-meta-left">
+      <div><strong>จากแผนก :</strong> ฝ่ายขาย</div>
+      <div><strong>ถึงแผนก :</strong> บัญชี / คลังสินค้า</div>
+    </div>
+    <div class="cn-meta-right">
+      <div class="cn-id">เลขที่ &nbsp; ${r.id || ''}</div>
+      <div class="cn-date">วันที่ &nbsp; ${dd}/${mm < 10 ? '0'+mm : mm}/${yy}</div>
+    </div>
+  </div>
+
+  <!-- Main Table -->
+  <table class="cn-table">
+    <thead>
+      <tr>
+        <th rowspan="2" style="width:18pt">ลำดับ</th>
+        <th rowspan="2">ชื่อลูกค้า</th>
+        <th rowspan="2">จังหวัด/เขต</th>
+        <th rowspan="2">รายการสินค้า</th>
+        <th colspan="2">จำนวน</th>
+        <th colspan="2">หมายเหตุ (บัญชี)</th>
+      </tr>
+      <tr>
+        <th style="width:36pt">ยอดสินค้า</th>
+        <th style="width:28pt">หน่วย</th>
+        <th style="width:44pt">ราคา : หน่วย</th>
+        <th style="width:44pt">จำนวนเงิน</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${itemRows}
+    </tbody>
+  </table>
+
+  <!-- Bottom section -->
+  <div class="cn-bottom">
+    <!-- Left: reason + bill ref + warehouse -->
+    <div class="cn-bottom-left">
+      <div class="cn-reason-label">สาเหตุที่คืน</div>
+      <div class="cn-reason-box">${(r.reason || '').replace(/\n/g, '<br/>')}</div>
+
+      <div style="margin-bottom:4pt;">
+        <span class="cn-bill-label">ตัดบิลเลขที่</span>
+        <span class="cn-bill-val">&nbsp;${r.billRef || ''}&nbsp;</span>
+      </div>
+
+      <div class="cn-warehouse">
+        <div style="font-weight:700;margin-bottom:3pt;">นำสินค้าเข้า &nbsp;&nbsp; คลังสินค้า</div>
+        ${['สินค้า','สินค้า','สินค้า','สินค้า','สินค้า','สินค้า','สินค้า','สินค้า'].map(s => `
+        <div class="cn-wh-row">
+          <div class="cn-wh-circle"></div>
+          <span style="min-width:28pt;">${s}</span>
+          <div class="cn-wh-line"></div>
+          <span style="min-width:16pt;font-size:7.5pt;">จำนวน</span>
+          <div class="cn-wh-line"></div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Right: exchange + signatures -->
+    <div class="cn-bottom-right">
+      ${isExchange ? `
+      <div class="cn-exchange-box" style="margin-bottom:6pt;">
+        <div class="cn-exchange-label">เปลี่ยนเป็น :</div>
+        <div style="min-height:20pt;"></div>
+        <div>จำนวน <span style="display:inline-block;min-width:60pt;border-bottom:0.75pt solid #000;">&nbsp;</span></div>
+      </div>` : '<div style="min-height:52pt;"></div>'}
+
+      <!-- Signatures -->
+      <div class="cn-sign-grid">
+        <div class="cn-sign-box">
+          <div class="cn-sign-label">ลงชื่อ</div>
+          <div class="cn-sign-line"></div>
+          <div class="cn-sign-label">ผู้รับสินค้า (ฝ่ายคลังสินค้า)</div>
+          <div class="cn-sign-date">วันที่___/______/____</div>
+        </div>
+        <div class="cn-sign-box">
+          <div class="cn-sign-label">ลงชื่อ</div>
+          <div class="cn-sign-line"></div>
+          <div class="cn-sign-label">ผู้แทน</div>
+          <div class="cn-sign-date">วันที่___/______/____</div>
+        </div>
+        <div class="cn-sign-box">
+          <div class="cn-sign-label">ลงชื่อ</div>
+          <div class="cn-sign-line"></div>
+          <div class="cn-sign-label">ผู้ตรวจสินค้า (ฝ่ายคลังสินค้า)</div>
+          <div class="cn-sign-sub">(คุณรังสรรค์, ภคพงษ์, ชนินทร์)</div>
+          <div class="cn-sign-date">วันที่___/______/____</div>
+        </div>
+        <div class="cn-sign-box">
+          <div class="cn-sign-label">ลงชื่อ</div>
+          <div class="cn-sign-line"></div>
+          <div class="cn-sign-label">ฝ่ายบัญชี</div>
+          <div class="cn-sign-sub">(คุณอภิชญา นิตย์ภิรมย์)</div>
+          <div class="cn-sign-date">วันที่___/______/____</div>
+        </div>
+        <div class="cn-sign-box">
+          <div class="cn-sign-label">ลงชื่อ</div>
+          <div class="cn-sign-line"></div>
+          <div class="cn-sign-label">ผจก.ฝ่ายขาย</div>
+          <div class="cn-sign-sub">(คุณประสิทธิ์ เตโชนิมิต)</div>
+          <div class="cn-sign-date">วันที่___/______/____</div>
+        </div>
+        <div class="cn-sign-box">
+          <div class="cn-sign-label">ลงชื่อ</div>
+          <div class="cn-sign-line"></div>
+          <div class="cn-sign-label">ผช.ผจก.ฝ่ายบัญชี</div>
+          <div class="cn-sign-sub">(คุณปทุมพร ธีรประภาส)</div>
+          <div class="cn-sign-date">วันที่___/______/____</div>
+        </div>
+      </div>
+
+      <div class="cn-remark-box" style="margin-top:8pt;">
+        <span class="cn-remark-label">หมายเหตุ :</span>
+        <span style="border-bottom:0.75pt solid #555;display:inline-block;width:80%;min-height:12pt;">&nbsp;</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>window.onload = () => { window.print(); window.onafterprint = () => window.close(); }<\/script>
+</body></html>`;
+
+  const win = window.open('', '_blank', 'width=800,height=700');
+  win.document.write(html);
+  win.document.close();
+}
+
+// ปริ้นท์แบบ summary list (admin รายงานภาพรวม)
 function printReport() {
   const rows = allAdminRecords.map(r => `
     <tr>
@@ -1638,18 +1978,31 @@ function printReport() {
       <td>${r.status}</td>
     </tr>`).join('');
 
-  document.getElementById('print-area').innerHTML = `
-    <div class="print-doc">
-      <h2>รายงาน Credit Note</h2>
-      <p style="text-align:center;margin-bottom:12pt;">วันที่พิมพ์: ${new Date().toLocaleDateString('th-TH')}</p>
-      <table class="print-table">
-        <thead>
-          <tr><th>เลขที่</th><th>วันที่</th><th>ผู้ทำรายการ</th><th>ประเภท</th><th>ลูกค้า</th><th>จังหวัด</th><th>สถานะ</th></tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
-  window.print();
+  const html = `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"/>
+  <title>รายงาน CN</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
+    @page { size: A4 landscape; margin: 12mm; }
+    body { font-family:'Sarabun',sans-serif; font-size:9pt; }
+    h2 { text-align:center; font-size:13pt; margin-bottom:4pt; }
+    p  { text-align:center; margin-bottom:8pt; font-size:8.5pt; color:#555; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { border:0.75pt solid #333; padding:3pt 5pt; }
+    th { background:#FFF9C4; font-weight:700; text-align:center; }
+    tr:nth-child(even) { background:#FAFAFA; }
+  </style></head><body>
+  <h2>รายงาน Credit Note — บริษัท รอแยล-ดี (ไทยแลนด์)</h2>
+  <p>วันที่พิมพ์: ${new Date().toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'})}</p>
+  <table>
+    <thead><tr><th>เลขที่</th><th>วันที่</th><th>ผู้ทำรายการ</th><th>ประเภท</th><th>ลูกค้า</th><th>จังหวัด</th><th>สถานะ</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}<\/script>
+  </body></html>`;
+
+  const win = window.open('', '_blank', 'width=900,height=600');
+  win.document.write(html);
+  win.document.close();
 }
 
 // ==========================================
