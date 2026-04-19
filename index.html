@@ -941,7 +941,7 @@ async function doUpload(cnId){
   document.getElementById('upr').style.display='none';
   const d=await apiPost({
     action:'uploadImage', base64:IMG.b64, mimeType:IMG.mime,
-    fileName:`CN_${cnId}_${Date.now()}.${IMG.mime.split('/')[1]}`, cnId,
+    fileName:`${cnId}.${IMG.mime.split('/')[1]}`, cnId,
   });
   if(d.success){ IMG.url=d.imageUrl; showUDone(d.imageUrl); return d.imageUrl; }
   else{ document.getElementById('uloading').style.display='none'; throw new Error('อัปโหลดรูปไม่สำเร็จ: '+(d.message||'')); }
