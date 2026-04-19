@@ -440,7 +440,6 @@ var CFG = {
   GAS : 'https://script.google.com/macros/s/AKfycbxUSKr0j62AFvyAQhyjoZgV9goduGfkBdWHFfhQT6n7fazHDKtUYlHWjD5v1XjoLGRF/exec',   // << แก้ตรงนี้
   LIFF: '2009828928-QGqi58ee',            // << แก้ตรงนี้
 };
-  
 window.CFG = CFG;  // ผูกกับ window โดยตรงเพื่อให้ onclick="..." เข้าถึงได้แน่นอน
 
 /* ─── STATE ─── */
@@ -506,14 +505,26 @@ async function apiPost(body){
 
 /* ─── LIFF / AUTH ─── */
 async function initLiff(){
+  /* ตรวจสอบว่าตั้งค่า Config แล้วหรือยัง */
+  if(!CFG.LIFF || CFG.LIFF==='YOUR_LIFF_ID'){
+    showErr('auth-err','⚠️ ยังไม่ได้ตั้งค่า LIFF ID — กรุณาแก้ไขค่า LIFF ใน index.html ก่อนใช้งาน');
+    return;
+  }
+  if(!CFG.GAS || CFG.GAS==='YOUR_GAS_DEPLOYED_URL'){
+    showErr('auth-err','⚠️ ยังไม่ได้ตั้งค่า GAS URL — กรุณาแก้ไขค่า GAS ใน index.html ก่อนใช้งาน');
+    return;
+  }
   L.show('กำลังเชื่อมต่อ LINE...');
   try{
-    await liff.init({liffId:CFG.LIFF});
+    await liff.init({liffId: String(CFG.LIFF).trim()});
     if(!liff.isLoggedIn()){ liff.login(); return; }
     const p = await liff.getProfile();
     ST.profile = p;
     await checkUser(p.userId);
-  }catch(e){ L.hide(); showErr('auth-err','เกิดข้อผิดพลาด: '+e.message); }
+  }catch(e){
+    L.hide();
+    showErr('auth-err','เกิดข้อผิดพลาด: '+e.message);
+  }
 }
 
 async function checkUser(uid){
