@@ -987,218 +987,237 @@ function printCNForm(r){
   while(its.length < 11) its.push({name:'',qty:'',unit:''});
 
   var rawDate = r.createdAt ? new Date(r.createdAt) : new Date();
-  var D  = rawDate.getDate();
-  var Mo = rawDate.getMonth()+1;
-  var Y  = rawDate.getFullYear()+543;
-  var dStr = (D<10?'0'+D:D) + '/' + (Mo<10?'0'+Mo:Mo) + '/' + Y;
+  var D=rawDate.getDate(), Mo=rawDate.getMonth()+1, Y=rawDate.getFullYear()+543;
+  var dStr = (D<10?'0'+D:D)+'/'+(Mo<10?'0'+Mo:Mo)+'/'+Y;
 
   var isRet = (r.docType||'')==='ใบแจ้งคืนสินค้า';
   var isEx  = (r.docType||'')==='ใบแจ้งเปลี่ยนสินค้า';
 
   var rows = '';
   for(var i=0;i<11;i++){
-    var it = its[i];
+    var it=its[i];
     rows += '<tr>'
-      + '<td class="bc tc">' + (i===0?'1':'') + '</td>'
-      + '<td class="bc">' + (i===0?esc(r.customerName||''):'') + '</td>'
-      + '<td class="bc tc">' + (i===0?esc(r.province||''):'') + '</td>'
-      + '<td class="bc">' + esc(it.name) + '</td>'
-      + '<td class="bc tc">' + esc(it.qty) + '</td>'
-      + '<td class="bc tc">' + esc(it.unit) + '</td>'
-      + '<td class="bc"></td>'
-      + '<td class="bc"></td>'
-      + '</tr>';
+      +'<td class="bc tc">'+(i===0?'1':'')+'</td>'
+      +'<td class="bc">'+(i===0?esc(r.customerName||''):'')+'</td>'
+      +'<td class="bc tc">'+(i===0?esc(r.province||''):'')+'</td>'
+      +'<td class="bc">'+esc(it.name)+'</td>'
+      +'<td class="bc tc">'+esc(it.qty)+'</td>'
+      +'<td class="bc tc">'+esc(it.unit)+'</td>'
+      +'<td class="bc"></td>'
+      +'<td class="bc"></td>'
+      +'</tr>';
   }
 
-  var css = [
-    '@import url(\'https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap\');',
-    '@page{size:210mm 297mm portrait;margin:7mm 10mm 7mm 10mm;}',
-    'html,body{font-family:\'Sarabun\',sans-serif;font-size:9pt;color:#000;background:#fff;width:190mm;}',
-    '*{box-sizing:border-box;margin:0;padding:0;}',
+  var css = `
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
+@page { size:210mm 297mm portrait; margin:7mm 10mm 7mm 10mm; }
+html,body { font-family:'Sarabun',sans-serif; font-size:9pt; color:#000; background:#fff; width:190mm; }
+* { box-sizing:border-box; margin:0; padding:0; }
 
-    '.co{text-align:center;font-size:13pt;font-weight:700;padding-bottom:2pt;}',
+/* Company */
+.co { text-align:center; font-size:13pt; font-weight:700; padding-bottom:2pt; }
 
-    '.tr2{display:flex;align-items:center;padding:1pt 0 2pt;}',
-    '.tr2-logo{flex-shrink:0;margin-right:6pt;}',
-    '.lw{width:40pt;height:40pt;border-radius:50%;background:#1d8c22;display:flex;align-items:center;justify-content:center;}',
-    '.li{width:32pt;height:32pt;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:6pt;color:#1d8c22;text-align:center;line-height:1.3;}',
-    '.tr2-types{flex:1;display:flex;justify-content:center;gap:30pt;font-size:11pt;font-weight:700;}',
-    '.ti{display:flex;align-items:center;gap:6pt;}',
-    '.oc{width:13pt;height:13pt;border:2pt solid #000;border-radius:50%;flex-shrink:0;display:inline-block;}',
-    '.ck{width:13pt;height:13pt;border:2pt solid #000;border-radius:50%;background:#000;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:9pt;font-weight:900;line-height:1;}',
+/* Type row */
+.tr2 { display:flex; align-items:center; padding:1pt 0 2pt; }
+.tr2-logo { flex-shrink:0; margin-right:6pt; }
+.lw { width:40pt; height:40pt; border-radius:50%; background:#1d8c22; display:flex; align-items:center; justify-content:center; }
+.li { width:32pt; height:32pt; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:6pt; color:#1d8c22; text-align:center; line-height:1.3; }
+.tr2-types { flex:1; display:flex; justify-content:center; gap:30pt; font-size:11pt; font-weight:700; }
+.ti { display:flex; align-items:center; gap:6pt; }
+.oc { width:14pt; height:14pt; border:2pt solid #000; border-radius:50%; flex-shrink:0; display:inline-block; }
+/* ✓ ใหญ่และเห็นชัด */
+.ck { width:16pt; height:16pt; border:2.5pt solid #000; border-radius:50%; background:#000; flex-shrink:0;
+      display:inline-flex; align-items:center; justify-content:center;
+      color:#fff; font-size:13pt; font-weight:900; line-height:1; }
 
-    '.mt0{width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:1pt;}',
-    '.mt0 td{padding:1pt 2pt;vertical-align:middle;}',
+/* Meta */
+.mt0 { width:100%; border-collapse:collapse; font-size:9pt; margin-bottom:1pt; }
+.mt0 td { padding:1pt 2pt; vertical-align:middle; }
 
-    '.mt{width:100%;border-collapse:collapse;font-size:8.5pt;}',
-    '.mt th{background:#FFFF99;font-weight:700;text-align:center;padding:2pt;line-height:1.3;}',
-    '.mt td{padding:1.5pt 2pt;height:14pt;vertical-align:middle;}',
-    '.bc{border:.6pt solid #555;}',
-    '.tc{text-align:center;}',
-    '.mt tbody tr:nth-child(odd) td{background:#FFFDE7;}',
-    '.mt tbody tr:nth-child(even) td{background:#fff;}',
+/* Main table */
+.mt { width:100%; border-collapse:collapse; font-size:8.5pt; }
+.mt th { background:#FFFF99; font-weight:700; text-align:center; padding:2pt; line-height:1.3; }
+.mt td { padding:1.5pt 2pt; height:14pt; vertical-align:middle; }
+.bc { border:.6pt solid #555; }
+.tc { text-align:center; }
+.mt tbody tr:nth-child(odd) td { background:#FFFDE7; }
+.mt tbody tr:nth-child(even) td { background:#fff; }
 
-    /* สาเหตุ/เปลี่ยนเป็น */
-    '.sec-reason{display:table;width:100%;border:.6pt solid #555;border-top:none;}',
-    '.sec-reason-l{display:table-cell;width:50%;border-right:.6pt solid #555;vertical-align:top;}',
-    '.sec-reason-r{display:table-cell;vertical-align:top;}',
-    '.srow{padding:2pt 5pt;border-bottom:.6pt solid #555;font-size:8.5pt;min-height:18pt;}',
-    '.srow:last-child{border-bottom:none;}',
-    '.slbl{font-weight:700;}',
+/* สาเหตุ/เปลี่ยนเป็น */
+.sec-reason { display:table; width:100%; border:.6pt solid #555; border-top:none; }
+.sec-reason-l { display:table-cell; width:50%; border-right:.6pt solid #555; vertical-align:top; }
+.sec-reason-r { display:table-cell; vertical-align:top; }
+.srow { padding:2pt 5pt; border-bottom:.6pt solid #555; font-size:8.5pt; min-height:18pt; }
+.srow:last-child { border-bottom:none; }
+.slbl { font-weight:700; }
 
-    /* ── SIGNATURES: 3 คู่ เว้นระยะกลาง ── */
-    /* ใช้ table-cell 3 คอลัมน์: ซ้าย | spacer | ขวา */
-    '.sig-wrap{width:100%;margin-top:3pt;}',
-    '.sig-pair{display:table;width:100%;margin-bottom:2pt;}',
-    /* ซ้าย: 44% | กลาง: 8% | ขวา: 44% */
-    '.sig-l{display:table-cell;width:44%;vertical-align:top;padding:3pt 4pt 2pt 4pt;}',
-    '.sig-gap{display:table-cell;width:12%;vertical-align:top;}',
-    '.sig-r{display:table-cell;width:44%;vertical-align:top;padding:3pt 4pt 2pt 4pt;}',
-    /* เส้นเซ็นสั้นลง: ใช้ max-width แทน flex */
-    '.sig-name{display:flex;align-items:flex-end;gap:3pt;font-size:8pt;}',
-    '.sig-line{width:70pt;border-bottom:.75pt solid #000;min-height:12pt;flex-shrink:0;}',
-    '.sig-suf{white-space:nowrap;font-size:8pt;}',
-    '.sig-sub{text-align:center;font-size:7pt;color:#333;margin-top:1.5pt;}',
-    '.sig-dt{text-align:center;font-size:7.5pt;margin-top:1.5pt;margin-bottom:2pt;}',
+/* ── SIGNATURES ── */
+.sig-wrap { width:100%; margin-top:10pt; }     /* เว้นจากสาเหตุลงมา */
+.sig-pair { display:table; width:100%; margin-bottom:8pt; }   /* ระยะห่างระหว่างคู่ */
+.sig-l    { display:table-cell; width:44%; vertical-align:top; padding:0 6pt 0 2pt; }
+.sig-gap  { display:table-cell; width:12%; }
+.sig-r    { display:table-cell; width:44%; vertical-align:top; padding:0 2pt 0 6pt; }
 
-    /* ── WAREHOUSE: เว้นระยะแต่ละแถวมากขึ้น ── */
-    '.wh-wrap{margin-top:5pt;font-size:8.5pt;}',
-    '.wh-row{display:flex;align-items:flex-end;gap:3pt;margin-bottom:5pt;}',  /* เพิ่ม margin-bottom */
-    '.wh-lbl{font-weight:700;white-space:nowrap;min-width:44pt;}',
-    '.wh-o{width:9pt;height:9pt;border:.75pt solid #000;border-radius:50%;flex-shrink:0;margin-bottom:1pt;}',
-    '.wh-name{font-size:8.5pt;white-space:nowrap;}',
-    '.wh-line{flex:1;border-bottom:.5pt solid #777;}',
-    '.wh-qty{white-space:nowrap;font-size:8.5pt;padding:0 4pt;}',
-    '.wh-line2{width:55pt;border-bottom:.5pt solid #777;}',
+/* แถวลงชื่อ */
+.sig-name-row { display:flex; align-items:flex-end; gap:4pt; font-size:8.5pt; }
+.sig-pre  { white-space:nowrap; }
+.sig-line { width:65pt; border-bottom:.75pt solid #000; flex-shrink:0; height:14pt; }
+.sig-suf  { white-space:nowrap; font-size:8.5pt; }
 
-    /* ── REMARK: 2 แถวเส้น ── */
-    '.remark-wrap{margin-top:8pt;font-size:8.5pt;}',
-    '.remark-row1{display:flex;align-items:flex-end;gap:3pt;margin-bottom:6pt;}',
-    '.remark-row2{display:flex;align-items:flex-end;gap:3pt;}',
-    '.remark-lbl{font-weight:700;white-space:nowrap;}',
-    '.remark-line{flex:1;border-bottom:.5pt solid #777;min-height:10pt;}',
-  ].join('\n');
+/* ชื่อและวันที่อยู่กึ่งกลางด้านล่าง */
+.sig-sub  { text-align:center; font-size:7.5pt; color:#333; margin-top:3pt; }
+.sig-dt   { text-align:center; font-size:8pt; margin-top:3pt; margin-bottom:2pt; }
+
+/* ── WAREHOUSE ── */
+.wh-wrap  { margin-top:14pt; font-size:8.5pt; }    /* เว้นจากลายเซ็น */
+/* หัว: นำสินค้าเข้า + คลัง อยู่บรรทัดเดียว */
+.wh-head  { display:flex; align-items:center; gap:8pt; margin-bottom:8pt; font-weight:700; font-size:8.5pt; }
+.wh-head-lbl { white-space:nowrap; }
+/* แต่ละแถวสินค้า */
+.wh-row   { display:flex; align-items:center; gap:6pt; margin-bottom:9pt; }  /* เว้นระยะแต่ละแถว */
+/* วงกลมใหญ่ขึ้น เพื่อเขียนเลขคลังเอง */
+.wh-o     { width:16pt; height:16pt; border:.75pt solid #000; border-radius:50%; flex-shrink:0; }
+.wh-name  { font-size:8.5pt; white-space:nowrap; min-width:20pt; }
+.wh-line  { flex:1; border-bottom:.5pt solid #777; }
+.wh-qty   { white-space:nowrap; font-size:8.5pt; padding:0 4pt; }
+.wh-line2 { width:58pt; border-bottom:.5pt solid #777; }
+
+/* ── REMARK ── */
+.remark-wrap  { margin-top:14pt; font-size:8.5pt; }    /* เว้นจากคลัง */
+.remark-row   { display:flex; align-items:flex-end; gap:3pt; margin-bottom:10pt; }
+.remark-lbl   { font-weight:700; white-space:nowrap; }
+.remark-line  { flex:1; border-bottom:.5pt solid #777; min-height:10pt; }
+`;
 
   var html = '<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"/>'
-    + '<title>CN ' + esc(r.id||'') + '</title>'
-    + '<style>' + css + '</style></head><body>';
+    + '<title>CN '+esc(r.id||'')+'</title>'
+    + '<style>'+css+'</style></head><body>';
 
   /* 1. Company */
-  html += '<div class="co">' + esc(r.company||'บริษัท รอแยล-ดี (ไทยแลนด์)') + '</div>';
+  html += '<div class="co">'+esc(r.company||'บริษัท รอแยล-ดี (ไทยแลนด์)')+'</div>';
 
   /* 2. Logo + Type */
   html += '<div class="tr2">'
-    + '<div class="tr2-logo"><div class="lw"><div class="li">ROYAL<br/>-D</div></div></div>'
-    + '<div class="tr2-types">'
-    + '<span class="ti">' + (isRet?'<span class="ck">✓</span>':'<span class="oc"></span>') + '<span>ใบแจ้งคืนสินค้า</span></span>'
-    + '<span class="ti">' + (isEx ?'<span class="ck">✓</span>':'<span class="oc"></span>') + '<span>ใบแจ้งเปลี่ยนสินค้า</span></span>'
-    + '</div></div>';
+    +'<div class="tr2-logo"><div class="lw"><div class="li">ROYAL<br/>-D</div></div></div>'
+    +'<div class="tr2-types">'
+    +'<span class="ti">'+(isRet?'<span class="ck">✓</span>':'<span class="oc"></span>')+'<span>ใบแจ้งคืนสินค้า</span></span>'
+    +'<span class="ti">'+(isEx ?'<span class="ck">✓</span>':'<span class="oc"></span>')+'<span>ใบแจ้งเปลี่ยนสินค้า</span></span>'
+    +'</div></div>';
 
   /* 3. Meta */
   html += '<table class="mt0"><tr>'
-    + '<td style="font-weight:700;">จากแผนก :</td><td>ฝ่ายขาย</td>'
-    + '<td style="width:35%;"></td>'
-    + '<td style="font-weight:700;text-align:right;white-space:nowrap;">เลขที่&nbsp;</td>'
-    + '<td style="border-bottom:.75pt solid #000;min-width:70pt;font-weight:700;">&nbsp;' + esc(r.id||'') + '</td>'
-    + '</tr><tr>'
-    + '<td style="font-weight:700;">ถึงแผนก :</td><td>บัญชี / คลังสินค้า</td>'
-    + '<td></td>'
-    + '<td style="font-weight:700;text-align:right;white-space:nowrap;">วันที่&nbsp;</td>'
-    + '<td>&nbsp;' + dStr + '</td>'
-    + '</tr></table>';
+    +'<td style="font-weight:700;">จากแผนก :</td><td>ฝ่ายขาย</td>'
+    +'<td style="width:35%;"></td>'
+    +'<td style="font-weight:700;text-align:right;white-space:nowrap;">เลขที่&nbsp;</td>'
+    +'<td style="border-bottom:.75pt solid #000;min-width:70pt;font-weight:700;">&nbsp;'+esc(r.id||'')+'</td>'
+    +'</tr><tr>'
+    +'<td style="font-weight:700;">ถึงแผนก :</td><td>บัญชี / คลังสินค้า</td>'
+    +'<td></td>'
+    +'<td style="font-weight:700;text-align:right;white-space:nowrap;">วันที่&nbsp;</td>'
+    +'<td>&nbsp;'+dStr+'</td>'
+    +'</tr></table>';
 
   /* 4. Main Table */
   html += '<table class="mt">'
-    + '<thead><tr>'
-    + '<th rowspan="2" class="bc" style="width:16pt;">ลำดับ</th>'
-    + '<th rowspan="2" class="bc" style="width:58pt;">ชื่อลูกค้า</th>'
-    + '<th rowspan="2" class="bc" style="width:40pt;">จังหวัด/เขต</th>'
-    + '<th rowspan="2" class="bc">รายการสินค้า</th>'
-    + '<th colspan="2" class="bc">จำนวน</th>'
-    + '<th colspan="2" class="bc">หมายเหตุ (บัญชี)</th>'
-    + '</tr><tr>'
-    + '<th class="bc" style="width:28pt;">ยอดสินค้า</th>'
-    + '<th class="bc" style="width:24pt;">หน่วย</th>'
-    + '<th class="bc" style="width:36pt;">ราคา : หน่วย</th>'
-    + '<th class="bc" style="width:36pt;">จำนวนเงิน</th>'
-    + '</tr></thead>'
-    + '<tbody>' + rows + '</tbody>'
-    + '</table>';
+    +'<thead><tr>'
+    +'<th rowspan="2" class="bc" style="width:16pt;">ลำดับ</th>'
+    +'<th rowspan="2" class="bc" style="width:58pt;">ชื่อลูกค้า</th>'
+    +'<th rowspan="2" class="bc" style="width:40pt;">จังหวัด/เขต</th>'
+    +'<th rowspan="2" class="bc">รายการสินค้า</th>'
+    +'<th colspan="2" class="bc">จำนวน</th>'
+    +'<th colspan="2" class="bc">หมายเหตุ (บัญชี)</th>'
+    +'</tr><tr>'
+    +'<th class="bc" style="width:28pt;">ยอดสินค้า</th>'
+    +'<th class="bc" style="width:24pt;">หน่วย</th>'
+    +'<th class="bc" style="width:36pt;">ราคา : หน่วย</th>'
+    +'<th class="bc" style="width:36pt;">จำนวนเงิน</th>'
+    +'</tr></thead>'
+    +'<tbody>'+rows+'</tbody>'
+    +'</table>';
 
   /* 5. สาเหตุ / เปลี่ยนเป็น */
   html += '<div class="sec-reason">'
-    + '<div class="sec-reason-l">'
-    + '<div class="srow"><span class="slbl">สาเหตุที่คืน :</span>&nbsp;' + esc(r.reason||'') + '</div>'
-    + '<div class="srow"><span class="slbl">ตัดบิลเลขที่</span>&nbsp;' + esc(r.billRef||'') + '</div>'
-    + '</div>'
-    + '<div class="sec-reason-r">'
-    + '<div class="srow"><span class="slbl">เปลี่ยนเป็น :</span></div>'
-    + '<div class="srow"><span class="slbl">จำนวน&nbsp;:</span></div>'
-    + '</div>'
-    + '</div>';
+    +'<div class="sec-reason-l">'
+    +'<div class="srow"><span class="slbl">สาเหตุที่คืน :</span>&nbsp;'+esc(r.reason||'')+'</div>'
+    +'<div class="srow"><span class="slbl">ตัดบิลเลขที่</span>&nbsp;'+esc(r.billRef||'')+'</div>'
+    +'</div>'
+    +'<div class="sec-reason-r">'
+    +'<div class="srow"><span class="slbl">เปลี่ยนเป็น :</span></div>'
+    +'<div class="srow"><span class="slbl">จำนวน&nbsp;:</span></div>'
+    +'</div>'
+    +'</div>';
 
-  /* 6. Signatures 3 คู่ — ซ้าย | เว้นกลาง | ขวา */
+  /* 6. Signatures — ซ้าย | เว้นกลาง 12% | ขวา */
+  /* helper: สร้าง block แต่ละช่อง */
+  function sigBlock(prefixLabel, centerLabel, subLabel, showDate){
+    var out = '<div class="sig-name-row">'
+      +'<span class="sig-pre">ลงชื่อ</span>'
+      +'<div class="sig-line"></div>'
+      +(prefixLabel ? '<span class="sig-suf">'+prefixLabel+'</span>' : '')
+      +'</div>';
+    if(centerLabel) out += '<div class="sig-sub">'+centerLabel+'</div>';
+    if(subLabel)    out += '<div class="sig-sub">'+subLabel+'</div>';
+    if(showDate !== false) out += '<div class="sig-dt">วันที่___/______/____</div>';
+    return out;
+  }
+
   html += '<div class="sig-wrap">';
 
-  // helper สร้าง sig-pair
-  function sigPair(lContent, rContent){
-    return '<div class="sig-pair">'
-      + '<div class="sig-l">' + lContent + '</div>'
-      + '<div class="sig-gap"></div>'
-      + '<div class="sig-r">' + rContent + '</div>'
-      + '</div>';
-  }
+  /* pair 1 */
+  html += '<div class="sig-pair">'
+    +'<div class="sig-l">'+sigBlock('','ผู้รับสินค้า (ฝ่ายคลังสินค้า)','')+'</div>'
+    +'<div class="sig-gap"></div>'
+    +'<div class="sig-r">'+sigBlock('ผู้แทน','','')+'</div>'
+    +'</div>';
 
-  function sigBlock(label, sub, dt){
-    dt = (dt===undefined) ? 'วันที่___/______/____' : dt;
-    return '<div class="sig-name"><span>ลงชื่อ</span><div class="sig-line"></div>'
-      + (label?'<span class="sig-suf">'+label+'</span>':'')
-      + '</div>'
-      + (sub?'<div class="sig-sub">'+sub+'</div>':'')
-      + '<div class="sig-dt">'+dt+'</div>';
-  }
+  /* pair 2 */
+  html += '<div class="sig-pair">'
+    +'<div class="sig-l">'+sigBlock('','ผู้ตรวจสินค้า (ฝ่ายคลังสินค้า)','(คุณรังสรรค์ ,ภคพงษ์,ชนินทร์)')+'</div>'
+    +'<div class="sig-gap"></div>'
+    +'<div class="sig-r">'+sigBlock('ฝ่ายบัญชี','(คุณอภิชญา นิตย์ภิรมย์)','')+'</div>'
+    +'</div>';
 
-  html += sigPair(
-    sigBlock('','ผู้รับสินค้า (ฝ่ายคลังสินค้า)'),
-    sigBlock('ผู้แทน','')
-  );
-  html += sigPair(
-    sigBlock('','ผู้ตรวจสินค้า (ฝ่ายคลังสินค้า)') + '<div class="sig-sub">(คุณรังสรรค์ ,ภคพงษ์,ชนินทร์)</div>',
-    sigBlock('ฝ่ายบัญชี','(คุณอภิชญา นิตย์ภิรมย์)')
-  );
-  html += sigPair(
-    sigBlock('','ผจก.ฝ่ายขาย') + '<div class="sig-sub">(คุณประสิทธิ์ เตโชนิมิต)</div>',
-    sigBlock('','ผช.ผจก.ฝ่ายบัญชี') + '<div class="sig-sub">(คุณปทุมพร ธีรประภาส)</div>'
-  );
+  /* pair 3 */
+  html += '<div class="sig-pair">'
+    +'<div class="sig-l">'+sigBlock('','ผจก.ฝ่ายขาย','(คุณประสิทธิ์ เตโชนิมิต)')+'</div>'
+    +'<div class="sig-gap"></div>'
+    +'<div class="sig-r">'+sigBlock('','ผช.ผจก.ฝ่ายบัญชี','(คุณปทุมพร ธีรประภาส)')+'</div>'
+    +'</div>';
 
-  html += '</div>'; // sig-wrap
+  html += '</div>'; /* end sig-wrap */
 
-  /* 7. นำสินค้าเข้าคลัง 8 แถว */
+  /* 7. นำสินค้าเข้า คลัง — บรรทัดเดียว + 7 แถวสินค้า */
   html += '<div class="wh-wrap">';
 
-  var whRows = [
-    {lbl:'นำสินค้าเข้า'},
-    {lbl:'คลัง'},
-    {lbl:''},{lbl:''},{lbl:''},{lbl:''},{lbl:''},{lbl:''}
-  ];
-  for(var w=0;w<whRows.length;w++){
+  /* หัว: "นำสินค้าเข้า  คลัง  ○ สินค้า ─── จำนวน ───" (1 บรรทัด) */
+  html += '<div class="wh-head">'
+    +'<span class="wh-head-lbl">นำสินค้าเข้า&emsp;คลัง</span>'
+    +'<span class="wh-o"></span>'
+    +'<span class="wh-name">สินค้า</span>'
+    +'<div class="wh-line"></div>'
+    +'<span class="wh-qty">จำนวน</span>'
+    +'<div class="wh-line2"></div>'
+    +'</div>';
+
+  /* 7 แถวถัดไป */
+  for(var w=0;w<7;w++){
     html += '<div class="wh-row">'
-      + '<span class="wh-lbl">' + whRows[w].lbl + '</span>'
-      + '<span class="wh-o"></span>'
-      + '<span class="wh-name">สินค้า</span>'
-      + '<div class="wh-line"></div>'
-      + '<span class="wh-qty">จำนวน</span>'
-      + '<div class="wh-line2"></div>'
-      + '</div>';
+      +'<span style="min-width:80pt;"></span>'
+      +'<span class="wh-o"></span>'
+      +'<span class="wh-name">สินค้า</span>'
+      +'<div class="wh-line"></div>'
+      +'<span class="wh-qty">จำนวน</span>'
+      +'<div class="wh-line2"></div>'
+      +'</div>';
   }
 
-  html += '</div>'; // wh-wrap
+  html += '</div>'; /* end wh-wrap */
 
   /* 8. หมายเหตุ 2 แถวเส้น */
   html += '<div class="remark-wrap">'
-    + '<div class="remark-row1"><span class="remark-lbl">หมายเหตุ :</span><div class="remark-line"></div></div>'
-    + '<div class="remark-row2"><span class="remark-lbl" style="visibility:hidden;">หมายเหตุ :</span><div class="remark-line"></div></div>'
-    + '</div>';
+    +'<div class="remark-row"><span class="remark-lbl">หมายเหตุ :</span><div class="remark-line"></div></div>'
+    +'<div class="remark-row"><span class="remark-lbl" style="visibility:hidden;">หมายเหตุ :</span><div class="remark-line"></div></div>'
+    +'</div>';
 
   html += '<script>window.onload=function(){setTimeout(function(){window.print();},400);window.onafterprint=function(){window.close();};};<\/script>';
   html += '</body></html>';
