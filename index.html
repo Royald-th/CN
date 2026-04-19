@@ -983,274 +983,261 @@ function printReport(){
 function printCNForm(r){
   if(!r){ alert('ไม่พบข้อมูล'); return; }
 
+  // parse items
   var its = parseItems(r.items||'');
   while(its.length < 11) its.push({name:'',qty:'',unit:''});
 
+  // วันที่
   var rawDate = r.createdAt ? new Date(r.createdAt) : new Date();
   var D  = rawDate.getDate();
   var Mo = rawDate.getMonth()+1;
   var Y  = rawDate.getFullYear()+543;
-  var dStr = D + '/' + (Mo<10?'0'+Mo:String(Mo)) + '/' + Y;
+  var dStr = (D<10?'0'+D:D) + '/' + (Mo<10?'0'+Mo:Mo) + '/' + Y;
 
   var isRet = (r.docType||'')==='ใบแจ้งคืนสินค้า';
   var isEx  = (r.docType||'')==='ใบแจ้งเปลี่ยนสินค้า';
 
-  // สร้างแถวสินค้า: แถวแรกแสดง ลำดับ/ชื่อลูกค้า/จังหวัด, แถวถัดไปว่าง
-  function makeRow(i){
+  // แถวสินค้า: แถวแรกแสดง ลำดับ/ชื่อลูกค้า/จังหวัด ที่เหลือว่าง
+  var rows = '';
+  for(var i=0;i<11;i++){
     var it = its[i];
-    var showMeta = (i===0);
-    return '<tr>'
-      + '<td class="tc bc">' + (showMeta?'1':'') + '</td>'
-      + '<td class="bc">' + (showMeta?esc(r.customerName||''):'') + '</td>'
-      + '<td class="tc bc">' + (showMeta?esc(r.province||''):'') + '</td>'
+    rows += '<tr>'
+      + '<td class="bc tc">' + (i===0?'1':'') + '</td>'
+      + '<td class="bc">' + (i===0?esc(r.customerName||''):'') + '</td>'
+      + '<td class="bc tc">' + (i===0?esc(r.province||''):'') + '</td>'
       + '<td class="bc">' + esc(it.name) + '</td>'
-      + '<td class="tc bc">' + esc(it.qty) + '</td>'
-      + '<td class="tc bc">' + esc(it.unit) + '</td>'
+      + '<td class="bc tc">' + esc(it.qty) + '</td>'
+      + '<td class="bc tc">' + esc(it.unit) + '</td>'
       + '<td class="bc"></td>'
       + '<td class="bc"></td>'
       + '</tr>';
   }
 
-  var rows = '';
-  for(var i=0;i<11;i++) rows += makeRow(i);
+  var css = [
+    '@import url(\'https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap\');',
+    '@page{size:210mm 297mm portrait;margin:8mm 11mm 7mm 11mm;}',
+    'html,body{font-family:\'Sarabun\',sans-serif;font-size:9pt;color:#000;background:#fff;width:188mm;}',
+    '*{box-sizing:border-box;margin:0;padding:0;}',
 
-  var html = '<!DOCTYPE html>\n<html lang="th"><head><meta charset="UTF-8"/>\n'
-  + '<title>CN ' + (r.id||'') + '</title>\n'
-  + '<style>\n'
-  + '@import url(\'https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap\');\n'
-  + '@page{size:210mm 297mm portrait;margin:8mm 10mm 6mm 10mm;}\n'
-  + 'html,body{font-family:\'Sarabun\',sans-serif;font-size:9pt;color:#000;background:#fff;}\n'
-  + '*{box-sizing:border-box;margin:0;padding:0;}\n'
+    /* company */
+    '.co{text-align:center;font-size:13pt;font-weight:700;padding-bottom:2pt;}',
 
-  /* ── ROW 1: Company name ── */
-  + '.r1{text-align:center;font-size:13pt;font-weight:700;padding:3pt 0;}\n'
+    /* type row */
+    '.tr2{display:flex;align-items:center;padding:1pt 0 2pt;}',
+    '.tr2-logo{flex-shrink:0;margin-right:6pt;}',
+    '.lw{width:40pt;height:40pt;border-radius:50%;background:#1d8c22;display:flex;align-items:center;justify-content:center;}',
+    '.li{width:32pt;height:32pt;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:6pt;color:#1d8c22;text-align:center;line-height:1.3;}',
+    '.tr2-types{flex:1;display:flex;justify-content:center;gap:30pt;font-size:11pt;font-weight:700;}',
+    '.ti{display:flex;align-items:center;gap:6pt;}',
+    '.oc{width:13pt;height:13pt;border:2pt solid #000;border-radius:50%;flex-shrink:0;display:inline-block;}',
+    '.ck{width:13pt;height:13pt;border:2pt solid #000;border-radius:50%;background:#000;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:9pt;font-weight:900;line-height:1;}',
 
-  /* ── ROW 2: Logo + type checkboxes ── */
-  + '.r2{display:flex;align-items:center;padding:2pt 0 3pt;}\n'
-  + '.r2-logo{width:44pt;flex-shrink:0;}\n'
-  + '.logo-wrap{width:42pt;height:42pt;border-radius:50%;background:#1d8c22;display:flex;align-items:center;justify-content:center;}\n'
-  + '.logo-inner{width:34pt;height:34pt;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:6pt;color:#1d8c22;text-align:center;line-height:1.3;}\n'
-  + '.r2-types{flex:1;display:flex;justify-content:center;gap:28pt;font-size:11pt;font-weight:700;}\n'
-  + '.type-item{display:flex;align-items:center;gap:6pt;}\n'
-  /* วงกลมเปล่า */
-  + '.oc{width:13pt;height:13pt;border:2pt solid #000;border-radius:50%;display:inline-block;flex-shrink:0;}\n'
-  /* ติ๊กถูก = checkmark style */
-  + '.ck{width:13pt;height:13pt;border:2pt solid #000;border-radius:50%;background:#000;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:9pt;font-weight:900;line-height:1;}\n'
+    /* meta table */
+    '.mt0{width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:1pt;}',
+    '.mt0 td{padding:1pt 2pt;vertical-align:middle;}',
 
-  /* ── ROW 3-4: meta (แผนก, เลขที่, วันที่) ── */
-  + '.meta-tbl{width:100%;border-collapse:collapse;margin-bottom:1pt;font-size:9pt;}\n'
-  + '.meta-tbl td{padding:1pt 2pt;}\n'
+    /* main table */
+    '.mt{width:100%;border-collapse:collapse;font-size:8.5pt;}',
+    '.mt th{background:#FFFF99;font-weight:700;text-align:center;padding:2pt;line-height:1.3;}',
+    '.mt td{padding:1.5pt 2pt;height:14pt;vertical-align:middle;}',
+    '.bc{border:.6pt solid #555;}',
+    '.tc{text-align:center;}',
+    '.mt tbody tr:nth-child(odd) td{background:#FFFDE7;}',
+    '.mt tbody tr:nth-child(even) td{background:#fff;}',
 
-  /* ── MAIN TABLE ── */
-  + '.mt{width:100%;border-collapse:collapse;font-size:8.5pt;}\n'
-  + '.mt th{background:#FFFF99;font-weight:700;text-align:center;padding:2.5pt 2pt;line-height:1.3;}\n'
-  + '.mt td{padding:1.5pt 2pt;height:14pt;vertical-align:middle;}\n'
-  + '.bc{border:.6pt solid #555;}\n'
-  + '.bct{border:.6pt solid #555;border-top:none;}\n'    // no top border (merged look)
-  + '.tc{text-align:center;}\n'
-  + '.mt tbody tr:nth-child(odd) td{background:#FFFDE7;}\n'
-  + '.mt tbody tr:nth-child(even) td{background:#fff;}\n'
+    /* ---------- SECTION BELOW TABLE ---------- */
 
-  /* ── BOTTOM: two-column layout ── */
-  + '.bot{display:table;width:100%;margin-top:3pt;border-top:.6pt solid #555;}\n'
-  + '.bot-l{display:table-cell;width:50%;vertical-align:top;border-right:.6pt solid #555;padding:2pt 3pt;}\n'
-  + '.bot-r{display:table-cell;vertical-align:top;padding:2pt 3pt;}\n'
+    /* row19-20: สาเหตุ/ตัดบิล (ซ้าย) | เปลี่ยนเป็น/จำนวน (ขวา) */
+    '.sec-reason{display:table;width:100%;border:.6pt solid #555;border-top:none;}',
+    '.sec-reason-l{display:table-cell;width:50%;border-right:.6pt solid #555;vertical-align:top;}',
+    '.sec-reason-r{display:table-cell;vertical-align:top;}',
+    '.srow{padding:2pt 4pt;border-bottom:.6pt solid #555;font-size:8.5pt;min-height:18pt;}',
+    '.srow:last-child{border-bottom:none;}',
+    '.slbl{font-weight:700;}',
 
-  /* ── reason / bill ── */
-  + '.rlbl{font-weight:700;font-size:8.5pt;}\n'
-  + '.rval{font-size:8.5pt;}\n'
-  + '.bot-row{display:flex;border-bottom:.6pt solid #555;padding:2pt 0;min-height:16pt;font-size:8.5pt;}\n'
-  + '.bot-row-label{font-weight:700;white-space:nowrap;margin-right:4pt;}\n'
+    /* ---------- SIGNATURES: full width, 3 pairs ---------- */
+    '.sig-wrap{width:100%;margin-top:2pt;}',
+    '.sig-pair{display:table;width:100%;margin-bottom:0pt;}',
+    '.sig-l,.sig-r{display:table-cell;width:50%;padding:3pt 6pt 1pt;vertical-align:top;}',
+    '.sig-name{display:flex;align-items:flex-end;gap:3pt;font-size:8pt;}',
+    '.sig-line{flex:1;border-bottom:.75pt solid #000;min-height:12pt;}',
+    '.sig-suf{white-space:nowrap;font-size:8pt;}',
+    '.sig-sub{text-align:center;font-size:7pt;color:#333;margin-top:1pt;}',
+    '.sig-dt{text-align:center;font-size:7.5pt;margin-top:1pt;margin-bottom:3pt;}',
 
-  /* ── exchange box ── */
-  + '.ex-row{display:flex;border-bottom:.6pt solid #555;padding:2pt 0;font-size:8.5pt;min-height:16pt;}\n'
-  + '.ex-lbl{font-weight:700;white-space:nowrap;margin-right:3pt;}\n'
-  + '.qty-row{display:flex;border-bottom:.6pt solid #555;padding:2pt 0;font-size:8.5pt;min-height:14pt;}\n'
+    /* ---------- WAREHOUSE ---------- */
+    '.wh-wrap{margin-top:3pt;font-size:8.5pt;}',
+    '.wh-row{display:flex;align-items:flex-end;gap:3pt;margin-bottom:2pt;}',
+    '.wh-lbl{font-weight:700;white-space:nowrap;min-width:16pt;}',
+    '.wh-o{width:9pt;height:9pt;border:.75pt solid #000;border-radius:50%;flex-shrink:0;}',
+    '.wh-name{font-size:8pt;white-space:nowrap;}',
+    '.wh-line{flex:1;border-bottom:.5pt solid #777;}',
+    '.wh-qty{white-space:nowrap;font-size:8pt;padding:0 3pt;}',
+    '.wh-line2{width:52pt;border-bottom:.5pt solid #777;}',
 
-  /* ── signatures ── */
-  + '.sig-section{margin-top:3pt;}\n'
-  + '.sig-row{display:table;width:100%;margin-bottom:1pt;}\n'
-  + '.sig-cell{display:table-cell;width:50%;vertical-align:top;padding:1pt 2pt;font-size:8pt;}\n'
-  + '.sig-name-row{display:flex;align-items:flex-end;gap:2pt;font-size:8pt;}\n'
-  + '.sig-line{flex:1;border-bottom:.75pt solid #000;min-height:11pt;}\n'
-  + '.sig-sub{text-align:center;font-size:7pt;color:#333;}\n'
-  + '.sig-dt{text-align:center;font-size:7.5pt;margin-top:1pt;}\n'
+    /* ---------- REMARK ---------- */
+    '.remark{display:flex;align-items:flex-end;gap:3pt;margin-top:3pt;font-size:8.5pt;border-top:.5pt solid #777;padding-top:2pt;}',
+    '.remark-lbl{font-weight:700;white-space:nowrap;}',
+    '.remark-line{flex:1;border-bottom:.5pt solid #777;min-height:10pt;}',
+  ].join('\n');
 
-  /* ── warehouse ── */
-  + '.wh-section{margin-top:3pt;font-size:8pt;}\n'
-  + '.wh-title-row{display:flex;align-items:flex-end;gap:2pt;margin-bottom:1.5pt;font-size:8pt;font-weight:700;}\n'
-  + '.wh-row{display:flex;align-items:flex-end;gap:2pt;margin-bottom:1.5pt;font-size:8pt;}\n'
-  + '.wh-o{width:9pt;height:9pt;border:.75pt solid #000;border-radius:50%;flex-shrink:0;display:inline-block;}\n'
-  + '.wh-label{white-space:nowrap;font-weight:700;min-width:20pt;}\n'
-  + '.wh-line{flex:1;border-bottom:.5pt solid #888;}\n'
-  + '.wh-qty{white-space:nowrap;padding:0 2pt;}\n'
-  + '.wh-line2{width:48pt;border-bottom:.5pt solid #888;}\n'
+  var html = '<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"/>'
+    + '<title>CN ' + esc(r.id||'') + '</title>'
+    + '<style>' + css + '</style></head><body>';
 
-  /* ── remark ── */
-  + '.remark{display:flex;align-items:flex-start;gap:2pt;margin-top:3pt;font-size:8pt;border-top:.5pt solid #888;padding-top:2pt;}\n'
-  + '.remark-lbl{font-weight:700;white-space:nowrap;}\n'
-  + '.remark-line{flex:1;border-bottom:.5pt solid #888;min-height:10pt;}\n'
+  /* ── 1. Company ── */
+  html += '<div class="co">' + esc(r.company||'บริษัท รอแยล-ดี (ไทยแลนด์)') + '</div>';
 
-  + '</style></head><body>\n';
+  /* ── 2. Logo + Type ── */
+  html += '<div class="tr2">'
+    + '<div class="tr2-logo"><div class="lw"><div class="li">ROYAL<br/>-D</div></div></div>'
+    + '<div class="tr2-types">'
+    + '<span class="ti">' + (isRet?'<span class="ck">✓</span>':'<span class="oc"></span>') + '<span>ใบแจ้งคืนสินค้า</span></span>'
+    + '<span class="ti">' + (isEx ?'<span class="ck">✓</span>':'<span class="oc"></span>') + '<span>ใบแจ้งเปลี่ยนสินค้า</span></span>'
+    + '</div></div>';
 
-  /* ══ COMPANY NAME ROW ══ */
-  html += '<div class="r1">' + esc(r.company||'บริษัท รอแยล-ดี (ไทยแลนด์)') + '</div>\n';
-
-  /* ══ LOGO + TYPE ROW ══ */
-  html += '<div class="r2">'
-    + '<div class="r2-logo"><div class="logo-wrap"><div class="logo-inner">ROYAL<br/>-D</div></div></div>'
-    + '<div class="r2-types">'
-    + '<span class="type-item">'
-    + (isRet ? '<span class="ck">✓</span>' : '<span class="oc"></span>')
-    + '<span>ใบแจ้งคืนสินค้า</span></span>'
-    + '<span class="type-item">'
-    + (isEx  ? '<span class="ck">✓</span>' : '<span class="oc"></span>')
-    + '<span>ใบแจ้งเปลี่ยนสินค้า</span></span>'
-    + '</div>'
-    + '</div>\n';
-
-  /* ══ META: แผนก + เลขที่/วันที่ ══ */
-  html += '<table class="meta-tbl">'
-    + '<tr>'
+  /* ── 3. Meta ── */
+  html += '<table class="mt0"><tr>'
     + '<td style="font-weight:700;">จากแผนก :</td><td>ฝ่ายขาย</td>'
-    + '<td style="width:32%"></td>'
+    + '<td style="width:35%;"></td>'
     + '<td style="font-weight:700;text-align:right;white-space:nowrap;">เลขที่&nbsp;</td>'
     + '<td style="border-bottom:.75pt solid #000;min-width:70pt;font-weight:700;">&nbsp;' + esc(r.id||'') + '&nbsp;</td>'
-    + '</tr>'
-    + '<tr>'
+    + '</tr><tr>'
     + '<td style="font-weight:700;">ถึงแผนก :</td><td>บัญชี / คลังสินค้า</td>'
     + '<td></td>'
     + '<td style="font-weight:700;text-align:right;white-space:nowrap;">วันที่&nbsp;</td>'
     + '<td>&nbsp;' + dStr + '</td>'
-    + '</tr>'
-    + '</table>\n';
+    + '</tr></table>';
 
-  /* ══ MAIN TABLE ══ */
+  /* ── 4. Main Table ── */
   html += '<table class="mt">'
-  + '<thead>'
-  + '<tr>'
-  + '<th rowspan="2" class="bc" style="width:16pt;">ลำดับ</th>'
-  + '<th rowspan="2" class="bc" style="width:60pt;">ชื่อลูกค้า</th>'
-  + '<th rowspan="2" class="bc" style="width:42pt;">จังหวัด/เขต</th>'
-  + '<th rowspan="2" class="bc">รายการสินค้า</th>'
-  + '<th colspan="2" class="bc">จำนวน</th>'
-  + '<th colspan="2" class="bc">หมายเหตุ (บัญชี)</th>'
-  + '</tr>'
-  + '<tr>'
-  + '<th class="bc" style="width:30pt;">ยอดสินค้า</th>'
-  + '<th class="bc" style="width:26pt;">หน่วย</th>'
-  + '<th class="bc" style="width:36pt;">ราคา : หน่วย</th>'
-  + '<th class="bc" style="width:36pt;">จำนวนเงิน</th>'
-  + '</tr>'
-  + '</thead>'
-  + '<tbody>' + rows + '</tbody>'
-  + '</table>\n';
+    + '<thead><tr>'
+    + '<th rowspan="2" class="bc" style="width:16pt;">ลำดับ</th>'
+    + '<th rowspan="2" class="bc" style="width:58pt;">ชื่อลูกค้า</th>'
+    + '<th rowspan="2" class="bc" style="width:40pt;">จังหวัด/เขต</th>'
+    + '<th rowspan="2" class="bc">รายการสินค้า</th>'
+    + '<th colspan="2" class="bc">จำนวน</th>'
+    + '<th colspan="2" class="bc">หมายเหตุ (บัญชี)</th>'
+    + '</tr><tr>'
+    + '<th class="bc" style="width:28pt;">ยอดสินค้า</th>'
+    + '<th class="bc" style="width:24pt;">หน่วย</th>'
+    + '<th class="bc" style="width:36pt;">ราคา : หน่วย</th>'
+    + '<th class="bc" style="width:36pt;">จำนวนเงิน</th>'
+    + '</tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table>';
 
-  /* ══ BOTTOM SECTION ══ */
-  html += '<div class="bot">';
-
-  /* ─ LEFT: reason + bill + warehouse ─ */
-  html += '<div class="bot-l">';
-
-  /* สาเหตุ */
-  html += '<div class="bot-row">'
-    + '<span class="bot-row-label">สาเหตุที่คืน :</span>'
-    + '<span class="rval">' + esc(r.reason||'') + '</span>'
+  /* ── 5. สาเหตุ / เปลี่ยนเป็น (row 19-20 ของ Excel) ── */
+  html += '<div class="sec-reason">'
+    /* LEFT */
+    + '<div class="sec-reason-l">'
+    + '<div class="srow"><span class="slbl">สาเหตุที่คืน :</span>&nbsp;' + esc(r.reason||'') + '</div>'
+    + '<div class="srow"><span class="slbl">ตัดบิลเลขที่</span>&nbsp;' + esc(r.billRef||'') + '</div>'
+    + '</div>'
+    /* RIGHT */
+    + '<div class="sec-reason-r">'
+    + '<div class="srow"><span class="slbl">เปลี่ยนเป็น :</span>&nbsp;' + (isEx?'':'') + '</div>'
+    + '<div class="srow"><span class="slbl">จำนวน&nbsp;:&nbsp;</span></div>'
+    + '</div>'
     + '</div>';
 
-  /* ตัดบิล */
-  html += '<div class="bot-row">'
-    + '<span class="bot-row-label">ตัดบิลเลขที่</span>'
-    + '<span class="rval">&nbsp;' + esc(r.billRef||'') + '</span>'
+  /* ── 6. Signatures — full width, 3 pairs ── */
+  /* pair 1: ผู้รับสินค้า | ผู้แทน */
+  html += '<div class="sig-wrap">';
+
+  html += '<div class="sig-pair">'
+    + '<div class="sig-l">'
+    + '<div class="sig-name"><span>ลงชื่อ</span><div class="sig-line"></div></div>'
+    + '<div class="sig-sub">ผู้รับสินค้า (ฝ่ายคลังสินค้า)</div>'
+    + '<div class="sig-dt">วันที่___/______/____</div>'
+    + '</div>'
+    + '<div class="sig-r">'
+    + '<div class="sig-name"><span>ลงชื่อ</span><div class="sig-line"></div><span class="sig-suf">ผู้แทน</span></div>'
+    + '<div class="sig-dt">วันที่___/______/____</div>'
+    + '</div>'
     + '</div>';
 
-  /* warehouse */
-  html += '<div class="wh-section">';
-  html += '<div class="wh-title-row">'
-    + '<span class="wh-label">นำสินค้าเข้า</span>'
+  /* pair 2: ผู้ตรวจสินค้า | ฝ่ายบัญชี */
+  html += '<div class="sig-pair">'
+    + '<div class="sig-l">'
+    + '<div class="sig-name"><span>ลงชื่อ</span><div class="sig-line"></div></div>'
+    + '<div class="sig-sub">ผู้ตรวจสินค้า (ฝ่ายคลังสินค้า)</div>'
+    + '<div class="sig-sub">(คุณรังสรรค์ ,ภคพงษ์,ชนินทร์)</div>'
+    + '<div class="sig-dt">วันที่___/______/____</div>'
+    + '</div>'
+    + '<div class="sig-r">'
+    + '<div class="sig-name"><span>ลงชื่อ</span><div class="sig-line"></div><span class="sig-suf">ฝ่ายบัญชี</span></div>'
+    + '<div class="sig-sub">(คุณอภิชญา นิตย์ภิรมย์)</div>'
+    + '<div class="sig-dt">วันที่___/______/____</div>'
+    + '</div>'
+    + '</div>';
+
+  /* pair 3: ผจก.ฝ่ายขาย | ผช.ผจก.ฝ่ายบัญชี */
+  html += '<div class="sig-pair">'
+    + '<div class="sig-l">'
+    + '<div class="sig-name"><span>ลงชื่อ</span><div class="sig-line"></div></div>'
+    + '<div class="sig-sub">ผจก.ฝ่ายขาย</div>'
+    + '<div class="sig-sub">(คุณประสิทธิ์ เตโชนิมิต)</div>'
+    + '<div class="sig-dt">วันที่___/______/____</div>'
+    + '</div>'
+    + '<div class="sig-r">'
+    + '<div class="sig-name"><span>ลงชื่อ</span><div class="sig-line"></div></div>'
+    + '<div class="sig-sub">ผช.ผจก.ฝ่ายบัญชี</div>'
+    + '<div class="sig-sub">(คุณปทุมพร ธีรประภาส)</div>'
+    + '<div class="sig-dt">วันที่___/______/____</div>'
+    + '</div>'
+    + '</div>';
+
+  html += '</div>'; /* end sig-wrap */
+
+  /* ── 7. นำสินค้าเข้าคลัง (row 33-40) ── */
+  html += '<div class="wh-wrap">';
+
+  /* แถวแรก: "นำสินค้าเข้า" + วงกลม + สินค้า */
+  html += '<div class="wh-row">'
+    + '<span class="wh-lbl">นำสินค้าเข้า</span>'
     + '<span class="wh-o"></span>'
-    + '<span>สินค้า</span>'
+    + '<span class="wh-name">สินค้า</span>'
     + '<div class="wh-line"></div>'
     + '<span class="wh-qty">จำนวน</span>'
     + '<div class="wh-line2"></div>'
     + '</div>';
-  html += '<div style="display:flex;align-items:flex-end;gap:2pt;margin-bottom:1.5pt;font-size:8pt;">'
-    + '<span style="font-weight:700;min-width:20pt;">คลัง</span>'
+
+  /* แถว "คลัง" */
+  html += '<div class="wh-row">'
+    + '<span class="wh-lbl">คลัง</span>'
     + '<span class="wh-o"></span>'
-    + '<span>สินค้า</span>'
+    + '<span class="wh-name">สินค้า</span>'
     + '<div class="wh-line"></div>'
     + '<span class="wh-qty">จำนวน</span>'
     + '<div class="wh-line2"></div>'
     + '</div>';
+
+  /* แถวเพิ่มเติม 6 แถว */
   for(var w=0;w<6;w++){
     html += '<div class="wh-row">'
-      + '<span style="min-width:20pt;"></span>'
+      + '<span class="wh-lbl"></span>'
       + '<span class="wh-o"></span>'
-      + '<span>สินค้า</span>'
+      + '<span class="wh-name">สินค้า</span>'
       + '<div class="wh-line"></div>'
       + '<span class="wh-qty">จำนวน</span>'
       + '<div class="wh-line2"></div>'
       + '</div>';
   }
-  html += '</div>';  // wh-section
 
-  /* remark */
-  html += '<div class="remark"><span class="remark-lbl">หมายเหตุ :</span><div class="remark-line"></div></div>';
-  html += '</div>';  // bot-l
+  html += '</div>'; /* end wh-wrap */
 
-  /* ─ RIGHT: exchange box + signatures ─ */
-  html += '<div class="bot-r">';
-
-  /* เปลี่ยนเป็น + จำนวน (ซ้ายขวาต้นฉบับ) */
-  html += '<div class="ex-row"><span class="ex-lbl">เปลี่ยนเป็น :</span>'
-    + (isEx ? '<span>' + '</span>' : '')
+  /* ── 8. หมายเหตุ (row 41) ── */
+  html += '<div class="remark">'
+    + '<span class="remark-lbl">หมายเหตุ :</span>'
+    + '<div class="remark-line"></div>'
     + '</div>';
-  html += '<div class="qty-row"><span class="ex-lbl">จำนวน&nbsp;:&nbsp;</span></div>';
-
-  /* signatures: 3 คู่ */
-  html += '<div class="sig-section">';
-
-  // pair 1: ผู้รับสินค้า | ผู้แทน
-  html += '<div class="sig-row">'
-    + '<div class="sig-cell"><div class="sig-name-row"><span>ลงชื่อ</span><div class="sig-line"></div></div>'
-    + '<div style="text-align:center;font-size:8pt;">ผู้รับสินค้า (ฝ่ายคลังสินค้า)</div>'
-    + '<div class="sig-dt">วันที่___/______/____</div></div>'
-    + '<div class="sig-cell"><div class="sig-name-row"><span>ลงชื่อ</span><div class="sig-line"></div><span>ผู้แทน</span></div>'
-    + '<div class="sig-dt">วันที่___/______/____</div></div>'
-    + '</div>';
-
-  // pair 2: ผู้ตรวจสินค้า | ฝ่ายบัญชี
-  html += '<div class="sig-row">'
-    + '<div class="sig-cell"><div class="sig-name-row"><span>ลงชื่อ</span><div class="sig-line"></div></div>'
-    + '<div style="text-align:center;font-size:8pt;">ผู้ตรวจสินค้า (ฝ่ายคลังสินค้า)</div>'
-    + '<div class="sig-sub">(คุณรังสรรค์ ,ภคพงษ์,ชนินทร์)</div>'
-    + '<div class="sig-dt">วันที่___/______/____</div></div>'
-    + '<div class="sig-cell"><div class="sig-name-row"><span>ลงชื่อ</span><div class="sig-line"></div><span>ฝ่ายบัญชี</span></div>'
-    + '<div class="sig-sub">(คุณอภิชญา นิตย์ภิรมย์)</div>'
-    + '<div class="sig-dt">วันที่___/______/____</div></div>'
-    + '</div>';
-
-  // pair 3: ผจก.ฝ่ายขาย | ผช.ผจก.ฝ่ายบัญชี
-  html += '<div class="sig-row">'
-    + '<div class="sig-cell"><div class="sig-name-row"><span>ลงชื่อ</span><div class="sig-line"></div></div>'
-    + '<div style="text-align:center;font-size:8pt;">ผจก.ฝ่ายขาย</div>'
-    + '<div class="sig-sub">(คุณประสิทธิ์ เตโชนิมิต)</div>'
-    + '<div class="sig-dt">วันที่___/______/____</div></div>'
-    + '<div class="sig-cell"><div class="sig-name-row"><span>ลงชื่อ</span><div class="sig-line"></div></div>'
-    + '<div style="text-align:center;font-size:8pt;">ผช.ผจก.ฝ่ายบัญชี</div>'
-    + '<div class="sig-sub">(คุณปทุมพร ธีรประภาส)</div>'
-    + '<div class="sig-dt">วันที่___/______/____</div></div>'
-    + '</div>';
-
-  html += '</div>';  // sig-section
-  html += '</div>';  // bot-r
-  html += '</div>';  // bot
 
   html += '<script>window.onload=function(){setTimeout(function(){window.print();},400);window.onafterprint=function(){window.close();};};<\/script>';
   html += '</body></html>';
 
-  var w=window.open('','_blank','width=840,height=800,toolbar=0,scrollbars=1');
-  if(!w){ alert('กรุณาอนุญาต popup สำหรับการปริ้นท์'); return; }
+  var w=window.open('','_blank','width=840,height=820,toolbar=0,scrollbars=1');
+  if(!w){ alert('กรุณาอนุญาต popup เพื่อปริ้นท์'); return; }
   w.document.write(html);
   w.document.close();
 }
