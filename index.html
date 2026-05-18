@@ -1059,7 +1059,7 @@ function viewDetail(id,isAdmin){
     +'<div><div class="lbl">วันที่</div><div style="color:#E6EDF3;">'+fDate(r.createdAt)+'</div></div>'
     +'</div>'
     +'<div><div class="lbl">บริษัท</div><div style="color:#E6EDF3;">'+esc(r.company)+'</div></div>'
-    +'<div><div class="lbl">ประเภท</div><div>'+badge(r.docType==='ใบแจ้งคืนสินค้า'?'รอของ':'กำลังดำเนินการ')+' <span style="color:#E6EDF3;font-size:.82rem;">'+esc(r.docType)+'</span></div></div>'
+    +'<div><div class="lbl">ประเภท</div><div>'+esc(r.docType)+'</span></div></div>'
     +'<div class="g2" style="gap:10px;">'
     +'<div><div class="lbl">ลูกค้า</div><div style="color:#E6EDF3;font-weight:500;">'+esc(r.customerName)+'</div></div>'
     +'<div><div class="lbl">จังหวัด</div><div style="color:#E6EDF3;">'+esc(r.province)+'</div></div>'
