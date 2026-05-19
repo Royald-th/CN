@@ -403,9 +403,30 @@ select.fc option { background: var(--surface2); }
 .month-btn { background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r); padding: 10px 8px; text-align: center; cursor: pointer; transition: all .15s; font-size: .8rem; color: #C9D1D9; }
 .month-btn:hover { border-color: var(--blue); background: var(--blue-dim); color: var(--blue); }
 
-/* ══════════════════════════════════════════
-   AUTH PAGE
-   ══════════════════════════════════════════ */
+/* ── TOAST ── */
+.toast{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--r);padding:10px 14px;
+  display:flex;align-items:center;gap:9px;
+  font-size:.8rem;color:#E6EDF3;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+  min-width:220px;max-width:320px;
+  pointer-events:all;
+  animation:toast-in .25s var(--ease);
+}
+.toast.out{ animation:toast-out .25s ease forwards; }
+@keyframes toast-in{ from{opacity:0;transform:translateX(20px);} to{opacity:1;transform:translateX(0);} }
+@keyframes toast-out{ from{opacity:1;transform:translateX(0);} to{opacity:0;transform:translateX(20px);} }
+.toast-icon{ font-size:1rem;flex-shrink:0; }
+.toast-success{ border-left:3px solid var(--green); }
+.toast-error  { border-left:3px solid var(--red);   }
+.toast-info   { border-left:3px solid var(--blue);  }
+
+/* ── USER MANAGEMENT (Admin view) ── */
+.user-table-wrap{ overflow-x:auto; }
+.role-select{ background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:#E6EDF3;font-family:var(--font);font-size:.78rem;padding:3px 7px;cursor:pointer;outline:none; }
+.role-select:focus{ border-color:var(--blue); }
+
 #page-auth {
   background: var(--bg);
   min-height: 100vh;
@@ -467,6 +488,9 @@ select.fc option { background: var(--surface2); }
     <p style="color:var(--muted);font-size:.82rem;" id="ltxt">กำลังโหลด...</p>
   </div>
 </div>
+
+<!-- ── TOAST NOTIFICATION ── -->
+<div id="toast-wrap" style="position:fixed;top:16px;right:16px;z-index:9998;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
 
 <!-- ── MODAL ── -->
 <div class="mov" id="mov" onclick="closeMdl(event)">
@@ -568,10 +592,16 @@ select.fc option { background: var(--surface2); }
           <div class="card">
             <div class="card-header">
               <span class="card-title">รายการ CN ของฉัน</span>
-              <button class="btn btn-primary btn-sm" onclick="openForm(null,false)">
-                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                สร้างรายการใหม่
-              </button>
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                <input type="text" id="user-search" class="fc" placeholder="🔍 ค้นหา..." oninput="filterUserTbl()" style="width:160px;padding:5px 10px;font-size:.78rem;"/>
+                <button class="btn btn-ghost btn-sm" onclick="loadUser()" title="รีเฟรช">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="openForm(null,false)">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                  สร้างรายการใหม่
+                </button>
+              </div>
             </div>
             <div class="tw">
               <table>
@@ -594,6 +624,10 @@ select.fc option { background: var(--surface2); }
             <div class="card-header">
               <span class="card-title">รายการ CN ทั้งหมด</span>
               <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                <button class="btn btn-ghost btn-sm" onclick="loadAdmin()" title="รีเฟรช">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                  รีเฟรช
+                </button>
                 <button class="btn btn-outline btn-sm" onclick="openMonthReport()">
                   <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                   รายงานรายเดือน
@@ -624,6 +658,7 @@ select.fc option { background: var(--surface2); }
                 <thead><tr><th>เลขที่</th><th>วันที่</th><th>ผู้ทำรายการ</th><th>ประเภท</th><th>ลูกค้า</th><th>จังหวัด</th><th>สถานะ</th><th></th></tr></thead>
                 <tbody id="atbl"><tr><td colspan="8" class="te">ไม่พบรายการ</td></tr></tbody>
               </table>
+              <div id="admin-pagination"></div>
             </div>
           </div>
         </div>
@@ -641,16 +676,16 @@ select.fc option { background: var(--surface2); }
                 <label class="lbl">บริษัท <span class="req">*</span></label>
                 <select id="f-co" class="fc">
                   <option value="">-- เลือกบริษัท --</option>
-                  <option value="บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด">บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด</option>
-                  <option value="บริษัท แฟนซีเวิล์ด จำกัด">บริษัท แฟนซีเวิล์ด จำกัด</option>
-                  <option value="บริษัท ควอลิแทต (ประเทศไทย) จำกัด">บริษัท ควอลิแทต (ประเทศไทย) จำกัด</option>
+                  <option value="บริษัท รอแยล-ดี (ไทยแลนด์)">บริษัท รอแยล-ดี (ไทยแลนด์)</option>
+                  <option value="บริษัท อาร์ดี ดิสทริบิวชั่น">บริษัท อาร์ดี ดิสทริบิวชั่น</option>
+                  <option value="อื่นๆ">อื่นๆ</option>
                 </select>
               </div>
               <div class="fg">
                 <label class="lbl">ประเภทใบแจ้ง <span class="req">*</span></label>
                 <div class="rg">
-                  <label class="ro"><input type="radio" name="dt" value="ใบแจ้งคืนสินค้า"/> ใบแจ้งคืนสินค้า</label>
-                  <label class="ro"><input type="radio" name="dt" value="ใบแจ้งเปลี่ยนสินค้า"/> ใบแจ้งเปลี่ยนสินค้า</label>
+                  <label class="ro"><input type="radio" name="dt" value="ใบแจ้งคืนสินค้า" onchange="onDtChange(this.value)"/> ใบแจ้งคืนสินค้า</label>
+                  <label class="ro"><input type="radio" name="dt" value="ใบแจ้งเปลี่ยนสินค้า" onchange="onDtChange(this.value)"/> ใบแจ้งเปลี่ยนสินค้า</label>
                 </div>
               </div>
               <div class="g2">
@@ -671,7 +706,18 @@ select.fc option { background: var(--surface2); }
                 </div>
               </div>
               <div class="fg"><label class="lbl">สาเหตุที่คืน / เปลี่ยน <span class="req">*</span></label><textarea id="f-reason" class="fc" rows="3" placeholder="ระบุสาเหตุ"></textarea></div>
-              <div class="fg"><label class="lbl">ตัดบิลเลขที่ <span style="color:var(--muted);font-weight:400;text-transform:none;">(ไม่บังคับ)</span></label><input type="text" id="f-bill" class="fc" placeholder="เลขที่บิลอ้างอิง"/></div>
+
+              <!-- ตัดบิล: แสดงเฉพาะ "ใบแจ้งคืนสินค้า" -->
+              <div class="fg" id="f-bill-group" style="display:none;">
+                <label class="lbl">ตัดบิลเลขที่ <span style="color:var(--muted);font-weight:400;text-transform:none;">(ไม่บังคับ)</span></label>
+                <input type="text" id="f-bill" class="fc" placeholder="เลขที่บิลอ้างอิง"/>
+              </div>
+
+              <!-- เปลี่ยนเป็น: แสดงเฉพาะ "ใบแจ้งเปลี่ยนสินค้า" -->
+              <div class="fg" id="f-exchange-group" style="display:none;">
+                <label class="lbl">เปลี่ยนเป็น <span style="color:var(--muted);font-weight:400;text-transform:none;">(ไม่บังคับ)</span></label>
+                <input type="text" id="f-exchange" class="fc" placeholder="ระบุสินค้าที่ต้องการเปลี่ยน"/>
+              </div>
               <!-- Admin: Status + Upload -->
               <div id="f-admin" style="display:none;">
                 <div class="divider"></div>
@@ -707,6 +753,25 @@ select.fc option { background: var(--surface2); }
                 </button>
                 <button class="btn btn-outline" onclick="goBack()" style="flex:1;min-width:100px;justify-content:center;">ยกเลิก</button>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── VIEW: USER MANAGEMENT (Admin only) ── -->
+        <div id="view-users" style="display:none;">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">จัดการผู้ใช้งาน</span>
+              <button class="btn btn-ghost btn-sm" onclick="loadUsers()" title="รีเฟรช">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                รีเฟรช
+              </button>
+            </div>
+            <div class="tw">
+              <table>
+                <thead><tr><th>#</th><th>ชื่อ-นามสกุล</th><th>Line UID</th><th>Role</th><th>วันที่สมัคร</th><th>รายการ CN</th></tr></thead>
+                <tbody id="users-tbl"><tr><td colspan="6" class="te">กำลังโหลด...</td></tr></tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -855,7 +920,7 @@ function enterApp(){
 
   gotoPage('page-app');
   if(u.role==='Admin'){showView('view-admin-dash','Admin Dashboard');loadAdmin();}
-  else{showView('view-user-dash','Dashboard ของฉัน');loadUser();}
+  else{showView('view-user-dash','Dashboard ของฉัน');loadUser();startAutoRefresh();}
 }
 
 function gotoPage(id){
@@ -873,6 +938,9 @@ function buildNav(role){
       +'<div class="nav-section">รายการ</div>'
       +'<div class="nav-item" data-view="view-form" onclick="openForm(null,true);">'
       +'<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>สร้างรายการ CN</div>'
+      +'<div class="nav-section">จัดการ</div>'
+      +'<div class="nav-item" data-view="view-users" onclick="showView(\'view-users\',\'จัดการผู้ใช้งาน\');loadUsers();">'
+      +'<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>ผู้ใช้งาน</div>'
       +'<div class="nav-section">รายงาน</div>'
       +'<div class="nav-item" onclick="openMonthReport();">'
       +'<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>รายงานรายเดือน</div>'
@@ -892,11 +960,11 @@ function buildNav(role){
 /* ══════════════════════════════════════════
    USER DASHBOARD
    ══════════════════════════════════════════ */
-async function loadUser(){
-  L.show();
+async function loadUser(silent){
+  if(!silent) L.show();
   try{
     var d=await apiGet({action:'getCNList',lineUID:ST.user.lineUID,role:'User'});
-    L.hide();
+    if(!silent) L.hide();
     if(!d.success)return;
     ST.cnList=d.records;
     var r=d.records;
@@ -904,8 +972,8 @@ async function loadUser(){
     document.getElementById('s-wait').textContent=r.filter(function(x){return x.status==='รอของ';}).length;
     document.getElementById('s-proc').textContent=r.filter(function(x){return x.status==='กำลังดำเนินการ';}).length;
     document.getElementById('s-done').textContent=r.filter(function(x){return x.status==='เสร็จสิ้น';}).length;
-    renderUserTbl(r);
-  }catch(e){L.hide();}
+    filterUserTbl(); // ใช้ filter แทน renderUserTbl โดยตรง
+  }catch(e){if(!silent) L.hide();}
 }
 
 function renderUserTbl(recs){
@@ -947,7 +1015,7 @@ async function loadAdmin(){
     allUsers=Object.keys(userMap).map(function(k){return{uid:k,name:userMap[k]};});
     buildUserDropdown();
     updateAdminStats(adminRecs);
-    renderAdminTbl(adminRecs);
+    paginateAdmin(adminRecs);
   }catch(e){L.hide();}
 }
 
@@ -1006,7 +1074,7 @@ function doFilter(){
       &&(!st||r.status===st)
       &&(!dt||r.createdAt.startsWith(dt));
   });
-  renderAdminTbl(filtered);
+  paginateAdmin(filtered);
 }
 
 async function doDelete(id){
@@ -1016,9 +1084,9 @@ async function doDelete(id){
   try{
     var d=await apiPost({action:'deleteCN',id:cid});
     L.hide();
-    if(d.success)await loadAdmin();
-    else alert('เกิดข้อผิดพลาด: '+(d.message||''));
-  }catch(e){L.hide();alert(e.message);}
+    if(d.success){ toast('ลบรายการ '+cid+' สำเร็จ','success'); await loadAdmin(); }
+    else toast('เกิดข้อผิดพลาด: '+(d.message||''),'error');
+  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
 }
 
 /* ══════════════════════════════════════════
@@ -1067,6 +1135,7 @@ function viewDetail(id,isAdmin){
     +'<div><div class="lbl">รายการสินค้า</div>'+itHtml+'</div>'
     +'<div><div class="lbl">สาเหตุ</div><div style="white-space:pre-wrap;color:#C9D1D9;font-size:.82rem;">'+esc(r.reason||'-')+'</div></div>'
     +(r.billRef?'<div><div class="lbl">ตัดบิลเลขที่</div><div class="mono">'+esc(r.billRef)+'</div></div>':'')
+    +(r.exchangeTo?'<div><div class="lbl">เปลี่ยนเป็น</div><div style="color:#E6EDF3;">'+esc(r.exchangeTo)+'</div></div>':'')
     +'<div><div class="lbl">สถานะ</div>'+badge(r.status)+'</div>'
     +proof
     +'</div>',
@@ -1134,6 +1203,10 @@ function openForm(editId,fromAdmin){
   document.getElementById('f-prov').value='';
   document.getElementById('f-reason').value='';
   document.getElementById('f-bill').value='';
+  document.getElementById('f-exchange').value='';
+  // reset docType conditional fields
+  document.getElementById('f-bill-group').style.display='none';
+  document.getElementById('f-exchange-group').style.display='none';
   document.getElementById('form-id-badge').textContent='';
   hideErr('form-err');
   uzClear();
@@ -1152,11 +1225,12 @@ function openForm(editId,fromAdmin){
       var r=d.record;
       document.getElementById('f-co').value=r.company||'';
       var rd=document.querySelector('input[name="dt"][value="'+r.docType+'"]');
-      if(rd)rd.checked=true;
+      if(rd){ rd.checked=true; onDtChange(r.docType); } // trigger conditional fields
       document.getElementById('f-cust').value=r.customerName||'';
       document.getElementById('f-prov').value=r.province||'';
       document.getElementById('f-reason').value=r.reason||'';
       document.getElementById('f-bill').value=r.billRef||'';
+      document.getElementById('f-exchange').value=r.exchangeTo||'';
       document.getElementById('form-id-badge').textContent=r.id;
       parseItems(r.items||'').forEach(function(it){addRow(it.name,it.qty,it.unit);});
       if(!parseItems(r.items||'').length)addRow();
@@ -1178,40 +1252,82 @@ function openForm(editId,fromAdmin){
 /* ══════════════════════════════════════════
    SAVE CN
    ══════════════════════════════════════════ */
+var _saving = false; // double-submit guard
+
 async function saveCN(){
-  var co=document.getElementById('f-co').value;
-  var dt=document.querySelector('input[name="dt"]:checked');dt=dt?dt.value:'';
-  var cust=document.getElementById('f-cust').value.trim();
-  var prov=document.getElementById('f-prov').value.trim();
-  var reason=document.getElementById('f-reason').value.trim();
-  var bill=document.getElementById('f-bill').value.trim();
-  var status=document.getElementById('f-status').value;
-  var items=getItems();
+  if(_saving) return;  // ป้องกันกด 2 ครั้ง
+  var co     = document.getElementById('f-co').value;
+  var dtEl   = document.querySelector('input[name="dt"]:checked');
+  var dt     = dtEl ? dtEl.value : '';
+  var cust   = document.getElementById('f-cust').value.trim();
+  var prov   = document.getElementById('f-prov').value.trim();
+  var reason = document.getElementById('f-reason').value.trim();
+  var bill   = document.getElementById('f-bill').value.trim();
+  var exchange = document.getElementById('f-exchange').value.trim();
+  var status = document.getElementById('f-status').value;
+  var items  = getItems();
+
   hideErr('form-err');
+
   if(!co||!dt||!cust||!prov||!reason||!items.length){
-    showErr('form-err','กรุณากรอกข้อมูลที่จำเป็นให้ครบ และเพิ่มรายการสินค้าอย่างน้อย 1 รายการ');return;
+    showErr('form-err','กรุณากรอกข้อมูลที่จำเป็นให้ครบ และเพิ่มรายการสินค้าอย่างน้อย 1 รายการ');
+    return;
   }
-  var isAdmin=ST.user&&ST.user.role==='Admin';
-  if(isAdmin&&ST.editId&&status==='เสร็จสิ้น'&&!IMG.b64&&!IMG.url){
-    showErr('form-err','กรุณาอัปโหลดรูปภาพหลักฐานก่อนเปลี่ยนสถานะเป็น "เสร็จสิ้น"');return;
+  var isAdmin = ST.user && ST.user.role === 'Admin';
+  if(isAdmin && ST.editId && status==='เสร็จสิ้น' && !IMG.b64 && !IMG.url){
+    showErr('form-err','กรุณาอัปโหลดรูปภาพหลักฐานก่อนเปลี่ยนสถานะเป็น "เสร็จสิ้น"');
+    return;
   }
-  var its=serItems(items);
+
+  var its = serItems(items);
+  _saving = true;
+  // ปิดปุ่มบันทึก
+  var saveBtn = document.querySelector('[onclick="saveCN()"]');
+  if(saveBtn){ saveBtn.disabled=true; saveBtn.style.opacity='.6'; }
+
   L.show('กำลังบันทึก...');
   try{
-    var imgUrl=undefined;
-    if(isAdmin&&ST.editId&&status==='เสร็จสิ้น')imgUrl=await doUpload(ST.editId);
+    var imgUrl = undefined;
+    if(isAdmin && ST.editId && status==='เสร็จสิ้น') imgUrl = await doUpload(ST.editId);
+
+    var payload = {
+      company: co, docType: dt, customerName: cust, province: prov,
+      items: its, reason: reason,
+      billRef: dt==='ใบแจ้งคืนสินค้า' ? bill : '',
+      exchangeTo: dt==='ใบแจ้งเปลี่ยนสินค้า' ? exchange : '',
+    };
+
     var d;
     if(ST.editId){
-      d=await apiPost({action:'updateCN',id:(ST.editId||'').trim(),company:co,docType:dt,customerName:cust,province:prov,items:its,reason:reason,billRef:bill,...(isAdmin&&{status}),...(imgUrl!=null&&{imageUrl:imgUrl})});
-    }else{
-      d=await apiPost({action:'createCN',lineUID:ST.user.lineUID,company:co,docType:dt,customerName:cust,province:prov,items:its,reason:reason,billRef:bill});
+      d = await apiPost(Object.assign({action:'updateCN', id:(ST.editId||'').trim()},
+        payload,
+        isAdmin ? {status:status} : {},
+        imgUrl!=null ? {imageUrl:imgUrl} : {}
+      ));
+    } else {
+      d = await apiPost(Object.assign({action:'createCN', lineUID:ST.user.lineUID}, payload));
     }
     L.hide();
     if(d.success){
-      if(ST.fromAdmin||isAdmin){await loadAdmin();showView('view-admin-dash','Admin Dashboard');}
-      else{await loadUser();showView('view-user-dash','Dashboard ของฉัน');}
-    }else showErr('form-err',d.message||'เกิดข้อผิดพลาด');
-  }catch(e){L.hide();showErr('form-err',e.message);}
+      var isCreate = !ST.editId;
+      toast(isCreate ? 'สร้างรายการ CN สำเร็จ 🎉' : 'บันทึกการแก้ไขสำเร็จ', 'success');
+      if(ST.fromAdmin || isAdmin){
+        await loadAdmin();
+        showView('view-admin-dash','Admin Dashboard');
+      } else {
+        await loadUser();
+        showView('view-user-dash','Dashboard ของฉัน');
+      }
+    } else {
+      showErr('form-err', d.message || 'เกิดข้อผิดพลาด');
+    }
+  } catch(e){
+    L.hide();
+    showErr('form-err', e.message);
+  } finally {
+    _saving = false;
+    if(saveBtn){ saveBtn.disabled=false; saveBtn.style.opacity=''; }
+  }
 }
 
 /* ══════════════════════════════════════════
@@ -1395,7 +1511,7 @@ function printCNForm(r){
       +'</tr>';
   }
 
-  var css=`
+var css=`
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
 @page{size:210mm 297mm portrait;margin:6mm 10mm 6mm 10mm;}
 html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background:#fff;width:190mm;}
@@ -1504,7 +1620,7 @@ html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background
     +'<th rowspan="2" class="bc" style="width:15pt;">ลำดับ</th>'
     +'<th rowspan="2" class="bc" style="width:56pt;">ชื่อลูกค้า</th>'
     +'<th rowspan="2" class="bc" style="width:38pt;">จังหวัด/เขต</th>'
-    +'<th rowspan="2" class="bc" style="width:100pt;">รายการสินค้า</th>'
+    +'<th rowspan="2" class="bc">รายการสินค้า</th>'
     +'<th colspan="2" class="bc">จำนวน</th>'
     +'<th colspan="2" class="bc">หมายเหตุ (บัญชี)</th>'
     +'</tr><tr>'
@@ -1520,10 +1636,10 @@ html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background
   html+='<div class="sec-reason">'
     +'<div class="sec-reason-l">'
     +'<div class="srow"><span class="slbl">สาเหตุที่คืน :</span>&nbsp;'+esc(r.reason||'')+'</div>'
-    +'<div class="srow"><span class="slbl">ตัดบิลเลขที่</span>&nbsp;'+esc(r.billRef||'')+'</div>'
+    +'<div class="srow"><span class="slbl">ตัดบิลเลขที่</span>&nbsp;'+(isRet?esc(r.billRef||''):'')+'</div>'
     +'</div>'
     +'<div class="sec-reason-r">'
-    +'<div class="srow"><span class="slbl">เปลี่ยนเป็น :</span></div>'
+    +'<div class="srow"><span class="slbl">เปลี่ยนเป็น :</span>&nbsp;'+(isEx?esc(r.exchangeTo||''):'')+'</div>'
     +'<div class="srow"><span class="slbl">จำนวน&nbsp;:</span></div>'
     +'</div>'
     +'</div>';
@@ -1592,7 +1708,6 @@ html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background
      แถวแรก: indent = "นำสินค้าเข้า  คลัง"
      แถวที่เหลือ: indent ว่าง (ความกว้างเท่าเดิม)
   */
-
   html+='<div class="wh-wrap">';
 
   var whLabels=['นำสินค้าเข้า  คลัง','','','','','','',''];
@@ -1623,6 +1738,161 @@ html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background
   w.document.write(html);
   w.document.close();
 }
+/* ══════════════════════════════════════════
+   TOAST NOTIFICATION
+   ══════════════════════════════════════════ */
+function toast(msg, type, duration){
+  type     = type     || 'success'; // 'success' | 'error' | 'info'
+  duration = duration || 3000;
+  var icons = { success:'✅', error:'❌', info:'ℹ️' };
+  var wrap = document.getElementById('toast-wrap');
+  var el   = document.createElement('div');
+  el.className = 'toast toast-' + type;
+  el.innerHTML = '<span class="toast-icon">' + icons[type] + '</span><span>' + msg + '</span>';
+  wrap.appendChild(el);
+  setTimeout(function(){
+    el.classList.add('out');
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 280);
+  }, duration);
+}
+
+/* ══════════════════════════════════════════
+   DOCTYPE SWITCH — billRef / exchange
+   ══════════════════════════════════════════ */
+function onDtChange(val){
+  var billGrp = document.getElementById('f-bill-group');
+  var exGrp   = document.getElementById('f-exchange-group');
+  if(!billGrp || !exGrp) return;
+  if(val === 'ใบแจ้งคืนสินค้า'){
+    billGrp.style.display = 'block';
+    exGrp.style.display   = 'none';
+    document.getElementById('f-exchange').value = '';
+  } else if(val === 'ใบแจ้งเปลี่ยนสินค้า'){
+    billGrp.style.display = 'none';
+    exGrp.style.display   = 'block';
+    document.getElementById('f-bill').value = '';
+  } else {
+    billGrp.style.display = 'none';
+    exGrp.style.display   = 'none';
+  }
+}
+
+/* ══════════════════════════════════════════
+   USER DASHBOARD SEARCH FILTER
+   ══════════════════════════════════════════ */
+function filterUserTbl(){
+  var q = (document.getElementById('user-search').value || '').toLowerCase();
+  if(!q){ renderUserTbl(ST.cnList); return; }
+  renderUserTbl(ST.cnList.filter(function(r){
+    return r.id.toLowerCase().includes(q)
+      || (r.customerName||'').toLowerCase().includes(q)
+      || (r.docType||'').toLowerCase().includes(q)
+      || (r.status||'').toLowerCase().includes(q);
+  }));
+}
+
+/* ══════════════════════════════════════════
+   AUTO-REFRESH (User dashboard: ทุก 2 นาที)
+   ══════════════════════════════════════════ */
+var _autoRefreshTimer = null;
+function startAutoRefresh(){
+  stopAutoRefresh();
+  _autoRefreshTimer = setInterval(function(){
+    var activeView = document.querySelector('[id^="view-"][style*="block"]');
+    if(!activeView) return;
+    if(activeView.id === 'view-user-dash' && ST.user && ST.user.role !== 'Admin'){
+      loadUser(true); // silent = true → ไม่แสดง loading overlay
+    }
+  }, 120000); // 2 นาที
+}
+function stopAutoRefresh(){
+  if(_autoRefreshTimer){ clearInterval(_autoRefreshTimer); _autoRefreshTimer = null; }
+}
+
+/* ══════════════════════════════════════════
+   USER MANAGEMENT (Admin)
+   ══════════════════════════════════════════ */
+async function loadUsers(){
+  L.show('กำลังโหลดข้อมูลผู้ใช้...');
+  try{
+    var d = await apiGet({action:'getUserList'});
+    L.hide();
+    if(!d.success){ toast('โหลดข้อมูลผู้ใช้ไม่สำเร็จ','error'); return; }
+    renderUsersTbl(d.users);
+  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+}
+
+function renderUsersTbl(users){
+  var tb = document.getElementById('users-tbl');
+  if(!users || !users.length){
+    tb.innerHTML = '<tr><td colspan="6" class="te">ยังไม่มีผู้ใช้งาน</td></tr>';
+    return;
+  }
+  // นับ CN ต่อ user จาก adminRecs
+  var cnCount = {};
+  adminRecs.forEach(function(r){ cnCount[r.lineUID] = (cnCount[r.lineUID]||0)+1; });
+
+  tb.innerHTML = users.map(function(u, i){
+    return '<tr>'
+      +'<td style="color:var(--muted);text-align:center;">'+(i+1)+'</td>'
+      +'<td style="font-weight:600;color:#E6EDF3;">'+(u.firstName||'')+' '+(u.lastName||'')+'</td>'
+      +'<td class="mono" style="font-size:.72rem;color:var(--muted);">'+u.lineUID+'</td>'
+      +'<td>'
+      +'<select class="role-select" onchange="changeUserRole(\''+u.lineUID+'\',this.value)">'
+      +'<option value="User"'+(u.role==='User'?' selected':'')+'>User</option>'
+      +'<option value="Admin"'+(u.role==='Admin'?' selected':'')+'>Admin</option>'
+      +'</select>'
+      +'</td>'
+      +'<td style="font-size:.76rem;color:var(--muted);">'+fDate(u.createdAt)+'</td>'
+      +'<td style="text-align:center;font-weight:600;">'+(cnCount[u.lineUID]||0)+'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+async function changeUserRole(lineUID, newRole){
+  try{
+    var d = await apiPost({action:'updateUserRole', lineUID:lineUID, role:newRole});
+    if(d.success) toast('เปลี่ยน Role เป็น '+newRole+' สำเร็จ','success');
+    else toast(d.message||'เกิดข้อผิดพลาด','error');
+  }catch(e){ toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+}
+
+/* ══════════════════════════════════════════
+   PAGINATION HELPERS
+   ══════════════════════════════════════════ */
+var _adminPage = 1;
+var _adminPageSize = 50;
+var _adminFiltered = [];
+
+function paginateAdmin(recs){
+  _adminFiltered = recs;
+  _adminPage = 1;
+  renderAdminPage();
+}
+
+function renderAdminPage(){
+  var total = _adminFiltered.length;
+  var pages = Math.ceil(total / _adminPageSize) || 1;
+  var start = (_adminPage-1) * _adminPageSize;
+  var slice = _adminFiltered.slice(start, start + _adminPageSize);
+
+  renderAdminTbl(slice);
+
+  // render pagination controls
+  var pgWrap = document.getElementById('admin-pagination');
+  if(!pgWrap) return;
+  if(total <= _adminPageSize){ pgWrap.innerHTML=''; return; }
+
+  var btns = '';
+  for(var p=1; p<=pages; p++){
+    var active = p===_adminPage;
+    btns += '<button class="btn btn-'+(active?'primary':'ghost')+' btn-xs" onclick="_adminPage='+p+';renderAdminPage();">'+p+'</button>';
+  }
+  pgWrap.innerHTML = '<div style="display:flex;align-items:center;gap:5px;padding:10px 14px;border-top:1px solid var(--border);">'
+    +'<span style="font-size:.75rem;color:var(--muted);flex:1;">แสดง '+(start+1)+'-'+Math.min(start+_adminPageSize,total)+' จาก '+total+' รายการ</span>'
+    +btns+'</div>';
+}
+
 /* ══════════════════════════════════════════
    INIT
    ══════════════════════════════════════════ */
