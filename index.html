@@ -1462,7 +1462,7 @@ function renderExistingImgs(urls){
     var fileId = (url.match(/\/d\/([a-zA-Z0-9_-]+)/) || ['',''])[1];
     var thumb = fileId ? 'https://drive.google.com/thumbnail?id='+fileId+'&sz=w80' : url;
     return '<div style="position:relative;width:80px;">'
-      +'<a href="'+url+'" target="_blank"><img src="'+thumb+'" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--green);" onerror="this.style.display=\'none\'"/></a>'
+      +'<a href="'+url+'" target="_blank"><img src="'+thumb+'" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--green);" onerror="this.style.display='none'"/></a>'
       +'<button onclick="removeExistingImg('+i+')" style="position:absolute;top:2px;left:2px;background:rgba(200,0,0,.8);border:none;border-radius:50%;width:16px;height:16px;cursor:pointer;color:#fff;font-size:9px;padding:0;">✕</button>'
       +'</div>';
   }).join('');
