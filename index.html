@@ -1499,7 +1499,7 @@ function renderExistingImgs(urls){
     var fileId = (url.match(/\/d\/([a-zA-Z0-9_-]+)/) || ['',''])[1];
     var thumb = fileId ? 'https://drive.google.com/thumbnail?id='+fileId+'&sz=w80' : url;
     return '<div style="position:relative;width:80px;">'
-      +'<a href="'+url+'" target="_blank"><img src="'+thumb+'" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--green);" onerror="this.style.display='none'"/></a>'
+      +'<a href="'+url+'" target="_blank" rel="noopener"><img src="'+thumb+'" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--green);" onerror="this.onerror=null;this.src=\'\';this.style.display=\'none\'"/></a>'
       +'<button onclick="removeExistingImg('+i+')" style="position:absolute;top:2px;left:2px;background:rgba(200,0,0,.8);border:none;border-radius:50%;width:16px;height:16px;cursor:pointer;color:#fff;font-size:9px;padding:0;">✕</button>'
       +'</div>';
   }).join('');
@@ -1582,10 +1582,10 @@ function openStatusModal(id, currentStatus){
     +'</div>';
 
   openMdl('เปลี่ยนสถานะรายการ',
-    '<p style="font-size:.78rem;color:var(--muted);margin-bottom:12px;">รายการ: <span style="font-family:var(--mono);color:var(--blue);">'+cid+'</span></p>'
+    '<input type="hidden" id="status-modal-cid" value="'+cid+'"/>'    +'<p style="font-size:.78rem;color:var(--muted);margin-bottom:12px;">รายการ: <span style="font-family:var(--mono);color:var(--blue);">'+cid+'</span></p>'
     +radios
     +uploadHtml,
-    '<button class="btn btn-primary" onclick="confirmStatusChange(''+cid+'')">บันทึกสถานะ</button>'
+    '<button class="btn btn-primary" id="confirm-status-btn">บันทึกสถานะ</button>'
     +'<button class="btn btn-ghost" onclick="closeMdl()">ยกเลิก</button>'
   );
 
@@ -1595,11 +1595,17 @@ function openStatusModal(id, currentStatus){
       r.addEventListener('change', function(){
         var upSec = document.getElementById('status-modal-upload');
         if(upSec) upSec.style.display = this.value==='เสร็จสิ้น'?'block':'none';
-        // reset queue เมื่อเปลี่ยน option
         smImgQueue = [];
         renderSmPreview();
       });
     });
+    // ผูก confirm button — เก็บ cid ใน data-attribute แทน inline onclick
+    var btn = document.getElementById('confirm-status-btn');
+    if(btn){
+      // หา cid จาก modal title หรือ hidden input
+      var cidEl = document.getElementById('status-modal-cid');
+      btn.onclick = function(){ confirmStatusChange(cidEl ? cidEl.value : ''); };
+    }
   }, 50);
 }
 
@@ -2252,7 +2258,49 @@ function renderAdminPage(){
 /* ══════════════════════════════════════════
    INIT
    ══════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded',function(){L.hide();});
+document.addEventListener('DOMContentLoaded',function(){
+  L.hide();
+  // expose functions to global window scope สำหรับ onclick attributes
+  window.initLiff = initLiff;
+  window.doRegister = doRegister;
+  window.openForm = openForm;
+  window.openStatusModal = openStatusModal;
+  window.confirmStatusChange = confirmStatusChange;
+  window.closeMdl = closeMdl;
+  window.viewDetail = viewDetail;
+  window.doDelete = doDelete;
+  window.printCNForm = printCNForm;
+  window.printMonthReport = printMonthReport;
+  window.openMonthReport = openMonthReport;
+  window.onDtChange = onDtChange;
+  window.onStChange = onStChange;
+  window.addRow = addRow;
+  window.delRow = delRow;
+  window.smAddFile = smAddFile;
+  window.smRemove = smRemove;
+  window.smUzSelect = smUzSelect;
+  window.smUzDrop = smUzDrop;
+  window.uzOver = uzOver;
+  window.uzLeave = uzLeave;
+  window.uzDrop = uzDrop;
+  window.uzSelect = uzSelect;
+  window.uzClear = uzClear;
+  window.filterUserTbl = filterUserTbl;
+  window.doFilter = doFilter;
+  window.saveCN = saveCN;
+  window.goBack = goBack;
+  window.exportCSV = exportCSV;
+  window.loadUser = loadUser;
+  window.loadAdmin = loadAdmin;
+  window.loadUsers = loadUsers;
+  window.changeUserRole = changeUserRole;
+  window.showView = showView;
+  window.toggleSidebar = toggleSidebar;
+  window.removeExistingImg = removeExistingImg;
+  window.renderExistingImgs = renderExistingImgs;
+  window.onReportModeChange = onReportModeChange;
+  window.renderAdminPage = renderAdminPage;
+});
 </script>
 </body>
 </html>
