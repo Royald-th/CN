@@ -1866,7 +1866,12 @@ function printCNForm(r){
   var LOGOS = {
     'บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด': {
       // Royal-D: วงกลมเขียว + ตัวอักษร
-      img: 'data:image/png;base64,Royal-D.jpg',  // base64 จริง
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="70" viewBox="0 0 80 70">'
+         + '<circle cx="32" cy="32" r="30" fill="#1d8c22"/>'
+         + '<circle cx="32" cy="32" r="24" fill="#fff"/>'
+         + '<text x="32" y="28" text-anchor="middle" font-family="Arial" font-size="7" font-weight="900" fill="#1d8c22">ROYAL</text>'
+         + '<text x="32" y="38" text-anchor="middle" font-family="Arial" font-size="8" font-weight="900" fill="#1d8c22">-D</text>'
+         + '</svg>',
       name: 'บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด'
     },
     'บริษัท รอแยล-ดี (ไทยแลนด์)': {
@@ -1893,6 +1898,16 @@ function printCNForm(r){
          + '<text x="32" y="41" text-anchor="middle" font-family="Arial" font-size="5.5" font-weight="700" fill="#fff">(THAILAND)</text>'
          + '</svg>',
       name: 'บริษัท ควอลิแทต (ประเทศไทย) จำกัด'
+    },
+    // legacy / alias
+    'บริษัท อาร์ดี ดิสทริบิวชั่น': {
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="70" viewBox="0 0 80 70">'
+         + '<circle cx="32" cy="32" r="30" fill="#1d8c22"/>'
+         + '<circle cx="32" cy="32" r="24" fill="#fff"/>'
+         + '<text x="32" y="29" text-anchor="middle" font-family="Arial" font-size="7" font-weight="900" fill="#1d8c22">RD</text>'
+         + '<text x="32" y="40" text-anchor="middle" font-family="Arial" font-size="5" font-weight="700" fill="#1d8c22">DISTRIBUTION</text>'
+         + '</svg>',
+      name: 'บริษัท อาร์ดี ดิสทริบิวชั่น'
     }
   };
 
