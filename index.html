@@ -1864,52 +1864,24 @@ function printCNForm(r){
   // เก็บโลโก้แต่ละบริษัทเป็น base64 PNG ขนาดเล็ก
   // ถ้ายังไม่มีรูปจริงให้ใช้ SVG placeholder แทนก่อน
   // วิธีเพิ่มโลโก้จริง: แปลงรูปเป็น base64 แล้วใส่ใน LOGOS object
+  // ── COMPANY LOGO CONFIG ─────────────────────────────────────────
+  // เปลี่ยน BASE_URL ให้ตรงกับ GitHub repo ของคุณ
+  // รูปแบบ: https://raw.githubusercontent.com/USERNAME/REPO/main/assets/logos/
+  var LOGO_BASE = 'https://raw.githubusercontent.com/Royald-th/CN/main/assets/logos/';
+
   var LOGOS = {
     'บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด': {
-      // Royal-D: วงกลมเขียว + ตัวอักษร
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="70" viewBox="0 0 80 70">'
-         + '<circle cx="32" cy="32" r="30" fill="#1d8c22"/>'
-         + '<circle cx="32" cy="32" r="24" fill="#fff"/>'
-         + '<text x="32" y="28" text-anchor="middle" font-family="Arial" font-size="7" font-weight="900" fill="#1d8c22">ROYAL</text>'
-         + '<text x="32" y="38" text-anchor="middle" font-family="Arial" font-size="8" font-weight="900" fill="#1d8c22">-D</text>'
-         + '</svg>',
-      name: 'บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด'
-    },
-    'บริษัท รอแยล-ดี (ไทยแลนด์)': {
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="70" viewBox="0 0 80 70">'
-         + '<circle cx="32" cy="32" r="30" fill="#1d8c22"/>'
-         + '<circle cx="32" cy="32" r="24" fill="#fff"/>'
-         + '<text x="32" y="28" text-anchor="middle" font-family="Arial" font-size="7" font-weight="900" fill="#1d8c22">ROYAL</text>'
-         + '<text x="32" y="38" text-anchor="middle" font-family="Arial" font-size="8" font-weight="900" fill="#1d8c22">-D</text>'
-         + '</svg>',
+      url : LOGO_BASE + 'royal-d.png',
       name: 'บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด'
     },
     'บริษัท แฟนซีเวิล์ด จำกัด': {
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="70" viewBox="0 0 80 70">'
-         + '<rect x="4" y="8" width="56" height="48" rx="6" fill="#e91e8c"/>'
-         + '<text x="32" y="30" text-anchor="middle" font-family="Arial" font-size="7" font-weight="900" fill="#fff">FANCY</text>'
-         + '<text x="32" y="42" text-anchor="middle" font-family="Arial" font-size="7" font-weight="900" fill="#fff">WORLD</text>'
-         + '</svg>',
+      url : LOGO_BASE + 'fancyworld.png',
       name: 'บริษัท แฟนซีเวิล์ด จำกัด'
     },
     'บริษัท ควอลิแทต (ประเทศไทย) จำกัด': {
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="70" viewBox="0 0 80 70">'
-         + '<rect x="4" y="8" width="56" height="48" rx="6" fill="#1565c0"/>'
-         + '<text x="32" y="29" text-anchor="middle" font-family="Arial" font-size="6" font-weight="900" fill="#fff">QUALITAT</text>'
-         + '<text x="32" y="41" text-anchor="middle" font-family="Arial" font-size="5.5" font-weight="700" fill="#fff">(THAILAND)</text>'
-         + '</svg>',
+      url : LOGO_BASE + 'qualitat.png',
       name: 'บริษัท ควอลิแทต (ประเทศไทย) จำกัด'
     },
-    // legacy / alias
-    'บริษัท อาร์ดี ดิสทริบิวชั่น': {
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="70" viewBox="0 0 80 70">'
-         + '<circle cx="32" cy="32" r="30" fill="#1d8c22"/>'
-         + '<circle cx="32" cy="32" r="24" fill="#fff"/>'
-         + '<text x="32" y="29" text-anchor="middle" font-family="Arial" font-size="7" font-weight="900" fill="#1d8c22">RD</text>'
-         + '<text x="32" y="40" text-anchor="middle" font-family="Arial" font-size="5" font-weight="700" fill="#1d8c22">DISTRIBUTION</text>'
-         + '</svg>',
-      name: 'บริษัท อาร์ดี ดิสทริบิวชั่น'
-    }
   };
 
   // หาโลโก้ตาม company ที่เลือก
@@ -1921,7 +1893,10 @@ function printCNForm(r){
       if(companyKey.indexOf(k.replace(' จำกัด',''))>=0 || k.indexOf(companyKey)>=0) logoData=LOGOS[k];
     });
   }
-  var logoSvg = logoData ? logoData.svg : '';
+  // สร้าง HTML สำหรับโลโก้
+  var logoHtml = logoData
+    ? '<img src="'+logoData.url+'" style="max-width:68pt;max-height:40pt;object-fit:contain;display:block;" alt="logo" onerror="this.style.display=\047none\047"/>'
+    : '';
 
   var rows='';
   for(var i=0;i<11;i++){
@@ -2014,7 +1989,7 @@ html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background
 
   /* 1. Company Header — โลโก้ซ้าย + ชื่อบริษัทกลาง */
   html+='<div class="hd-wrap">'
-    +'<div class="hd-logo">'+(logoSvg||'<div style="width:64pt;height:38pt;"></div>')+'</div>'
+    +'<div class="hd-logo">'+(logoHtml||'<div style="width:68pt;height:40pt;"></div>')+'</div>'
     +'<div class="hd-center"><div class="co">'+esc(r.company||'บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด')+'</div></div>'
     +'<div class="hd-spacer"></div>'
     +'</div>';
