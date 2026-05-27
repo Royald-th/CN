@@ -685,7 +685,7 @@ select.fc option { background: var(--surface2); }
                   <option value="บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด">บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด</option>
                   <option value="บริษัท แฟนซีเวิล์ด จำกัด">บริษัท แฟนซีเวิล์ด จำกัด</option>
                   <option value="บริษัท ควอลิแทต (ประเทศไทย) จำกัด">บริษัท ควอลิแทต (ประเทศไทย) จำกัด</option>
-                </select> 
+                </select>
               </div>
               <div class="fg">
                 <label class="lbl">ประเภทใบแจ้ง <span class="req">*</span></label>
@@ -788,6 +788,86 @@ select.fc option { background: var(--surface2); }
               <table>
                 <thead><tr><th>#</th><th>ชื่อ-นามสกุล</th><th>Line UID</th><th>Role</th><th>วันที่สมัคร</th><th>รายการ CN</th></tr></thead>
                 <tbody id="users-tbl"><tr><td colspan="6" class="te">กำลังโหลด...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── VIEW: ARCHIVE ── -->
+        <div id="view-archive" style="display:none;">
+          <div class="stats" id="archive-stats-row" style="margin-bottom:16px;">
+            <div class="stat s0"><div class="stat-n" id="arc-total">0</div><div class="stat-l">รายการทั้งหมด</div></div>
+            <div class="stat s3"><div class="stat-n" id="arc-done">0</div><div class="stat-l">เสร็จสิ้น</div></div>
+          </div>
+          <div class="card">
+            <div class="card-hd">
+              <span class="card-title">รายการ CN ที่ Archive แล้ว</span>
+              <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                <button class="btn btn-ghost btn-sm" onclick="loadArchive()" title="รีเฟรช">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>รีเฟรช
+                </button>
+              </div>
+            </div>
+            <div class="filter-bar">
+              <input type="text" id="arc-search" class="fc" placeholder="🔍 ค้นหา เลขที่ / ลูกค้า..." oninput="filterArchive()" style="flex:2;min-width:180px;"/>
+              <input type="date" id="arc-from" class="fc" style="max-width:148px;" onchange="filterArchive()"/>
+              <input type="date" id="arc-to"   class="fc" style="max-width:148px;" onchange="filterArchive()"/>
+            </div>
+            <div class="tw">
+              <table>
+                <thead><tr><th>เลขที่</th><th>วันที่สร้าง</th><th>ผู้ทำรายการ</th><th>ลูกค้า</th><th>ประเภท</th><th>วันที่ Archive</th><th></th></tr></thead>
+                <tbody id="arc-tbl"><tr><td colspan="7" class="te">กำลังโหลด...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── VIEW: BACKUP ── -->
+        <div id="view-backup" style="display:none;">
+          <!-- Action cards -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:20px;">
+            <div class="card" style="border-left:3px solid var(--green);">
+              <div class="card-body" style="padding:18px;">
+                <div style="font-size:.88rem;font-weight:700;color:#E6EDF3;margin-bottom:5px;">💾 Backup ทันที</div>
+                <div style="font-size:.78rem;color:var(--txt2);margin-bottom:12px;">สำรองข้อมูล CN_Records ทั้งหมดไปยัง Sheet ใหม่ทันที</div>
+                <div class="fg" style="margin-bottom:10px;">
+                  <label class="lbl">หมายเหตุ (ไม่บังคับ)</label>
+                  <input type="text" id="bk-note" class="fc" placeholder="เช่น ก่อน deploy version ใหม่"/>
+                </div>
+                <button class="btn btn-pri btn-full" onclick="doBackupNow()">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  สำรองข้อมูลตอนนี้
+                </button>
+              </div>
+            </div>
+            <div class="card" style="border-left:3px solid var(--amber);">
+              <div class="card-body" style="padding:18px;">
+                <div style="font-size:.88rem;font-weight:700;color:#E6EDF3;margin-bottom:5px;">📦 Archive รายการเสร็จสิ้น</div>
+                <div style="font-size:.78rem;color:var(--txt2);margin-bottom:12px;">ย้ายรายการ CN ที่ "เสร็จสิ้น" ทั้งหมดไปยัง Archive Sheet เพื่อลดขนาดข้อมูล</div>
+                <div class="fg" style="margin-bottom:10px;">
+                  <label class="lbl">Archive รายการก่อนวันที่ (ไม่บังคับ)</label>
+                  <input type="date" id="arc-before" class="fc"/>
+                </div>
+                <button class="btn btn-full" style="background:var(--amber-d);border:1px solid var(--amber-b);color:var(--amber);font-weight:600;" onclick="doArchiveCompleted()">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                  Archive รายการเสร็จสิ้นทั้งหมด
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Backup list -->
+          <div class="card">
+            <div class="card-hd">
+              <span class="card-title">ประวัติการ Backup</span>
+              <button class="btn btn-ghost btn-sm" onclick="loadBackups()">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>รีเฟรช
+              </button>
+            </div>
+            <div class="tw">
+              <table>
+                <thead><tr><th>Backup ID</th><th>วันที่</th><th>ประเภท</th><th>จำนวน record</th><th>หมายเหตุ</th><th>Sheet</th></tr></thead>
+                <tbody id="bk-tbl"><tr><td colspan="6" class="te">กำลังโหลด...</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -984,6 +1064,8 @@ function buildNav(role){
   var iCal  = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
   var iDl   = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>';
   var iEye  = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var iArc  = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><line x1="10" y1="12" x2="14" y2="12"/></svg>';
+  var iBk   = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>';
 
   function navItem(view, label, icon, clickFn){
     return '<div class="nav-item"'+(view?' data-view="'+view+'"':'')+' onclick="'+clickFn+'">'+icon+label+'</div>';
@@ -1004,6 +1086,9 @@ function buildNav(role){
     html += navSection('รายงาน');
     html += navItem('','รายงานรายเดือน',iCal,"openMonthReport();");
     html += navItem('','Export CSV',iDl,"exportCSV();");
+    html += navSection('ข้อมูล');
+    html += navItem('view-archive','Archive',iArc,"showView('view-archive','รายการ CN ที่ Archive');loadArchive();");
+    html += navItem('view-backup','Backup & Restore',iBk,"showView('view-backup','Backup & Restore');loadBackups();");
 
   } else if(role === 'Warehouse'){
     // สิทธิ์เทียบเท่า Admin ยกเว้นจัดการ Users และลบ
@@ -1014,6 +1099,8 @@ function buildNav(role){
     html += navSection('รายงาน');
     html += navItem('','รายงานรายเดือน',iCal,"openMonthReport();");
     html += navItem('','Export CSV',iDl,"exportCSV();");
+    html += navSection('ข้อมูล');
+    html += navItem('view-archive','Archive',iArc,"showView('view-archive','รายการ CN ที่ Archive');loadArchive();");
 
   } else if(role === 'Accountant'){
     // ดูรายงานอย่างเดียว
@@ -1867,12 +1954,16 @@ function printCNForm(r){
   // ── COMPANY LOGO CONFIG ─────────────────────────────────────────
   // เปลี่ยน BASE_URL ให้ตรงกับ GitHub repo ของคุณ
   // รูปแบบ: https://raw.githubusercontent.com/USERNAME/REPO/main/assets/logos/
-  var LOGO_BASE = 'https://raw.githubusercontent.com/Royald-th/CN/main/assets/logos/';
+  var LOGO_BASE = 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/assets/logos/';
 
   var LOGOS = {
     'บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด': {
       url : LOGO_BASE + 'royal-d.png',
       name: 'บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด'
+    },
+    'บริษัท รอแยล-ดี (ไทยแลนด์)': {
+      url : LOGO_BASE + 'royal-d.png',
+      name: 'บริษัท รอแยล-ดี (ไทยแลนด์)'
     },
     'บริษัท แฟนซีเวิล์ด จำกัด': {
       url : LOGO_BASE + 'fancyworld.png',
@@ -1882,6 +1973,10 @@ function printCNForm(r){
       url : LOGO_BASE + 'qualitat.png',
       name: 'บริษัท ควอลิแทต (ประเทศไทย) จำกัด'
     },
+    'บริษัท อาร์ดี ดิสทริบิวชั่น': {
+      url : LOGO_BASE + 'royal-d.png',
+      name: 'บริษัท อาร์ดี ดิสทริบิวชั่น'
+    }
   };
 
   // หาโลโก้ตาม company ที่เลือก
@@ -2262,6 +2357,173 @@ function renderAdminPage(){
 }
 
 /* ══════════════════════════════════════════
+   ARCHIVE SYSTEM — Frontend
+   ══════════════════════════════════════════ */
+var archiveRecs = [];  // cache
+
+async function loadArchive(){
+  L.show('กำลังโหลด Archive...');
+  try{
+    var d = await apiGet({action:'getArchiveList', lineUID:ST.user.lineUID, role:ST.user.role});
+    L.hide();
+    if(!d.success){ toast('โหลด Archive ไม่สำเร็จ','error'); return; }
+    archiveRecs = d.records || [];
+    document.getElementById('arc-total').textContent = archiveRecs.length;
+    document.getElementById('arc-done').textContent  = archiveRecs.filter(function(r){ return r.status==='เสร็จสิ้น'; }).length;
+    renderArchiveTbl(archiveRecs);
+  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+}
+
+function renderArchiveTbl(recs){
+  var tb = document.getElementById('arc-tbl');
+  if(!recs || !recs.length){
+    tb.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-ico">📦</div>'
+      +'<div class="empty-title">ยังไม่มีรายการ Archive</div>'
+      +'<div class="empty-sub">รายการที่ "เสร็จสิ้น" สามารถ Archive เพื่อลดขนาดข้อมูลหลักได้</div></div></td></tr>';
+    return;
+  }
+  tb.innerHTML = recs.map(function(r){
+    var key = '_arc_'+r.id.replace(/\W/g,'_');
+    window[key] = r;
+    return '<tr>'
+      +'<td class="mono">'+esc(r.id)+'</td>'
+      +'<td style="font-size:.76rem;color:var(--txt2);">'+fDate(r.createdAt)+'</td>'
+      +'<td style="font-size:.76rem;color:var(--blue);">'+esc(r.creatorName)+'</td>'
+      +'<td style="font-weight:500;color:#E6EDF3;">'+esc(r.customerName)+'</td>'
+      +'<td style="font-size:.76rem;">'+esc(r.docType)+'</td>'
+      +'<td style="font-size:.76rem;color:var(--txt2);">'+fDate(r.archivedAt)+'</td>'
+      +'<td><div style="display:flex;gap:3px;">'
+      +(isAdminLevel()
+        ? '<button class="btn btn-out btn-xs" onclick="doRestoreArchive(\''+r.id+'\')" title="คืนกลับ CN_Records">↩ Restore</button>'
+        : '')
+      +'</div></td>'
+      +'</tr>';
+  }).join('');
+}
+
+function filterArchive(){
+  var q    = (document.getElementById('arc-search').value||'').toLowerCase();
+  var from = document.getElementById('arc-from').value;
+  var to   = document.getElementById('arc-to').value;
+  renderArchiveTbl(archiveRecs.filter(function(r){
+    var matchQ = !q || r.id.toLowerCase().includes(q) || (r.customerName||'').toLowerCase().includes(q) || (r.creatorName||'').toLowerCase().includes(q);
+    var matchF = !from || (r.archivedAt||'') >= from;
+    var matchT = !to   || (r.archivedAt||'') <= to+'T23:59:59';
+    return matchQ && matchF && matchT;
+  }));
+}
+
+// Archive รายการเดี่ยว (เรียกจาก admin table)
+async function doArchiveSingle(id){
+  var cid = (id||'').trim();
+  if(!confirm('Archive รายการ '+cid+' ?\nรายการจะย้ายไปที่ Archive Sheet และหายจากหน้าหลัก\n(สามารถ Restore กลับมาได้ทุกเมื่อ)')) return;
+  L.show('กำลัง Archive...');
+  try{
+    var d = await apiPost({action:'archiveCN', id:cid});
+    L.hide();
+    if(d.success){
+      toast('Archive รายการ '+cid+' สำเร็จ ✅','success');
+      await loadAdmin();
+    } else {
+      toast(d.message||'Archive ไม่สำเร็จ','error');
+    }
+  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+}
+
+async function doRestoreArchive(id){
+  var cid = (id||'').trim();
+  if(!confirm('Restore รายการ '+cid+' กลับไปยัง CN_Records หลัก?')) return;
+  L.show('กำลัง Restore...');
+  try{
+    var d = await apiPost({action:'restoreArchive', id:cid});
+    L.hide();
+    if(d.success){
+      toast('Restore รายการ '+cid+' สำเร็จ ✅','success');
+      await loadArchive();
+      await loadAdmin(); // refresh main list ด้วย
+    } else {
+      toast(d.message||'Restore ไม่สำเร็จ','error');
+    }
+  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+}
+
+/* ══════════════════════════════════════════
+   BACKUP SYSTEM — Frontend
+   ══════════════════════════════════════════ */
+async function loadBackups(){
+  L.show('กำลังโหลดประวัติ Backup...');
+  try{
+    var d = await apiGet({action:'getBackupList'});
+    L.hide();
+    if(!d.success){ toast('โหลดข้อมูล Backup ไม่สำเร็จ','error'); return; }
+    renderBackupTbl(d.backups||[]);
+  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+}
+
+function renderBackupTbl(backups){
+  var tb = document.getElementById('bk-tbl');
+  if(!backups || !backups.length){
+    tb.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="empty-ico">💾</div>'
+      +'<div class="empty-title">ยังไม่มี Backup</div>'
+      +'<div class="empty-sub">กดปุ่ม "สำรองข้อมูลตอนนี้" เพื่อสร้าง Backup แรก</div></div></td></tr>';
+    return;
+  }
+  tb.innerHTML = backups.map(function(bk){
+    var typeLabel = bk.type==='auto'
+      ? '<span class="bdg bp">🤖 Auto</span>'
+      : '<span class="bdg bd">👤 Manual</span>';
+    return '<tr>'
+      +'<td class="mono" style="font-size:.73rem;">'+esc(bk.backupId)+'</td>'
+      +'<td style="font-size:.76rem;color:var(--txt2);">'+fDate(bk.createdAt)+'</td>'
+      +'<td>'+typeLabel+'</td>'
+      +'<td style="text-align:center;font-weight:600;color:#E6EDF3;">'+esc(bk.recordCount)+'</td>'
+      +'<td style="font-size:.76rem;color:var(--txt2);">'+esc(bk.note||'-')+'</td>'
+      +'<td class="mono" style="font-size:.7rem;color:var(--txt3);">'+esc(bk.sheetName)+'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+async function doBackupNow(){
+  var note = (document.getElementById('bk-note')||{value:''}).value.trim();
+  if(!confirm('สร้าง Backup ข้อมูล CN_Records ทั้งหมดตอนนี้?')) return;
+  L.show('กำลังสำรองข้อมูล...');
+  try{
+    var d = await apiPost({action:'backupNow', type:'manual', note:note});
+    L.hide();
+    if(d.success){
+      toast('Backup สำเร็จ: '+d.backupId+' ('+d.recordCount+' records) ✅','success',5000);
+      document.getElementById('bk-note').value = '';
+      await loadBackups();
+    } else {
+      toast(d.message||'Backup ไม่สำเร็จ','error');
+    }
+  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+}
+
+async function doArchiveCompleted(){
+  var beforeDate = (document.getElementById('arc-before')||{value:''}).value;
+  var msg = beforeDate
+    ? 'Archive รายการ "เสร็จสิ้น" ทั้งหมดที่ completedAt ก่อน '+beforeDate+' ?'
+    : 'Archive รายการ "เสร็จสิ้น" ทั้งหมด?\n\nแนะนำให้ Backup ก่อนทุกครั้ง';
+  if(!confirm(msg)) return;
+  L.show('กำลัง Archive รายการเสร็จสิ้นทั้งหมด...');
+  try{
+    var payload = {action:'archiveCompleted'};
+    if(beforeDate) payload.beforeDate = beforeDate+'T23:59:59';
+    var d = await apiPost(payload);
+    L.hide();
+    if(d.success){
+      toast('Archive สำเร็จ: '+d.archivedCount+' รายการ ✅','success',5000);
+      if(document.getElementById('arc-before')) document.getElementById('arc-before').value='';
+      await loadAdmin();
+      if(document.getElementById('arc-tbl')) await loadArchive();
+    } else {
+      toast(d.message||'Archive ไม่สำเร็จ','error');
+    }
+  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+}
+
+/* ══════════════════════════════════════════
    INIT
    ══════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded',function(){
@@ -2304,7 +2566,13 @@ document.addEventListener('DOMContentLoaded',function(){
   window.toggleSidebar = toggleSidebar;
   window.removeExistingImg = removeExistingImg;
   window.renderExistingImgs = renderExistingImgs;
-  window.onReportModeChange = onReportModeChange;
+  window.loadArchive         = loadArchive;
+  window.filterArchive       = filterArchive;
+  window.doArchiveSingle     = doArchiveSingle;
+  window.doRestoreArchive    = doRestoreArchive;
+  window.loadBackups         = loadBackups;
+  window.doBackupNow         = doBackupNow;
+  window.doArchiveCompleted  = doArchiveCompleted;
   window.renderAdminPage = renderAdminPage;
 });
 </script>
