@@ -793,7 +793,28 @@ select.fc option { background: var(--surface2); }
           </div>
         </div>
 
-        <!-- ── VIEW: ARCHIVE ── -->
+        <!-- ── CONFIRM MODAL ── -->
+<div class="mov" id="confirm-mdl" onclick="closeConfirmMdl(event)">
+  <div class="mdl" style="max-width:420px;">
+    <div class="mhd" style="background:var(--surf2);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="confirm-mdl-icon" style="font-size:1.4rem;">⚠️</span>
+        <span style="font-weight:700;font-size:.92rem;color:#E6EDF3;" id="confirm-mdl-title">ยืนยันการดำเนินการ</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeConfirmMdl()" style="padding:3px 7px;">✕</button>
+    </div>
+    <div class="mbody">
+      <p id="confirm-mdl-body" style="font-size:.85rem;color:var(--txt);line-height:1.7;"></p>
+      <div id="confirm-mdl-detail" style="margin-top:10px;padding:10px 12px;background:var(--surf2);border-radius:var(--r);font-size:.78rem;color:var(--txt2);display:none;"></div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-ghost" onclick="closeConfirmMdl()">ยกเลิก</button>
+      <button class="btn" id="confirm-mdl-ok" style="min-width:110px;justify-content:center;">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── VIEW: ARCHIVE ── -->
         <div id="view-archive" style="display:none;">
           <div class="stats" id="archive-stats-row" style="margin-bottom:16px;">
             <div class="stat s0"><div class="stat-n" id="arc-total">0</div><div class="stat-l">รายการทั้งหมด</div></div>
@@ -866,7 +887,7 @@ select.fc option { background: var(--surface2); }
             </div>
             <div class="tw">
               <table>
-                <thead><tr><th>Backup ID</th><th>วันที่</th><th>ประเภท</th><th>จำนวน record</th><th>หมายเหตุ</th><th>Sheet</th></tr></thead>
+                <thead><tr><th>Backup ID</th><th>วันที่</th><th>ประเภท</th><th>จำนวน record</th><th>หมายเหตุ</th><th>ไฟล์</th><th>Drive</th></tr></thead>
                 <tbody id="bk-tbl"><tr><td colspan="6" class="te">กำลังโหลด...</td></tr></tbody>
               </table>
             </div>
@@ -1612,7 +1633,8 @@ async function doUploadAll(cnId){
     if(prog) prog.textContent = (i+1)+'/'+toUpload.length;
     var ext = item.mime.split('/')[1] || 'jpg';
     var fileName = cnId+'_'+(i+1)+'_'+Date.now()+'.'+ext;
-    var d = await apiPost({action:'uploadImage', base64:item.b64, mimeType:item.mime, fileName:fileName, cnId:cnId});
+    var userName = ST.user ? (ST.user.firstName+' '+ST.user.lastName) : 'Unknown';
+    var d = await apiPost({action:'uploadImage', base64:item.b64, mimeType:item.mime, fileName:fileName, cnId:cnId, userName:userName});
     if(d.success){ item.url = d.imageUrl; renderImgPreview(); }
     else { document.getElementById('uloading').style.display='none'; throw new Error('อัปโหลด '+item.name+' ไม่สำเร็จ: '+(d.message||'')); }
   }
@@ -2406,37 +2428,84 @@ function filterArchive(){
 }
 
 // Archive รายการเดี่ยว (เรียกจาก admin table)
-async function doArchiveSingle(id){
+function doArchiveSingle(id){
   var cid = (id||'').trim();
-  if(!confirm('Archive รายการ '+cid+' ?\nรายการจะย้ายไปที่ Archive Sheet และหายจากหน้าหลัก\n(สามารถ Restore กลับมาได้ทุกเมื่อ)')) return;
-  L.show('กำลัง Archive...');
-  try{
-    var d = await apiPost({action:'archiveCN', id:cid});
-    L.hide();
-    if(d.success){
-      toast('Archive รายการ '+cid+' สำเร็จ ✅','success');
-      await loadAdmin();
-    } else {
-      toast(d.message||'Archive ไม่สำเร็จ','error');
+  openConfirmMdl({
+    icon:'📦', title:'Archive รายการ '+cid,
+    body:'รายการจะย้ายไปที่ Archive Sheet และหายจากหน้าหลัก',
+    detail:'สามารถ Restore กลับมาได้ทุกเมื่อจากหน้า Archive',
+    okLabel:'Archive เลย', okClass:'btn-danger',
+    onOk: async function(){
+      L.show('กำลัง Archive...');
+      try{
+        var d = await apiPost({action:'archiveCN', id:cid});
+        L.hide();
+        if(d.success){
+          toast('Archive รายการ '+cid+' สำเร็จ ✅','success');
+          await loadAdmin();
+        } else {
+          toast(d.message||'Archive ไม่สำเร็จ','error');
+        }
+      }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
     }
-  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+  });
 }
 
-async function doRestoreArchive(id){
+function doRestoreArchive(id){
   var cid = (id||'').trim();
-  if(!confirm('Restore รายการ '+cid+' กลับไปยัง CN_Records หลัก?')) return;
-  L.show('กำลัง Restore...');
-  try{
-    var d = await apiPost({action:'restoreArchive', id:cid});
-    L.hide();
-    if(d.success){
-      toast('Restore รายการ '+cid+' สำเร็จ ✅','success');
-      await loadArchive();
-      await loadAdmin(); // refresh main list ด้วย
-    } else {
-      toast(d.message||'Restore ไม่สำเร็จ','error');
+  openConfirmMdl({
+    icon:'🔄', title:'Restore รายการ '+cid,
+    body:'ต้องการ Restore รายการนี้กลับไปยัง CN_Records หลักใช่หรือไม่?',
+    detail:'รายการจะกลับมาปรากฏในหน้าหลักและลบออกจาก Archive',
+    okLabel:'Restore', okClass:'btn-pri',
+    onOk: async function(){
+      L.show('กำลัง Restore...');
+      try{
+        var d = await apiPost({action:'restoreArchive', id:cid});
+        L.hide();
+        if(d.success){
+          toast('Restore รายการ '+cid+' สำเร็จ ✅','success');
+          await loadArchive();
+          await loadAdmin();
+        } else {
+          toast(d.message||'Restore ไม่สำเร็จ','error');
+        }
+      }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
     }
-  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+  });
+}
+
+/* ══════════════════════════════════════════
+   CONFIRM MODAL — pretty popup แทน browser confirm()
+   ══════════════════════════════════════════ */
+var _confirmCallback = null;
+
+function openConfirmMdl(opts){
+  // opts: { title, body, detail, okLabel, okClass, icon, onOk }
+  opts = opts || {};
+  document.getElementById('confirm-mdl-icon').textContent  = opts.icon    || '⚠️';
+  document.getElementById('confirm-mdl-title').textContent = opts.title   || 'ยืนยันการดำเนินการ';
+  document.getElementById('confirm-mdl-body').textContent  = opts.body    || '';
+  var detailEl = document.getElementById('confirm-mdl-detail');
+  if(opts.detail){ detailEl.style.display='block'; detailEl.textContent=opts.detail; }
+  else            { detailEl.style.display='none'; }
+  var okBtn = document.getElementById('confirm-mdl-ok');
+  okBtn.textContent  = opts.okLabel || 'ยืนยัน';
+  okBtn.className    = 'btn '+(opts.okClass||'btn-pri');
+  okBtn.style.minWidth = '110px';
+  okBtn.style.justifyContent = 'center';
+  _confirmCallback = opts.onOk || null;
+  okBtn.onclick = function(){
+    closeConfirmMdl();
+    if(_confirmCallback) _confirmCallback();
+  };
+  document.getElementById('confirm-mdl').classList.add('on');
+}
+
+function closeConfirmMdl(e){
+  if(e && e.target !== document.getElementById('confirm-mdl')) return;
+  document.getElementById('confirm-mdl').classList.remove('on');
+  _confirmCallback = null;
 }
 
 /* ══════════════════════════════════════════
@@ -2455,64 +2524,100 @@ async function loadBackups(){
 function renderBackupTbl(backups){
   var tb = document.getElementById('bk-tbl');
   if(!backups || !backups.length){
-    tb.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="empty-ico">💾</div>'
+    tb.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-ico">💾</div>'
       +'<div class="empty-title">ยังไม่มี Backup</div>'
       +'<div class="empty-sub">กดปุ่ม "สำรองข้อมูลตอนนี้" เพื่อสร้าง Backup แรก</div></div></td></tr>';
     return;
   }
   tb.innerHTML = backups.map(function(bk){
-    var typeLabel = bk.type==='auto'
-      ? '<span class="bdg bp">🤖 Auto</span>'
-      : '<span class="bdg bd">👤 Manual</span>';
+    var isMonthly = bk.type==='monthly';
+    var typeLabel = isMonthly
+      ? '<span class="bdg bp">📅 Monthly</span>'
+      : bk.type==='auto'
+        ? '<span class="bdg bw">🤖 Auto</span>'
+        : '<span class="bdg bd">👤 Manual</span>';
+    var driveCell = bk.driveUrl
+      ? '<a href="'+esc(bk.driveUrl)+'" target="_blank" class="btn btn-ghost btn-xs" style="color:var(--blue);padding:2px 7px;">📂 Drive</a>'
+      : '<span style="color:var(--muted);font-size:.72rem;">-</span>';
     return '<tr>'
       +'<td class="mono" style="font-size:.73rem;">'+esc(bk.backupId)+'</td>'
       +'<td style="font-size:.76rem;color:var(--txt2);">'+fDate(bk.createdAt)+'</td>'
       +'<td>'+typeLabel+'</td>'
       +'<td style="text-align:center;font-weight:600;color:#E6EDF3;">'+esc(bk.recordCount)+'</td>'
       +'<td style="font-size:.76rem;color:var(--txt2);">'+esc(bk.note||'-')+'</td>'
-      +'<td class="mono" style="font-size:.7rem;color:var(--txt3);">'+esc(bk.sheetName)+'</td>'
+      +'<td class="mono" style="font-size:.7rem;color:var(--txt3);">'+esc(bk.driveFileName||bk.sheetName||'-')+'</td>'
+      +'<td style="text-align:center;">'+driveCell+'</td>'
       +'</tr>';
   }).join('');
 }
 
 async function doBackupNow(){
   var note = (document.getElementById('bk-note')||{value:''}).value.trim();
-  if(!confirm('สร้าง Backup ข้อมูล CN_Records ทั้งหมดตอนนี้?')) return;
-  L.show('กำลังสำรองข้อมูล...');
-  try{
-    var d = await apiPost({action:'backupNow', type:'manual', note:note});
-    L.hide();
-    if(d.success){
-      toast('Backup สำเร็จ: '+d.backupId+' ('+d.recordCount+' records) ✅','success',5000);
-      document.getElementById('bk-note').value = '';
-      await loadBackups();
-    } else {
-      toast(d.message||'Backup ไม่สำเร็จ','error');
+  var recs = adminRecs.length;
+  openConfirmMdl({
+    icon:'💾', title:'สำรองข้อมูล (Backup)',
+    body:'ต้องการสำรองข้อมูล CN_Records ทั้งหมดตอนนี้ใช่หรือไม่?',
+    detail:'จำนวน record ปัจจุบัน: '+recs+' รายการ'+(note?' | หมายเหตุ: '+note:''),
+    okLabel:'สำรองข้อมูล', okClass:'btn-pri',
+    onOk: async function(){
+      L.show('กำลังสำรองข้อมูลไปยัง Google Drive...');
+      try{
+        var d = await apiPost({action:'backupNow', type:'manual', note:note});
+        L.hide();
+        if(d.success){
+          document.getElementById('bk-note').value='';
+          await loadBackups();
+          openConfirmMdl({
+            icon:'✅', title:'Backup สำเร็จ',
+            body:'สำรองข้อมูลเรียบร้อยแล้ว',
+            detail:'Backup ID: '+d.backupId+' | จำนวน: '+d.recordCount+' records | โฟลเดอร์: '+(d.folder||''),
+
+
+            okLabel:'ดูไฟล์ใน Drive', okClass:'btn-out',
+            onOk: function(){ if(d.driveUrl) window.open(d.driveUrl,'_blank'); }
+          });
+        } else { toast(d.message||'Backup ไม่สำเร็จ','error'); }
+      }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
     }
-  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+  });
 }
 
 async function doArchiveCompleted(){
   var beforeDate = (document.getElementById('arc-before')||{value:''}).value;
-  var msg = beforeDate
-    ? 'Archive รายการ "เสร็จสิ้น" ทั้งหมดที่ completedAt ก่อน '+beforeDate+' ?'
-    : 'Archive รายการ "เสร็จสิ้น" ทั้งหมด?\n\nแนะนำให้ Backup ก่อนทุกครั้ง';
-  if(!confirm(msg)) return;
-  L.show('กำลัง Archive รายการเสร็จสิ้นทั้งหมด...');
-  try{
-    var payload = {action:'archiveCompleted'};
-    if(beforeDate) payload.beforeDate = beforeDate+'T23:59:59';
-    var d = await apiPost(payload);
-    L.hide();
-    if(d.success){
-      toast('Archive สำเร็จ: '+d.archivedCount+' รายการ ✅','success',5000);
-      if(document.getElementById('arc-before')) document.getElementById('arc-before').value='';
-      await loadAdmin();
-      if(document.getElementById('arc-tbl')) await loadArchive();
-    } else {
-      toast(d.message||'Archive ไม่สำเร็จ','error');
+  var doneCount  = adminRecs.filter(function(r){
+    if(r.status!=='เสร็จสิ้น') return false;
+    if(beforeDate && r.completedAt && r.completedAt>beforeDate+'T23:59:59') return false;
+    return true;
+  }).length;
+  var detailMsg = 'รายการที่จะถูก Archive: '+doneCount+' รายการ'+(beforeDate?' | เฉพาะก่อน: '+beforeDate:'')+' | ⚠️ แนะนำ Backup ก่อนทุกครั้ง';
+  openConfirmMdl({
+    icon:'📦', title:'Archive รายการเสร็จสิ้นทั้งหมด',
+    body:'รายการที่ Archive แล้วจะย้ายออกจากหน้าหลักไปยัง Archive Sheet และบันทึก CSV ลง Google Drive',
+    detail: detailMsg,
+    okLabel:'Archive เลย', okClass:'btn-danger',
+    onOk: async function(){
+      L.show('กำลัง Archive...');
+      try{
+        var payload={action:'archiveCompleted'};
+        if(beforeDate) payload.beforeDate=beforeDate+'T23:59:59';
+        var d=await apiPost(payload);
+        L.hide();
+        if(d.success){
+          var arcBefore=document.getElementById('arc-before');
+          if(arcBefore) arcBefore.value='';
+          await loadAdmin();
+          if(document.getElementById('arc-tbl')) await loadArchive();
+          openConfirmMdl({
+            icon:'✅', title:'Archive สำเร็จ',
+            body:'ย้ายรายการไปยัง Archive เรียบร้อยแล้ว',
+            detail:'จำนวนที่ Archive: '+d.archivedCount+' รายการ | CSV บันทึกลง Drive/Archives/'+new Date().getFullYear()+'/',
+            okLabel:'ดู Archive', okClass:'btn-out',
+            onOk:function(){ showView('view-archive','รายการ CN ที่ Archive'); loadArchive(); }
+          });
+        } else { toast(d.message||'Archive ไม่สำเร็จ','error'); }
+      }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
     }
-  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+  });
 }
 
 /* ══════════════════════════════════════════
@@ -2565,6 +2670,8 @@ document.addEventListener('DOMContentLoaded',function(){
   window.loadBackups         = loadBackups;
   window.doBackupNow         = doBackupNow;
   window.doArchiveCompleted  = doArchiveCompleted;
+  window.openConfirmMdl      = openConfirmMdl;
+  window.closeConfirmMdl     = closeConfirmMdl;
   window.renderAdminPage = renderAdminPage;
 });
 </script>
