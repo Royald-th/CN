@@ -1306,11 +1306,26 @@ function viewDetail(id,isAdmin){
         +'</tr>';}).join('')
       +'</tbody></table>'
     :'<span style="color:var(--muted);">-</span>';
-  var proof=r.imageUrl
-    ?'<div><div class="lbl" style="margin-top:10px;">รูปภาพหลักฐาน</div>'
-      +'<div class="piw"><img src="https://drive.google.com/thumbnail?id='+driveId(r.imageUrl)+'&sz=w400" onerror="this.style.display=\'none\'" alt=""/>'
-      +'<a href="'+r.imageUrl+'" target="_blank" rel="noopener">🔗 เปิดใน Google Drive</a></div></div>':'' ;
-  var key='_cn_'+r.id.replace(/\W/g,'_');window[key]=r;
+  var proof = '';
+  if(r.imageUrl){
+    var imgUrls = r.imageUrl.split(',').filter(Boolean);
+    var imgGrid = imgUrls.map(function(url, imgIdx){
+      var fid = '';
+      var m = url.match(/[/]d[/]([a-zA-Z0-9_-]+)/);
+      if(m) fid = m[1];
+      var thumb = fid ? 'https://drive.google.com/thumbnail?id='+fid+'&sz=w200' : url;
+      return '<a href="'+esc(url)+'" target="_blank" rel="noopener" style="display:block;width:90px;text-decoration:none;">'
+        +'<img src="'+thumb+'" style="width:90px;height:90px;object-fit:cover;border-radius:6px;border:1px solid var(--border);display:block;" alt="รูป '+(imgIdx+1)+'"/>'
+        +'<div style="font-size:.6rem;color:var(--muted);text-align:center;margin-top:2px;padding:0 2px;">รูป '+(imgIdx+1)+'</div>'
+        +'</a>';
+    }).join('');
+    proof = '<div><div class="lbl" style="margin-top:10px;">รูปภาพหลักฐาน'
+      +(imgUrls.length>1?' <span style="color:var(--muted);font-weight:400;font-size:.7rem;">('+imgUrls.length+' รูป)</span>':'')
+      +'</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">'+imgGrid+'</div>'
+      +'</div>';
+  }
+    var key='_cn_'+r.id.replace(/\W/g,'_');window[key]=r;
 
   openMdl('รายละเอียด CN',
     '<div style="display:grid;gap:11px;">'
@@ -1328,7 +1343,11 @@ function viewDetail(id,isAdmin){
     +'<div><div class="lbl">สาเหตุ</div><div style="white-space:pre-wrap;color:#C9D1D9;font-size:.82rem;">'+esc(r.reason||'-')+'</div></div>'
     +(r.billRef?'<div><div class="lbl">ตัดบิลเลขที่</div><div class="mono">'+esc(r.billRef)+'</div></div>':'')
     +(r.exchangeTo?'<div><div class="lbl">เปลี่ยนเป็น</div><div style="color:#E6EDF3;">'+esc(r.exchangeTo)+'</div></div>':'')
+    +'<div class="g2" style="gap:10px;">'
     +'<div><div class="lbl">สถานะ</div>'+badge(r.status)+'</div>'
+    +(r.processingAt?'<div><div class="lbl">เริ่มดำเนินการ</div><div style="color:var(--blue);font-size:.82rem;">'+fDateFull(r.processingAt)+'</div></div>':'<div></div>')
+    +'</div>'
+    +(r.completedAt?'<div><div class="lbl">วันที่เสร็จสิ้น</div><div style="color:var(--green);font-size:.82rem;">'+fDateFull(r.completedAt)+'</div></div>':'')
     +proof
     +'</div>',
     (isAdminLevel()&&(r.status==='กำลังดำเนินการ'||r.status==='เสร็จสิ้น')?'<button class="btn btn-outline btn-sm" onclick="printCNForm(window[\''+key+'\'])">🖨 ปริ้นท์ฟอร์ม</button>':isAdminLevel()?'<button class="btn btn-ghost btn-sm" style="opacity:.4;cursor:not-allowed;" disabled title="ต้องเปลี่ยนสถานะเป็น กำลังดำเนินการ ก่อน">🖨 (ยังพิมพ์ไม่ได้)</button>':'')
@@ -1633,8 +1652,10 @@ async function doUploadAll(cnId){
     if(prog) prog.textContent = (i+1)+'/'+toUpload.length;
     var ext = item.mime.split('/')[1] || 'jpg';
     var fileName = cnId+'_'+(i+1)+'_'+Date.now()+'.'+ext;
-    var userName = ST.user ? (ST.user.firstName+' '+ST.user.lastName) : 'Unknown';
-    var d = await apiPost({action:'uploadImage', base64:item.b64, mimeType:item.mime, fileName:fileName, cnId:cnId, userName:userName});
+    // ใช้ creatorName ของ CN (คนสร้าง) ไม่ใช่คนล็อกอิน
+    var editRec = adminRecs.find(function(r){ return String(r.id).trim()===cnId; });
+    var creatorName = editRec ? (editRec.creatorName || '') : (ST.user ? ST.user.firstName+' '+ST.user.lastName : 'Unknown');
+    var d = await apiPost({action:'uploadImage', base64:item.b64, mimeType:item.mime, fileName:fileName, cnId:cnId, creatorName:creatorName});
     if(d.success){ item.url = d.imageUrl; renderImgPreview(); }
     else { document.getElementById('uloading').style.display='none'; throw new Error('อัปโหลด '+item.name+' ไม่สำเร็จ: '+(d.message||'')); }
   }
@@ -1761,9 +1782,13 @@ async function confirmStatusChange(cnId){
     toast('กรุณาอัปโหลดรูปภาพหลักฐานก่อน','error'); return;
   }
 
+  // หา creatorName ของ CN นี้ (ชื่อคนสร้าง ไม่ใช่คนล็อกอิน)
+  var cnRec = adminRecs.find(function(r){ return String(r.id).trim()===cnId; });
+  var creatorName = cnRec ? (cnRec.creatorName || '') : '';
+
   L.show('กำลังบันทึกสถานะ...');
   try{
-    // อัปโหลดรูปทั้งหมด (ถ้ามี)
+    // อัปโหลดรูปทั้งหมด — ส่ง creatorName ไปด้วยเพื่อให้ folder ถูก
     var imageUrl = undefined;
     if(smImgQueue.length){
       var uploadedUrls = [];
@@ -1777,7 +1802,8 @@ async function confirmStatusChange(cnId){
           action:'uploadImage',
           base64:item.b64, mimeType:item.mime,
           fileName:cnId+'_'+(i+1)+'_'+Date.now()+'.'+ext,
-          cnId:cnId
+          cnId:cnId,
+          creatorName:creatorName
         });
         if(d.success) uploadedUrls.push(d.imageUrl);
         else{ L.hide(); toast('อัปโหลดรูป '+(i+1)+' ไม่สำเร็จ: '+(d.message||''),'error'); return; }
@@ -2217,7 +2243,7 @@ html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background
   w.document.write(html);
   w.document.close();
 }
-
+   
 /* ══════════════════════════════════════════
    TOAST NOTIFICATION
    ══════════════════════════════════════════ */
