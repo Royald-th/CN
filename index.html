@@ -256,12 +256,13 @@ body {
 .btn-danger:hover { background: var(--red-dim); }
 .btn-sm { padding: 4px 10px; font-size: .76rem; }
 .btn-xs { padding: 2px 8px; font-size: .72rem; }
+.btn-sm { padding: 6px 13px; font-size: .80rem; min-height: 34px; border-radius: 6px; }
 .btn-full { width: 100%; justify-content: center; }
 
 /* Badges */
 .badge {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 2px 8px;
+  padding: 4px 12px;
   border-radius: 20px;
   font-size: .72rem; font-weight: 600;
   border: 1px solid transparent;
@@ -284,13 +285,14 @@ th {
   white-space: nowrap;
 }
 td {
-  padding: 10px 12px;
+  padding: 11px 13px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
   color: #C9D1D9;
 }
 tr:last-child td { border-bottom: none; }
-tbody tr { transition: background .1s; }
+tbody tr { transition: background .15s; }
+tbody tr:hover { background: rgba(88,166,255,.07); cursor: pointer; }
 tbody tr:hover td { background: var(--surface2); }
 .te { text-align: center; padding: 40px; color: var(--muted); font-size: .85rem; }
 .mono { font-family: var(--mono); font-size: .76rem; color: var(--blue); }
@@ -685,11 +687,11 @@ select.fc option { background: var(--surface2); }
               <div id="form-err" class="alert ae" style="margin-bottom:12px;"></div>
               <div class="fg">
                 <label class="lbl">บริษัท <span class="req">*</span></label>
-                <select id="f-co" class="fc">
+                <select id="f-co" class="fc" onchange="updateDocIdPreview()">
                   <option value="">-- เลือกบริษัท --</option>
-                  <option value="บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด">บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด</option>
-                  <option value="บริษัท แฟนซีเวิล์ด จำกัด">บริษัท แฟนซีเวิล์ด จำกัด</option>
-                  <option value="บริษัท ควอลิแทต (ประเทศไทย) จำกัด">บริษัท ควอลิแทต (ประเทศไทย) จำกัด</option>
+                  <option value="รอแยล-ดี (ไทยแลนด์)">บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด</option>
+                  <option value="แฟนซีเวิล์ด">บริษัท แฟนซีเวิล์ด จำกัด</option>
+                  <option value="ควอลิแทต (ประเทศไทย)">บริษัท ควอลิแทต (ประเทศไทย) จำกัด</option>
                 </select>
               </div>
               <div class="fg">
@@ -1242,14 +1244,14 @@ function renderUserTbl(recs){
   tb.innerHTML=recs.map(function(r){
     var key='_cn_'+r.id.replace(/\W/g,'_');
     window[key]=r;
-    return '<tr>'
-      +'<td class="mono">'+r.id+'</td>'
-      +'<td style="font-size:.78rem;color:var(--muted);">'+fDate(r.createdAt)+'</td>'
-      +'<td style="font-size:.78rem;">'+r.docType+'</td>'
-      +'<td style="font-weight:500;color:#E6EDF3;">'+esc(r.customerName)+'</td>'
+    return '<tr style="height:52px;">'
+      +'<td class="mono" style="font-size:.8rem;font-weight:600;">'+r.id+'</td>'
+      +'<td style="font-size:.8rem;color:var(--muted);white-space:nowrap;">'+fDate(r.createdAt)+'</td>'
+      +'<td style="font-size:.8rem;">'+r.docType+'</td>'
+      +'<td style="font-weight:600;color:#E6EDF3;font-size:.88rem;">'+esc(r.customerName)+'</td>'
       +'<td>'+badge(r.status)+'</td>'
-      +'<td><div style="display:flex;gap:4px;">'
-      +'<button class="btn btn-ghost btn-xs" onclick="viewDetail(\''+r.id+'\',false)">ดู</button>'
+      +'<td><div style="display:flex;gap:5px;">'
+      +'<button class="btn btn-ghost btn-sm" onclick="viewDetail(\''+r.id+'\',false)" title="ดูรายละเอียด">👁 ดู</button>'
       +'</div></td>'
       +'</tr>';
   }).join('');
@@ -1314,31 +1316,40 @@ function renderAdminTbl(recs){
     tb.innerHTML='<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">ไม่พบรายการ</div><div class="empty-sub">ลองเปลี่ยนเงื่อนไขการค้นหา</div></div></td></tr>';
     return;
   }
-  var canEdit  = isAdminLevel();
-  var canPrint = isAdminLevel();
+  var canEdit    = isAdminLevel();
+  var canPrint   = isAdminLevel();
+  var isAdmin    = ST.user && ST.user.role === 'Admin';
+  var isWarehouse= ST.user && ST.user.role === 'Warehouse';
   tb.innerHTML=recs.map(function(r){
     var key='_cn_'+r.id.replace(/\W/g,'_');
     window[key]=r;
     var printOk = canPrint && (r.status==='กำลังดำเนินการ'||r.status==='เสร็จสิ้น');
     var printBtn = canPrint
       ? (printOk
-          ? '<button class="btn btn-ghost btn-xs" onclick="printCNForm(window[\''+key+'\'])" title="พิมพ์ฟอร์ม PDF">🖨</button>'
-          : '<button class="btn btn-ghost btn-xs" style="opacity:.3;cursor:not-allowed;" title="ต้องเปลี่ยนสถานะเป็นกำลังดำเนินการก่อน" disabled>🖨</button>')
+          ? '<button class="btn btn-ghost btn-sm" onclick="printCNForm(window[\''+key+'\'])" title="พิมพ์ฟอร์ม PDF">🖨</button>'
+          : '<button class="btn btn-ghost btn-sm" style="opacity:.3;cursor:not-allowed;" title="ต้องเปลี่ยนสถานะเป็นกำลังดำเนินการก่อน" disabled>🖨</button>')
       : '';
-    return '<tr>'
-      +'<td class="mono">'+r.id+'</td>'
-      +'<td style="font-size:.76rem;color:var(--muted);">'+fDate(r.createdAt)+'</td>'
-      +'<td style="font-size:.76rem;color:var(--blue);">'+esc(r.creatorName)+'</td>'
-      +'<td style="font-size:.74rem;">'+r.docType+'</td>'
-      +'<td style="font-weight:500;color:#E6EDF3;">'+esc(r.customerName)+'</td>'
-      +'<td style="font-size:.76rem;color:var(--muted);">'+esc(r.province)+(r.district?' / '+esc(r.district):'')+'</td>'
+    // Warehouse ลบได้เฉพาะรายการที่ไม่ใช่ "เสร็จสิ้น"
+    var canDelete = isAdmin || (isWarehouse && r.status !== 'เสร็จสิ้น');
+    var deleteBtn = canDelete
+      ? '<button class="btn btn-danger btn-sm" onclick="doDelete(\''+r.id+'\')" title="ลบรายการ">🗑</button>'
+      : (isWarehouse && r.status==='เสร็จสิ้น'
+          ? '<button class="btn btn-ghost btn-sm" style="opacity:.25;cursor:not-allowed;" title="ไม่สามารถลบรายการที่เสร็จสิ้นแล้ว" disabled>🗑</button>'
+          : '');
+    return '<tr style="height:52px;">'
+      +'<td class="mono" style="font-size:.78rem;font-weight:600;">'+r.id+'</td>'
+      +'<td style="font-size:.78rem;color:var(--muted);white-space:nowrap;">'+fDate(r.createdAt)+'</td>'
+      +'<td style="font-size:.8rem;color:var(--blue);font-weight:500;">'+esc(r.creatorName)+'</td>'
+      +'<td style="font-size:.76rem;">'+r.docType+'</td>'
+      +'<td style="font-weight:600;color:#E6EDF3;font-size:.85rem;">'+esc(r.customerName)+'</td>'
+      +'<td style="font-size:.78rem;color:var(--muted);">'+esc(r.province)+(r.district?' / '+esc(r.district):'')+'</td>'
       +'<td>'+badge(r.status)+'</td>'
-      +'<td><div style="display:flex;gap:3px;flex-wrap:wrap;">'
-      +'<button class="btn btn-ghost btn-xs" onclick="viewDetail(\''+r.id+'\',true)">ดู</button>'
+      +'<td><div style="display:flex;gap:5px;flex-wrap:nowrap;align-items:center;">'
+      +'<button class="btn btn-ghost btn-sm" onclick="viewDetail(\''+r.id+'\',true)" title="ดูรายละเอียด">👁</button>'
       +printBtn
-      +(canEdit ? '<button class="btn btn-ghost btn-xs" onclick="openStatusModal(\''+r.id+'\',\''+r.status+'\')" title="เปลี่ยนสถานะ">🔄</button>' : '')
-      +(canEdit ? '<button class="btn btn-outline btn-xs" onclick="openForm(\''+r.id+'\',true)">แก้ไข</button>' : '')
-      +(ST.user&&ST.user.role==='Admin' ? '<button class="btn btn-danger btn-xs" onclick="doDelete(\''+r.id+'\')">ลบ</button>' : '')
+      +(canEdit ? '<button class="btn btn-pri btn-sm" onclick="openStatusModal(\''+r.id+'\',\''+r.status+'\')" title="เปลี่ยนสถานะ">🔄</button>' : '')
+      +(canEdit ? '<button class="btn btn-outline btn-sm" onclick="openForm(\''+r.id+'\',true)" title="แก้ไข">✏️</button>' : '')
+      +deleteBtn
       +'</div></td>'
       +'</tr>';
   }).join('');
@@ -1358,16 +1369,25 @@ function doFilter(){
   paginateAdmin(filtered);
 }
 
-async function doDelete(id){
-  var cid=(id||'').trim();
-  if(!confirm('ต้องการลบรายการ '+cid+' ใช่หรือไม่?'))return;
-  L.show('กำลังลบ...');
-  try{
-    var d=await apiPost({action:'deleteCN',id:cid});
-    L.hide();
-    if(d.success){ toast('ลบรายการ '+cid+' สำเร็จ','success'); await loadAdmin(); }
-    else toast('เกิดข้อผิดพลาด: '+(d.message||''),'error');
-  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+function doDelete(id){
+  var cid = (id||'').trim();
+  var rec = adminRecs.find(function(r){ return String(r.id).trim()===cid; });
+  var statusLabel = rec ? rec.status : '';
+  openConfirmMdl({
+    icon:'🗑', title:'ลบรายการ '+cid,
+    body:'ต้องการลบรายการนี้ออกจากระบบใช่หรือไม่?',
+    detail: statusLabel ? 'สถานะปัจจุบัน: '+statusLabel+' | การลบไม่สามารถย้อนคืนได้' : 'การลบไม่สามารถย้อนคืนได้',
+    okLabel:'ลบเลย', okClass:'btn-danger',
+    onOk: async function(){
+      L.show('กำลังลบ...');
+      try{
+        var d = await apiPost({action:'deleteCN', id:cid, role: ST.user ? ST.user.role : ''});
+        L.hide();
+        if(d.success){ toast('ลบรายการ '+cid+' สำเร็จ','success'); await loadAdmin(); }
+        else toast(d.message||'เกิดข้อผิดพลาด','error');
+      }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+    }
+  });
 }
 
 /* ══════════════════════════════════════════
@@ -1509,6 +1529,7 @@ function openForm(editId,fromAdmin){
   document.getElementById('f-bill-group').style.display='none';
   document.getElementById('f-exchange-group').style.display='none';
   document.getElementById('form-id-badge').textContent='';
+  updateDocIdPreview();
   hideErr('form-err');
   uzClear(); imgQueue=[]; existingUrls=[];
   var eg=document.getElementById('existing-imgs'); if(eg) eg.style.display='none';
@@ -1761,8 +1782,9 @@ async function doUploadAll(cnId){
   for(var i=0; i<toUpload.length; i++){
     var item = toUpload[i];
     if(prog) prog.textContent = (i+1)+'/'+toUpload.length;
-    var ext = item.mime.split('/')[1] || 'jpg';
-    var fileName = cnId+'_'+(i+1)+'_'+Date.now()+'.'+ext;
+    // ชื่อไฟล์ = [cnId]-img[N].jpg เพื่อค้นหาง่ายใน Drive
+    var ext = 'jpg'; // บีบอัดเป็น jpeg เสมอหลัง resize
+    var fileName = cnId + '-img' + (i+1) + '.jpg';
     // ใช้ creatorName ของ CN (คนสร้าง) ไม่ใช่คนล็อกอิน
     var editRec = adminRecs.find(function(r){ return String(r.id).trim()===cnId; });
     var creatorName = editRec ? (editRec.creatorName || '') : (ST.user ? ST.user.firstName+' '+ST.user.lastName : 'Unknown');
@@ -1905,11 +1927,11 @@ async function confirmStatusChange(cnId){
       for(var i=0; i<smImgQueue.length; i++){
         var item = smImgQueue[i];
         if(prog) prog.textContent=(i+1)+'/'+smImgQueue.length;
-        var ext = item.mime.split('/')[1]||'jpg';
+        // ชื่อไฟล์ = [cnId]-img[N].jpg
         var d = await apiPost({
           action:'uploadImage',
-          base64:item.b64, mimeType:item.mime,
-          fileName:cnId+'_'+(i+1)+'_'+Date.now()+'.'+ext,
+          base64:item.b64, mimeType:'image/jpeg',
+          fileName:cnId+'-img'+(i+1)+'.jpg',
           cnId:cnId,
           creatorName:creatorName
         });
@@ -2110,12 +2132,16 @@ function printCNForm(r){
   // ── COMPANY LOGO CONFIG ─────────────────────────────────────────
   // เปลี่ยน BASE_URL ให้ตรงกับ GitHub repo ของคุณ
   // รูปแบบ: https://raw.githubusercontent.com/USERNAME/REPO/main/assets/logos/
-  var LOGO_BASE = 'https://raw.githubusercontent.com/Royald-th/CN/main/assets/logos/';
+  var LOGO_BASE = 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/assets/logos/';
 
   var LOGOS = {
     'บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด': {
       url : LOGO_BASE + 'royal-d.png',
       name: 'บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด'
+    },
+    'บริษัท รอแยล-ดี (ไทยแลนด์)': {
+      url : LOGO_BASE + 'royal-d.png',
+      name: 'บริษัท รอแยล-ดี (ไทยแลนด์)'
     },
     'บริษัท แฟนซีเวิล์ด จำกัด': {
       url : LOGO_BASE + 'fancyworld.png',
@@ -2225,7 +2251,7 @@ html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background
 .remark-lbl{font-weight:700;white-space:nowrap;}
 .remark-line{flex:1;border-bottom:.5pt solid #777;min-height:9pt;}
 `;
-
+   
   var html='<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"/>'
     +'<title>CN '+esc(r.id||'')+'</title>'
     +'<style>'+css+'</style></head><body>';
@@ -2373,6 +2399,29 @@ function toast(msg, type, duration){
 /* ══════════════════════════════════════════
    DOCTYPE SWITCH — billRef / exchange
    ══════════════════════════════════════════ */
+/* ── ตัวย่อบริษัท (mirror ของ backend companyAbbr) ── */
+function companyAbbrJS(co){
+  if(!co) return '????';
+  if(co.indexOf('รอแยล') > -1 || co.indexOf('Royal')  > -1) return 'RDIN';
+  if(co.indexOf('แฟนซี') > -1 || co.indexOf('Fancy')  > -1) return 'FWIN';
+  if(co.indexOf('ควอลิแทต') > -1 || co.indexOf('Quali') > -1) return 'QTIN';
+  return co.replace(/[^a-zA-Zก-๙]/g,'').toUpperCase().substring(0,4) || 'CNTH';
+}
+
+/* แสดง preview เลขที่เอกสาร เช่น RDIN-68-06-??? */
+function updateDocIdPreview(){
+  var badge = document.getElementById('form-id-badge');
+  if(!badge) return;
+  if(ST.editId){ badge.textContent = ST.editId; return; } // edit mode แสดง ID จริง
+  var co = (document.getElementById('f-co')||{value:''}).value;
+  if(!co){ badge.textContent = ''; return; }
+  var now = new Date();
+  var yy  = String(now.getFullYear()).slice(-2);
+  var mm  = (now.getMonth()+1 < 10 ? '0' : '') + (now.getMonth()+1);
+  badge.textContent = companyAbbrJS(co) + '-' + yy + '-' + mm + '-???';
+  badge.style.color = 'var(--muted)';
+}
+
 function onDtChange(val){
   var billGrp = document.getElementById('f-bill-group');
   var exGrp   = document.getElementById('f-exchange-group');
