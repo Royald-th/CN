@@ -981,7 +981,7 @@ function fDateFull(s){
 }
 function badge(s){var m={'รอของ':'bw','กำลังดำเนินการ':'bp','เสร็จสิ้น':'bd'};return '<span class="badge '+( m[s]||'')+'">'+ s+'</span>';}
 function driveId(u){if(!u)return'';var m=u.match(/\/d\/([a-zA-Z0-9_-]+)/);return m?m[1]:'';}
-function getMonthKey(iso){if(!iso)return'';var d=new Date(iso);return d.getFullYear()+'-'+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1);}
+function getMonthKey(iso){if(!iso)return'';var d=new Date(iso);return d.getFullYear()+543 +'-'+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1);}
 function thMonth(iso){if(!iso)return'';return new Date(iso).toLocaleDateString('th-TH',{year:'numeric',month:'long'});}
 
 /* ══════════════════════════════════════════
@@ -2793,7 +2793,7 @@ async function doArchiveCompleted(){
           openConfirmMdl({
             icon:'✅', title:'Archive สำเร็จ',
             body:'ย้ายรายการไปยัง Archive เรียบร้อยแล้ว',
-            detail:'จำนวนที่ Archive: '+d.archivedCount+' รายการ | CSV บันทึกลง Drive/Archives/'+new Date().getFullYear()+'/',
+            detail:'จำนวนที่ Archive: '+d.archivedCount+' รายการ | CSV บันทึกลง Drive/Archives/'+new Date().getFullYear()+543+'/',
             okLabel:'ดู Archive', okClass:'btn-out',
             onOk:function(){ showView('view-archive','รายการ CN ที่ Archive'); loadArchive(); }
           });
