@@ -254,18 +254,22 @@ body {
 .btn-ghost:hover { background: var(--surface2); color: #C9D1D9; }
 .btn-danger { background: transparent; border-color: var(--red); color: var(--red); }
 .btn-danger:hover { background: var(--red-dim); }
-.btn-sm { padding: 4px 10px; font-size: .76rem; }
-.btn-xs { padding: 2px 8px; font-size: .72rem; }
-.btn-sm { padding: 6px 13px; font-size: .80rem; min-height: 34px; border-radius: 6px; }
+.btn-xs  { padding: 2px 8px; font-size: .72rem; }
+.btn-sm  { padding: 6px 13px; font-size: .80rem; min-height: 34px; border-radius: 6px; }
+.btn-pri { background: var(--accent); border-color: var(--accent-h); color: #fff; }
+.btn-pri:hover { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(35,134,54,.3); }
+.btn-out { background: transparent; border-color: var(--border2); color: #C9D1D9; }
+.btn-out:hover { border-color: var(--muted); background: var(--surface2); }
 .btn-full { width: 100%; justify-content: center; }
 
 /* Badges */
 .badge {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 4px 12px;
+  padding: 3px 10px 3px 8px;
   border-radius: 20px;
-  font-size: .72rem; font-weight: 600;
+  font-size: .73rem; font-weight: 600;
   border: 1px solid transparent;
+  white-space: nowrap;
 }
 .bw { background: var(--amber-dim); color: var(--amber); border-color: rgba(227,179,65,.3); }
 .bp { background: var(--blue-dim);  color: var(--blue);  border-color: rgba(88,166,255,.3); }
@@ -972,17 +976,22 @@ function toggleSidebar(){
 function showErr(id,m){var e=document.getElementById(id);e.textContent=m;e.classList.add('on');}
 function hideErr(id){var e=document.getElementById(id);e.textContent='';e.classList.remove('on');}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function fDate(s){if(!s)return'-';return new Date(s).toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'});}
+function fDate(s){if(!s)return'-';return new Date(s).toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric',calendar:'buddhist'});}
 function fDateFull(s){
   if(!s) return '-';
   var d = new Date(s);
-  return d.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})
+  return d.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric',calendar:'buddhist'})
     +' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
 }
-function badge(s){var m={'รอของ':'bw','กำลังดำเนินการ':'bp','เสร็จสิ้น':'bd'};return '<span class="badge '+( m[s]||'')+'">'+ s+'</span>';}
+function badge(s){
+  var cls={'รอของ':'bw','กำลังดำเนินการ':'bp','เสร็จสิ้น':'bd'};
+  var dotColor={'รอของ':'var(--amber)','กำลังดำเนินการ':'var(--blue)','เสร็จสิ้น':'var(--green)'};
+  var dot=dotColor[s]?'<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:'+dotColor[s]+';flex-shrink:0;"></span> ':'';
+  return '<span class="badge '+(cls[s]||'')+'" style="gap:5px;">'+dot+esc(s)+'</span>';
+}
 function driveId(u){if(!u)return'';var m=u.match(/\/d\/([a-zA-Z0-9_-]+)/);return m?m[1]:'';}
-function getMonthKey(iso){if(!iso)return'';var d=new Date(iso);return (d.getFullYear()+543) +'-'+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1);}
-function thMonth(iso){if(!iso)return'';return new Date(iso).toLocaleDateString('th-TH',{year:'numeric',month:'long'});}
+function getMonthKey(iso){if(!iso)return'';var d=new Date(iso);return d.getFullYear()+'-'+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1);}
+function thMonth(iso){if(!iso)return'';return new Date(iso).toLocaleDateString('th-TH',{year:'numeric',month:'long',calendar:'buddhist'});}
 
 /* ══════════════════════════════════════════
    API
@@ -1329,12 +1338,12 @@ function renderAdminTbl(recs){
           ? '<button class="btn btn-ghost btn-sm" onclick="printCNForm(window[\''+key+'\'])" title="พิมพ์ฟอร์ม PDF">🖨</button>'
           : '<button class="btn btn-ghost btn-sm" style="opacity:.3;cursor:not-allowed;" title="ต้องเปลี่ยนสถานะเป็นกำลังดำเนินการก่อน" disabled>🖨</button>')
       : '';
-    // Warehouse ลบได้เฉพาะรายการที่ไม่ใช่ "เสร็จสิ้น"
+    // Admin: ลบได้ทุก status | Warehouse: ลบได้เฉพาะที่ไม่ใช่ "เสร็จสิ้น"
     var canDelete = isAdmin || (isWarehouse && r.status !== 'เสร็จสิ้น');
     var deleteBtn = canDelete
       ? '<button class="btn btn-danger btn-sm" onclick="doDelete(\''+r.id+'\')" title="ลบรายการ">🗑</button>'
-      : (isWarehouse && r.status==='เสร็จสิ้น'
-          ? '<button class="btn btn-ghost btn-sm" style="opacity:.25;cursor:not-allowed;" title="ไม่สามารถลบรายการที่เสร็จสิ้นแล้ว" disabled>🗑</button>'
+      : (isWarehouse
+          ? '<button class="btn btn-ghost btn-sm" style="opacity:.22;cursor:not-allowed;" title="Warehouse ไม่สามารถลบรายการที่เสร็จสิ้นแล้ว" disabled>🗑</button>'
           : '');
     return '<tr style="height:52px;">'
       +'<td class="mono" style="font-size:.78rem;font-weight:600;">'+r.id+'</td>'
@@ -1459,7 +1468,15 @@ function viewDetail(id,isAdmin){
     +(r.completedAt?'<div><div class="lbl">วันที่เสร็จสิ้น</div><div style="color:var(--green);font-size:.82rem;">'+fDateFull(r.completedAt)+'</div></div>':'')
     +proof
     +'</div>',
-    (isAdminLevel()&&(r.status==='กำลังดำเนินการ'||r.status==='เสร็จสิ้น')?'<button class="btn btn-outline btn-sm" onclick="printCNForm(window[\''+key+'\'])">🖨 ปริ้นท์ฟอร์ม</button>':isAdminLevel()?'<button class="btn btn-ghost btn-sm" style="opacity:.4;cursor:not-allowed;" disabled title="ต้องเปลี่ยนสถานะเป็น กำลังดำเนินการ ก่อน">🖨 (ยังพิมพ์ไม่ได้)</button>':'')
+    (isAdminLevel()
+      ? '<button class="btn btn-pri btn-sm" style="min-width:130px;justify-content:center;" onclick="closeMdl();setTimeout(function(){openStatusModal(\''+r.id+'\',\''+r.status+'\')},80)">'
+        +'<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> เปลี่ยนสถานะ</button>'
+      : '')
+    +(isAdminLevel()&&(r.status==='กำลังดำเนินการ'||r.status==='เสร็จสิ้น')
+      ? '<button class="btn btn-out btn-sm" onclick="printCNForm(window[\''+key+'\'])">🖨 พิมพ์ฟอร์ม</button>'
+      : isAdminLevel()
+        ? '<button class="btn btn-ghost btn-sm" style="opacity:.35;cursor:not-allowed;" disabled title="ต้องเปลี่ยนสถานะเป็น กำลังดำเนินการ ก่อน">🖨 พิมพ์ฟอร์ม</button>'
+        : '')
     +'<button class="btn btn-ghost btn-sm" onclick="closeMdl()">ปิด</button>'
   );
 }
@@ -1812,63 +1829,102 @@ async function doUpload(cnId){ return doUploadAll(cnId); }
 /* ── REQ3: INLINE STATUS CHANGE MODAL ── */
 function openStatusModal(id, currentStatus){
   var cid = (id||'').trim();
-  var statuses = ['รอของ','กำลังดำเนินการ','เสร็จสิ้น'];
 
-  // สร้าง radio options
-  var radios = statuses.map(function(s){
-    var active = s===currentStatus;
-    var colorMap = {'รอของ':'var(--amber)','กำลังดำเนินการ':'var(--blue)','เสร็จสิ้น':'var(--green)'};
-    return '<label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid '
-      +(active?colorMap[s]:'var(--border)')+';border-radius:var(--r);cursor:pointer;margin-bottom:8px;'
-      +'background:'+(active?'rgba(255,255,255,.04)':'transparent')+';transition:all .15s;">'
+  // config แต่ละสถานะ: icon, color-var, sublabel
+  var stCfg = {
+    'รอของ':          { icon:'⏳', color:'var(--amber)', dim:'var(--amber-dim)', border:'rgba(227,179,65,.4)',  sub:'รายการรอรับสินค้าคืน' },
+    'กำลังดำเนินการ': { icon:'🔄', color:'var(--blue)',  dim:'var(--blue-dim)',  border:'rgba(88,166,255,.4)', sub:'อยู่ระหว่างดำเนินการ' },
+    'เสร็จสิ้น':      { icon:'✅', color:'var(--green)', dim:'var(--green-dim)', border:'rgba(63,185,80,.4)',  sub:'ดำเนินการเสร็จสิ้นแล้ว' }
+  };
+
+  var radios = Object.keys(stCfg).map(function(s){
+    var cfg = stCfg[s];
+    var active = s === currentStatus;
+    return '<label id="sl-'+s.replace(/[^a-z]/gi,'_')+'" style="'
+      +'display:flex;align-items:center;gap:13px;'
+      +'padding:13px 15px;'
+      +'border:2px solid '+(active ? cfg.border : 'var(--border)')+';'
+      +'border-radius:10px;cursor:pointer;margin-bottom:9px;'
+      +'background:'+(active ? cfg.dim : 'var(--surface)')+';'
+      +'transition:all .18s;position:relative;'
+      +(active?'box-shadow:0 0 0 1px '+cfg.color+' inset;':'')+'">'
       +'<input type="radio" name="new-status" value="'+s+'"'+(active?' checked':'')
-      +' style="accent-color:'+colorMap[s]+';"/>'
-      +'<span style="font-weight:600;color:'+(active?colorMap[s]:'var(--txt)')+';">'+s+'</span>'
+      +' style="position:absolute;opacity:0;width:0;height:0;"/>'
+      +'<span style="font-size:1.35rem;line-height:1;flex-shrink:0;">'+cfg.icon+'</span>'
+      +'<span style="flex:1;">'
+      +'<span style="display:block;font-weight:700;font-size:.88rem;color:'+(active?cfg.color:'#E6EDF3')+';">'+s+'</span>'
+      +'<span style="display:block;font-size:.72rem;color:var(--muted);margin-top:2px;">'+cfg.sub+'</span>'
+      +'</span>'
+      +(active?'<span style="color:'+cfg.color+';font-size:1rem;">●</span>':'<span style="color:var(--border);font-size:1rem;">○</span>')
       +'</label>';
   }).join('');
 
-  // ถ้าเลือก "เสร็จสิ้น" — แสดง upload section
-  var uploadHtml = '<div id="status-modal-upload" style="display:none;margin-top:12px;">'
-    +'<label style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px;">'
-    +'หลักฐานการดำเนินการ <span style="color:var(--red);">*</span> <span style="font-weight:400;color:var(--muted);text-transform:none;">(อัปโหลดได้หลายรูป)</span></label>'
-    +'<div class="uz" id="sm-uz" ondragover="uzOver(event)" ondragleave="uzLeave()" ondrop="smUzDrop(event)" style="padding:14px;">'
+  // upload section (แสดงเมื่อเลือก "เสร็จสิ้น")
+  var uploadHtml = '<div id="status-modal-upload" style="display:'+(currentStatus==='เสร็จสิ้น'?'block':'none')+';margin-top:4px;">'
+    +'<div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">'
+    +'📎 หลักฐานการดำเนินการ <span style="color:var(--red);">*</span>'
+    +'<span style="font-weight:400;color:var(--muted);text-transform:none;margin-left:4px;">(อัปโหลดได้หลายรูป)</span></div>'
+    +'<div class="uz" id="sm-uz" ondragover="uzOver(event)" ondragleave="uzLeave()" ondrop="smUzDrop(event)" style="padding:12px 14px;">'
     +'<input type="file" id="sm-img" accept="image/*" multiple onchange="smUzSelect(event)"/>'
-    +'<div style="font-size:1rem;margin-bottom:3px;">📎</div>'
-    +'<div style="font-size:.78rem;font-weight:600;color:var(--txt);">คลิกหรือลากไฟล์รูปภาพ</div>'
-    +'<div style="font-size:.68rem;color:var(--muted);margin-top:2px;">เลือกหลายรูปพร้อมกันได้</div>'
+    +'<div style="font-size:.88rem;margin-bottom:2px;">📸</div>'
+    +'<div style="font-size:.78rem;font-weight:600;color:var(--txt);">คลิกหรือลากรูปภาพมาที่นี่</div>'
+    +'<div style="font-size:.68rem;color:var(--muted);margin-top:2px;">เลือกหลายรูปพร้อมกันได้ · max 20MB/รูป</div>'
     +'</div>'
     +'<div id="sm-preview-grid" style="display:none;margin-top:8px;">'
     +'<div id="sm-preview-list" style="display:flex;flex-wrap:wrap;gap:7px;"></div>'
     +'<div style="margin-top:5px;font-size:.72rem;color:var(--muted);" id="sm-count-lbl"></div>'
     +'</div>'
-    +'<div class="uloading" id="sm-uloading" style="margin-top:8px;"><div class="spin" style="width:14px;height:14px;border-width:2px;margin:0;flex-shrink:0;"></div>กำลังอัปโหลด <span id="sm-progress"></span>...</div>'
+    +'<div class="uloading" id="sm-uloading" style="display:none;margin-top:8px;">'
+    +'<div class="spin" style="width:14px;height:14px;border-width:2px;margin:0;flex-shrink:0;"></div>'
+    +'กำลังอัปโหลด <span id="sm-progress"></span>...</div>'
     +'</div>';
 
-  openMdl('เปลี่ยนสถานะรายการ',
-    '<input type="hidden" id="status-modal-cid" value="'+cid+'"/>'    +'<p style="font-size:.78rem;color:var(--muted);margin-bottom:12px;">รายการ: <span style="font-family:var(--mono);color:var(--blue);">'+cid+'</span></p>'
+  openMdl(
+    'เปลี่ยนสถานะรายการ',
+    '<input type="hidden" id="status-modal-cid" value="'+cid+'"/>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:9px 12px;background:var(--surface2);border-radius:8px;">'
+    +'<span style="font-size:.72rem;color:var(--muted);">เลขที่เอกสาร</span>'
+    +'<span style="font-family:var(--mono);color:var(--blue);font-weight:700;font-size:.85rem;">'+cid+'</span>'
+    +'</div>'
     +radios
     +uploadHtml,
-    '<button class="btn btn-primary" id="confirm-status-btn">บันทึกสถานะ</button>'
+    '<button class="btn btn-primary" id="confirm-status-btn" style="min-width:130px;justify-content:center;">'
+    +'<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>'
+    +'บันทึกสถานะ</button>'
     +'<button class="btn btn-ghost" onclick="closeMdl()">ยกเลิก</button>'
   );
 
-  // เพิ่ม event listener เพื่อ show/hide upload เมื่อเลือก "เสร็จสิ้น"
+  // event listeners
   setTimeout(function(){
-    document.querySelectorAll('input[name="new-status"]').forEach(function(r){
-      r.addEventListener('change', function(){
+    document.querySelectorAll('input[name="new-status"]').forEach(function(radio){
+      radio.addEventListener('change', function(){
+        var val = this.value;
+        // อัปเดต visual ของทุก label
+        document.querySelectorAll('input[name="new-status"]').forEach(function(r){
+          var lbl = r.closest('label');
+          if(!lbl) return;
+          var s = r.value;
+          var cfg = {'รอของ':{color:'var(--amber)',dim:'var(--amber-dim)',border:'rgba(227,179,65,.4)'},
+                     'กำลังดำเนินการ':{color:'var(--blue)',dim:'var(--blue-dim)',border:'rgba(88,166,255,.4)'},
+                     'เสร็จสิ้น':{color:'var(--green)',dim:'var(--green-dim)',border:'rgba(63,185,80,.4)'}};
+          var ck = r.checked;
+          lbl.style.border = '2px solid '+(ck?cfg[s].border:'var(--border)');
+          lbl.style.background = ck ? cfg[s].dim : 'var(--surface)';
+          lbl.style.boxShadow = ck ? '0 0 0 1px '+cfg[s].color+' inset' : '';
+          var nameEl = lbl.querySelector('span[style*="font-weight:700"]');
+          if(nameEl) nameEl.style.color = ck ? cfg[s].color : '#E6EDF3';
+          var dotEl  = lbl.querySelector('span:last-child');
+          if(dotEl)  dotEl.textContent = ck ? '●' : '○', dotEl.style.color = ck ? cfg[s].color : 'var(--border)';
+        });
+        // show/hide upload
         var upSec = document.getElementById('status-modal-upload');
-        if(upSec) upSec.style.display = this.value==='เสร็จสิ้น'?'block':'none';
-        smImgQueue = [];
-        renderSmPreview();
+        if(upSec){ upSec.style.display = val==='เสร็จสิ้น'?'block':'none'; }
+        smImgQueue = []; renderSmPreview();
       });
     });
-    // ผูก confirm button — เก็บ cid ใน data-attribute แทน inline onclick
     var btn = document.getElementById('confirm-status-btn');
-    if(btn){
-      // หา cid จาก modal title หรือ hidden input
-      var cidEl = document.getElementById('status-modal-cid');
-      btn.onclick = function(){ confirmStatusChange(cidEl ? cidEl.value : ''); };
-    }
+    var cidEl = document.getElementById('status-modal-cid');
+    if(btn && cidEl) btn.onclick = function(){ confirmStatusChange(cidEl.value); };
   }, 50);
 }
 
@@ -1989,12 +2045,13 @@ function openMonthReport(){
   var grid='<div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">เลือกเดือน</div>'
     +'<div class="month-grid">';
   keys.forEach(function(mk){
-    var label=thMonth(mk+'-01');
-    var cnt=months[mk];
+    var labelRaw = thMonth(mk+'-01');
+    var cnt = months[mk];
+    var done = adminRecs.filter(function(r2){return getMonthKey(r2.createdAt)===mk&&r2.status==='เสร็จสิ้น';}).length;
     grid+='<div class="month-btn" onclick="printMonthReport(\''+mk+'\')">'
-      +'<div style="font-size:.9rem;margin-bottom:3px;">📅</div>'
-      +'<div style="font-weight:600;font-size:.8rem;">'+label+'</div>'
-      +'<div style="font-size:.7rem;color:var(--muted);margin-top:2px;">'+cnt+' รายการ</div>'
+      +'<div style="font-size:1rem;margin-bottom:3px;">📅</div>'
+      +'<div style="font-weight:700;font-size:.83rem;color:#E6EDF3;">'+labelRaw+'</div>'
+      +'<div style="font-size:.68rem;color:var(--muted);margin-top:3px;">ทั้งหมด '+cnt+' | เสร็จ '+done+'</div>'
       +'</div>';
   });
   grid+='</div>';
@@ -2251,7 +2308,7 @@ html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background
 .remark-lbl{font-weight:700;white-space:nowrap;}
 .remark-line{flex:1;border-bottom:.5pt solid #777;min-height:9pt;}
 `;
-   
+
   var html='<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"/>'
     +'<title>CN '+esc(r.id||'')+'</title>'
     +'<style>'+css+'</style></head><body>';
@@ -2416,7 +2473,7 @@ function updateDocIdPreview(){
   var co = (document.getElementById('f-co')||{value:''}).value;
   if(!co){ badge.textContent = ''; return; }
   var now = new Date();
-  var yy  = String(now.getFullYear()+543).slice(-2);
+  var yy  = String(now.getFullYear()).slice(-2);
   var mm  = (now.getMonth()+1 < 10 ? '0' : '') + (now.getMonth()+1);
   badge.textContent = companyAbbrJS(co) + '-' + yy + '-' + mm + '-???';
   badge.style.color = 'var(--muted)';
@@ -2793,7 +2850,7 @@ async function doArchiveCompleted(){
           openConfirmMdl({
             icon:'✅', title:'Archive สำเร็จ',
             body:'ย้ายรายการไปยัง Archive เรียบร้อยแล้ว',
-            detail:'จำนวนที่ Archive: '+d.archivedCount+' รายการ | CSV บันทึกลง Drive/Archives/'+ (new Date().getFullYear()+543)+'/',
+            detail:'จำนวนที่ Archive: '+d.archivedCount+' รายการ | CSV บันทึกลง Drive/Archives/'+new Date().getFullYear()+'/',
             okLabel:'ดู Archive', okClass:'btn-out',
             onOk:function(){ showView('view-archive','รายการ CN ที่ Archive'); loadArchive(); }
           });
