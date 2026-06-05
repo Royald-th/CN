@@ -4,8 +4,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>CN System — Royal-D</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/>
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<!-- preconnect → ลด DNS/TLS handshake ก่อน font โหลด -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/></noscript>
+<!-- LIFF SDK โหลด async เพื่อไม่ block render -->
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" defer></script>
 <style>
 /* ══════════════════════════════════════════
    DESIGN SYSTEM — Industrial Precision
@@ -966,7 +971,12 @@ function showErr(id,m){var e=document.getElementById(id);e.textContent=m;e.class
 function hideErr(id){var e=document.getElementById(id);e.textContent='';e.classList.remove('on');}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function fDate(s){if(!s)return'-';return new Date(s).toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'});}
-function fDateFull(s){if(!s)return'-';return new Date(s).toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});}
+function fDateFull(s){
+  if(!s) return '-';
+  var d = new Date(s);
+  return d.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})
+    +' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+}
 function badge(s){var m={'รอของ':'bw','กำลังดำเนินการ':'bp','เสร็จสิ้น':'bd'};return '<span class="badge '+( m[s]||'')+'">'+ s+'</span>';}
 function driveId(u){if(!u)return'';var m=u.match(/\/d\/([a-zA-Z0-9_-]+)/);return m?m[1]:'';}
 function getMonthKey(iso){if(!iso)return'';var d=new Date(iso);return d.getFullYear()+'-'+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1);}
@@ -975,15 +985,48 @@ function thMonth(iso){if(!iso)return'';return new Date(iso).toLocaleDateString('
 /* ══════════════════════════════════════════
    API
    ══════════════════════════════════════════ */
+/* ── API helpers: content-type guard + 1 auto-retry on HTML/network error ── */
+var _apiRetrying = false;
+function _safeFetch(url, opts){
+  return fetch(url, opts).then(function(r){
+    var ct = r.headers.get('content-type') || '';
+    if(!ct.includes('application/json') && !ct.includes('text/plain')){
+      // GAS ส่ง HTML (cold-start redirect / error page) → retry 1 ครั้ง
+      if(!_apiRetrying){
+        _apiRetrying = true;
+        return new Promise(function(res){ setTimeout(res, 1800); })
+          .then(function(){ return fetch(url, opts); })
+          .then(function(r2){
+            _apiRetrying = false;
+            var ct2 = r2.headers.get('content-type') || '';
+            if(!ct2.includes('application/json') && !ct2.includes('text/plain')){
+              return r2.text().then(function(t){
+                throw new Error('GAS ส่งข้อมูลผิดรูปแบบ (HTML) — อาจ cold start หรือ quota หมด');
+              });
+            }
+            return r2.json();
+          });
+      }
+      return r.text().then(function(t){
+        throw new Error('GAS ส่งข้อมูลผิดรูปแบบ (HTML) — อาจ cold start หรือ quota หมด');
+      });
+    }
+    _apiRetrying = false;
+    return r.json();
+  });
+}
 function apiGet(p){
-  var url=CFG.GAS+'?'+new URLSearchParams(p);
-  return fetch(url,{redirect:'follow'}).then(function(r){return r.json();});
+  var url = CFG.GAS+'?'+new URLSearchParams(p);
+  return _safeFetch(url, {redirect:'follow'});
 }
 function apiPost(body){
-  var fd=new URLSearchParams();
-  fd.append('payload',JSON.stringify(body));
-  return fetch(CFG.GAS,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:fd.toString(),redirect:'follow'})
-    .then(function(r){return r.json();});
+  var fd = new URLSearchParams();
+  fd.append('payload', JSON.stringify(body));
+  return _safeFetch(CFG.GAS, {
+    method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body: fd.toString(), redirect:'follow'
+  });
 }
 
 /* ══════════════════════════════════════════
@@ -994,20 +1037,43 @@ async function initLiff(){
   if(!CFG.GAS||CFG.GAS==='YOUR_GAS_DEPLOYED_URL'){showErr('auth-err','⚠️ ยังไม่ได้ตั้งค่า GAS URL');return;}
   L.show('กำลังเชื่อมต่อ LINE...');
   try{
+    // ยิง warm-ping ไป GAS พร้อมกับ liff.init เพื่อให้ GAS เริ่ม warm ก่อน
+    var warmPing = fetch(CFG.GAS+'?action=ping', {redirect:'follow'}).catch(function(){});
     await liff.init({liffId:String(CFG.LIFF).trim()});
     if(!liff.isLoggedIn()){liff.login();return;}
+    L.show('กำลังโหลดข้อมูลผู้ใช้...');
     var p=await liff.getProfile();
     ST.profile=p;
+    await warmPing; // รอ ping เสร็จก่อน (ทำให้ GAS warm แล้ว)
     await checkUser(p.userId);
   }catch(e){L.hide();showErr('auth-err','เกิดข้อผิดพลาด: '+e.message);}
 }
 async function checkUser(uid){
   try{
-    var d=await apiGet({action:'getUser',lineUID:uid});
+    var d = await apiGet({action:'getUser', lineUID:uid});
     L.hide();
-    if(d.found){ST.user=d.user;enterApp();}
-    else{document.getElementById('auth-login').style.display='none';document.getElementById('auth-reg').style.display='block';}
-  }catch(e){L.hide();showErr('auth-err','เชื่อมต่อไม่ได้: '+e.message);}
+    if(d.found){ ST.user=d.user; enterApp(); }
+    else{
+      document.getElementById('auth-login').style.display='none';
+      document.getElementById('auth-reg').style.display='block';
+    }
+  } catch(e){
+    // retry อัตโนมัติ 1 ครั้ง (GAS อาจยัง cold start)
+    L.show('กำลังลองเชื่อมต่อใหม่...');
+    try{
+      await new Promise(function(r){ setTimeout(r, 2500); });
+      var d2 = await apiGet({action:'getUser', lineUID:uid});
+      L.hide();
+      if(d2.found){ ST.user=d2.user; enterApp(); }
+      else{
+        document.getElementById('auth-login').style.display='none';
+        document.getElementById('auth-reg').style.display='block';
+      }
+    } catch(e2){
+      L.hide();
+      showErr('auth-err','เชื่อมต่อไม่ได้ — กรุณากดเข้าใหม่อีกครั้ง ('+e2.message+')');
+    }
+  }
 }
 async function doRegister(){
   var fn=document.getElementById('reg-fn').value.trim();
@@ -1066,8 +1132,11 @@ function enterApp(){
     showView('view-admin-dash','Warehouse Dashboard'); loadAdmin();
   } else if(u.role==='Accountant'){
     showView('view-admin-dash','รายงาน (ฝ่ายบัญชี)'); loadAdmin();
+  } else {
+    showView('view-user-dash','Dashboard ของฉัน');
+    loadUser();
+    startAutoRefresh();
   }
-  else { showView('view-user-dash','Dashboard ของฉัน'); loadUser(); startAutoRefresh(); }
 }
 
 function gotoPage(id){
@@ -1146,19 +1215,22 @@ function buildNav(role){
    USER DASHBOARD
    ══════════════════════════════════════════ */
 async function loadUser(silent){
-  if(!silent) L.show();
+  if(!silent) L.show('กำลังโหลดรายการ...');
   try{
-    var d=await apiGet({action:'getCNList',lineUID:ST.user.lineUID,role:'User'});
+    var d = await apiGet({action:'getCNList', lineUID:ST.user.lineUID, role:'User'});
     if(!silent) L.hide();
-    if(!d.success)return;
-    ST.cnList=d.records;
-    var r=d.records;
-    document.getElementById('s-all').textContent=r.length;
-    document.getElementById('s-wait').textContent=r.filter(function(x){return x.status==='รอของ';}).length;
-    document.getElementById('s-proc').textContent=r.filter(function(x){return x.status==='กำลังดำเนินการ';}).length;
-    document.getElementById('s-done').textContent=r.filter(function(x){return x.status==='เสร็จสิ้น';}).length;
-    filterUserTbl(); // ใช้ filter แทน renderUserTbl โดยตรง
-  }catch(e){if(!silent) L.hide();}
+    if(!d.success){ showLoadError('utbl', 6, loadUser); return; }
+    ST.cnList = d.records;
+    var r = d.records;
+    document.getElementById('s-all').textContent  = r.length;
+    document.getElementById('s-wait').textContent = r.filter(function(x){return x.status==='รอของ';}).length;
+    document.getElementById('s-proc').textContent = r.filter(function(x){return x.status==='กำลังดำเนินการ';}).length;
+    document.getElementById('s-done').textContent = r.filter(function(x){return x.status==='เสร็จสิ้น';}).length;
+    filterUserTbl();
+  } catch(e){
+    if(!silent) L.hide();
+    showLoadError('utbl', 6, loadUser);
+  }
 }
 
 function renderUserTbl(recs){
@@ -1187,19 +1259,36 @@ function renderUserTbl(recs){
    ADMIN DASHBOARD
    ══════════════════════════════════════════ */
 async function loadAdmin(silent){
-  if(!silent)L.show();
+  if(!silent) L.show('กำลังโหลดรายการ...');
   try{
-    var d=await apiGet({action:'getCNList',lineUID:ST.user.lineUID,role:'Admin'});
-    if(!silent)L.hide();
-    if(!d.success)return;
-    adminRecs=d.records;
-    var userMap={};
-    adminRecs.forEach(function(r){if(r.lineUID&&!userMap[r.lineUID])userMap[r.lineUID]=r.creatorName;});
-    allUsers=Object.keys(userMap).map(function(k){return{uid:k,name:userMap[k]};});
+    var d = await apiGet({action:'getCNList', lineUID:ST.user.lineUID, role:'Admin'});
+    if(!silent) L.hide();
+    if(!d.success){ showLoadError('atbl', 8, loadAdmin); return; }
+    adminRecs = d.records;
+    var userMap = {};
+    adminRecs.forEach(function(r){ if(r.lineUID&&!userMap[r.lineUID]) userMap[r.lineUID]=r.creatorName; });
+    allUsers = Object.keys(userMap).map(function(k){ return{uid:k, name:userMap[k]}; });
     buildUserDropdown();
     updateAdminStats(adminRecs);
     paginateAdmin(adminRecs);
-  }catch(e){if(!silent)L.hide();}
+  } catch(e){
+    if(!silent) L.hide();
+    showLoadError('atbl', 8, loadAdmin);
+  }
+}
+
+// แสดง error row พร้อมปุ่ม retry ในตาราง
+function showLoadError(tbId, colspan, retryFn){
+  var tb = document.getElementById(tbId);
+  if(!tb) return;
+  tb.innerHTML = '<tr><td colspan="'+colspan+'">'
+    +'<div class="empty-state" style="padding:28px 0;">'
+    +'<div class="empty-icon">⚠️</div>'
+    +'<div class="empty-title" style="color:var(--yellow);">โหลดไม่สำเร็จ</div>'
+    +'<div class="empty-sub" style="margin-bottom:12px;">เซิร์ฟเวอร์ใช้เวลาตอบสนองนาน หรือเครือข่ายขัดข้อง</div>'
+    +'<button class="btn btn-out btn-sm" onclick="('+retryFn.toString()+')()">'
+    +'🔄 โหลดใหม่</button>'
+    +'</div></td></tr>';
 }
 
 function buildUserDropdown(){
@@ -1572,16 +1661,35 @@ function uzSelect(e){
   files.forEach(function(f){ uzAddFile(f); });
   e.target.value = ''; // reset input เพื่อให้เลือกซ้ำได้
 }
-function uzAddFile(f){
-  if(!f.type.startsWith('image/')){ toast('ไฟล์ '+f.name+' ไม่ใช่รูปภาพ','error'); return; }
-  if(f.size>5*1024*1024){ toast('ไฟล์ '+f.name+' ใหญ่เกิน 5 MB','error'); return; }
+/* resize + compress ก่อนเพิ่มใน queue: max 1280px, quality 0.78 */
+function _resizeImage(file, maxPx, quality, cb){
   var rd = new FileReader();
   rd.onload = function(ev){
-    var du = ev.target.result;
-    imgQueue.push({ file:f, b64:du.split(',')[1], mime:f.type, name:f.name, size:f.size, url:null });
-    renderImgPreview();
+    var img = new Image();
+    img.onload = function(){
+      var w = img.width, h = img.height;
+      if(w > maxPx || h > maxPx){
+        var ratio = Math.min(maxPx/w, maxPx/h);
+        w = Math.round(w*ratio); h = Math.round(h*ratio);
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      // บีบอัดเป็น jpeg เสมอ (ขนาดเล็กกว่า png มาก)
+      var dataUrl = canvas.toDataURL('image/jpeg', quality);
+      cb(dataUrl.split(',')[1], 'image/jpeg');
+    };
+    img.src = ev.target.result;
   };
-  rd.readAsDataURL(f);
+  rd.readAsDataURL(file);
+}
+function uzAddFile(f){
+  if(!f.type.startsWith('image/')){ toast('ไฟล์ '+f.name+' ไม่ใช่รูปภาพ','error'); return; }
+  if(f.size > 20*1024*1024){ toast('ไฟล์ '+f.name+' ใหญ่เกิน 20 MB','error'); return; }
+  _resizeImage(f, 1280, 0.78, function(b64, mime){
+    imgQueue.push({ file:f, b64:b64, mime:mime, name:f.name, size:f.size, url:null });
+    renderImgPreview();
+  });
 }
 function renderImgPreview(){
   var grid = document.getElementById('img-preview-grid');
@@ -1592,11 +1700,14 @@ function renderImgPreview(){
   grid.style.display = 'block';
   countLbl.textContent = imgQueue.length + ' รูปที่เลือก';
   list.innerHTML = imgQueue.map(function(item, i){
+    // ใช้ dataUrl แบบสั้น (base64 ที่ resize แล้วเล็กพอ)
+    var src = 'data:'+item.mime+';base64,'+item.b64;
+    var kb  = Math.round(item.b64.length * 0.75 / 1024);
     return '<div style="position:relative;width:80px;">'
-      +'<img src="data:'+item.mime+';base64,'+item.b64+'" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border);" />'
+      +'<img src="'+src+'" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border);" />'
       +(item.url ? '<div style="position:absolute;top:2px;right:2px;background:var(--green);border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:9px;">✓</div>' : '')
       +'<button onclick="uzRemove('+i+')" style="position:absolute;top:2px;left:2px;background:rgba(0,0,0,.6);border:none;border-radius:50%;width:16px;height:16px;cursor:pointer;color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;padding:0;">✕</button>'
-      +'<div style="font-size:.6rem;color:var(--muted);text-align:center;margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">'+item.name+'</div>'
+      +'<div style="font-size:.6rem;color:var(--muted);text-align:center;margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">~'+kb+'KB</div>'
       +'</div>';
   }).join('');
   document.getElementById('udone').style.display='none';
@@ -1746,14 +1857,11 @@ function smUzDrop(e){ e.preventDefault(); Array.from(e.dataTransfer.files).forEa
 function smUzSelect(e){ Array.from(e.target.files).forEach(smAddFile); e.target.value=''; }
 function smAddFile(f){
   if(!f.type.startsWith('image/')){ toast('ไฟล์ '+f.name+' ไม่ใช่รูปภาพ','error'); return; }
-  if(f.size>5*1024*1024){ toast('ไฟล์ '+f.name+' ใหญ่เกิน 5 MB','error'); return; }
-  var rd=new FileReader();
-  rd.onload=function(ev){
-    var du=ev.target.result;
-    smImgQueue.push({b64:du.split(',')[1],mime:f.type,name:f.name,size:f.size});
+  if(f.size > 20*1024*1024){ toast('ไฟล์ '+f.name+' ใหญ่เกิน 20 MB','error'); return; }
+  _resizeImage(f, 1280, 0.78, function(b64, mime){
+    smImgQueue.push({b64:b64, mime:mime, name:f.name, size:f.size});
     renderSmPreview();
-  };
-  rd.readAsDataURL(f);
+  });
 }
 function renderSmPreview(){
   var grid=document.getElementById('sm-preview-grid');
@@ -2243,14 +2351,14 @@ html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background
   w.document.write(html);
   w.document.close();
 }
-   
+
 /* ══════════════════════════════════════════
    TOAST NOTIFICATION
    ══════════════════════════════════════════ */
 function toast(msg, type, duration){
-  type     = type     || 'success'; // 'success' | 'error' | 'info'
-  duration = duration || 3000;
-  var icons = { success:'✅', error:'❌', info:'ℹ️' };
+  type = type || 'success'; // 'success' | 'error' | 'info' | 'warn'
+  duration = duration || (type==='error' ? 5000 : type==='warn' ? 4000 : 3000);
+  var icons = { success:'✅', error:'❌', info:'ℹ️', warn:'⚠️' };
   var wrap = document.getElementById('toast-wrap');
   var el   = document.createElement('div');
   el.className = 'toast toast-' + type;
