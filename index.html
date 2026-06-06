@@ -806,7 +806,7 @@ select.fc option { background: var(--surface2); }
 
         <!-- ── CONFIRM MODAL ── -->
 <div class="mov" id="confirm-mdl" onclick="closeConfirmMdl(event)">
-  <div class="mdl" style="max-width:420px;">
+  <div class="mdl" style="max-width:420px;" onclick="event.stopPropagation()">
     <div class="mhd" style="background:var(--surf2);">
       <div style="display:flex;align-items:center;gap:10px;">
         <span id="confirm-mdl-icon" style="font-size:1.4rem;">⚠️</span>
@@ -2473,7 +2473,7 @@ function updateDocIdPreview(){
   var co = (document.getElementById('f-co')||{value:''}).value;
   if(!co){ badge.textContent = ''; return; }
   var now = new Date();
-  var yy = (now.getFullYear() + 543);
+  var yy  = String(now.getFullYear() + 543).slice(-2); // พ.ศ. 2 หลัก
   var mm  = (now.getMonth()+1 < 10 ? '0' : '') + (now.getMonth()+1);
   badge.textContent = companyAbbrJS(co) + '-' + yy + '-' + mm + '-???';
   badge.style.color = 'var(--muted)';
@@ -2743,7 +2743,8 @@ function openConfirmMdl(opts){
 }
 
 function closeConfirmMdl(e){
-  if(e && e.target !== document.getElementById('confirm-mdl')) return;
+  // ถ้าส่ง event มา ตรวจว่าคลิกที่ overlay เท่านั้น (ไม่ใช่ใน modal)
+  if(e && e.target !== e.currentTarget) return;
   document.getElementById('confirm-mdl').classList.remove('on');
   _confirmCallback = null;
 }
