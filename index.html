@@ -2473,7 +2473,7 @@ function updateDocIdPreview(){
   var co = (document.getElementById('f-co')||{value:''}).value;
   if(!co){ badge.textContent = ''; return; }
   var now = new Date();
-  var yy  = String(now.getFullYear()+543).slice(-2);
+  var yy  = String((now.getFullYear()+543)).slice(-2);
   var mm  = (now.getMonth()+1 < 10 ? '0' : '') + (now.getMonth()+1);
   badge.textContent = companyAbbrJS(co) + '-' + yy + '-' + mm + '-???';
   badge.style.color = 'var(--muted)';
