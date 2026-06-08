@@ -798,7 +798,7 @@ select.fc option { background: var(--surface2); }
             <div class="tw">
               <table>
                 <thead><tr><th>#</th><th>ชื่อ-นามสกุล</th><th>Line UID</th><th>Role</th><th>วันที่สมัคร</th><th>รายการ CN</th></tr></thead>
-                <tbody id="users-tbl"><tr><td colspan="6" class="te">กำลังโหลด...</td></tr></tbody>
+                <tbody id="users-tbl"><tr><td colspan="7" class="te">กำลังโหลด...</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -899,7 +899,7 @@ select.fc option { background: var(--surface2); }
             <div class="tw">
               <table>
                 <thead><tr><th>Backup ID</th><th>วันที่</th><th>ประเภท</th><th>จำนวน record</th><th>หมายเหตุ</th><th>ไฟล์</th><th>Drive</th></tr></thead>
-                <tbody id="bk-tbl"><tr><td colspan="6" class="te">กำลังโหลด...</td></tr></tbody>
+                <tbody id="bk-tbl"><tr><td colspan="7" class="te">กำลังโหลด...</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -941,18 +941,35 @@ var L={
 /* ══════════════════════════════════════════
    VIEW SWITCHING (SPA)
    ══════════════════════════════════════════ */
+// cache timestamps: ป้องกัน reload ซ้ำถ้าเพิ่งโหลดไปไม่นาน
+var _viewCache = {};
+var CACHE_TTL  = 5 * 60 * 1000; // 5 นาที
+
 function showView(id, title){
   document.querySelectorAll('[id^="view-"]').forEach(function(el){el.style.display='none';});
   var el = document.getElementById(id);
   if(el) el.style.display='block';
-  document.getElementById('topbar-title').textContent = title||'';
-  // update nav active
-  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
-  var nav = document.querySelector('.nav-item[data-view="'+id+'"]');
-  if(nav) nav.classList.add('active');
-  // close sidebar on mobile
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sb-overlay').classList.remove('on');
+  if(title) document.getElementById('page-title').textContent = title;
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  var activeNav = document.querySelector('.nav-item[data-view="'+id+'"]');
+  if(activeNav) activeNav.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+function loadViewCached(viewId, loadFn){
+  var now = Date.now();
+  var last = _viewCache[viewId] || 0;
+  if(now - last < CACHE_TTL){
+    if(viewId==='view-admin-dash') { paginateAdmin(adminRecs); return; }
+    return;
+  }
+  _viewCache[viewId] = now;
+  loadFn();
+}
+
+function invalidateCache(viewId){
+  if(viewId) delete _viewCache[viewId];
+  else _viewCache = {};
 }
 
 function goBack(){
@@ -1179,34 +1196,35 @@ function buildNav(role){
 
   if(role === 'Admin'){
     html += navSection('หลัก');
-    html += navItem('view-admin-dash','ภาพรวม',iGrid,"showView('view-admin-dash','Admin Dashboard');loadAdmin();");
+    html += navItem('view-admin-dash','ภาพรวม',iGrid,"showView('view-admin-dash','Admin Dashboard');loadViewCached('view-admin-dash',loadAdmin);");
     html += navSection('รายการ');
     html += navItem('view-form','สร้างรายการ CN',iPlus,"openForm(null,true);");
     html += navSection('จัดการ');
-    html += navItem('view-users','ผู้ใช้งาน',iUser,"showView('view-users','จัดการผู้ใช้งาน');loadUsers();");
+    html += navItem('view-users','ผู้ใช้งาน',iUser,"showView('view-users','จัดการผู้ใช้งาน');loadViewCached('view-users',loadUsers);");
     html += navSection('รายงาน');
     html += navItem('','รายงานรายเดือน',iCal,"openMonthReport();");
     html += navItem('','Export CSV',iDl,"exportCSV();");
     html += navSection('ข้อมูล');
-    html += navItem('view-archive','Archive',iArc,"showView('view-archive','รายการ CN ที่ Archive');loadArchive();");
-    html += navItem('view-backup','Backup & Restore',iBk,"showView('view-backup','Backup & Restore');loadBackups();");
+    html += navItem('view-archive','Archive',iArc,"showView('view-archive','รายการ CN ที่ Archive');loadViewCached('view-archive',loadArchive);");
+    html += navItem('view-backup','Backup & Restore',iBk,"showView('view-backup','Backup & Restore');loadViewCached('view-backup',loadBackups);");
 
   } else if(role === 'Warehouse'){
-    // สิทธิ์เทียบเท่า Admin ยกเว้นจัดการ Users และลบ
     html += navSection('หลัก');
-    html += navItem('view-admin-dash','ภาพรวม',iGrid,"showView('view-admin-dash','Warehouse Dashboard');loadAdmin();");
+    html += navItem('view-admin-dash','ภาพรวม',iGrid,"showView('view-admin-dash','Warehouse Dashboard');loadViewCached('view-admin-dash',loadAdmin);");
     html += navSection('รายการ');
     html += navItem('view-form','สร้างรายการ CN',iPlus,"openForm(null,true);");
+    html += navSection('จัดการ');
+    html += navItem('view-users','ผู้ใช้งาน',iUser,"showView('view-users','จัดการผู้ใช้งาน');loadViewCached('view-users',loadUsers);");
     html += navSection('รายงาน');
     html += navItem('','รายงานรายเดือน',iCal,"openMonthReport();");
     html += navItem('','Export CSV',iDl,"exportCSV();");
     html += navSection('ข้อมูล');
-    html += navItem('view-archive','Archive',iArc,"showView('view-archive','รายการ CN ที่ Archive');loadArchive();");
+    html += navItem('view-archive','Archive',iArc,"showView('view-archive','รายการ CN ที่ Archive');loadViewCached('view-archive',loadArchive);");
 
   } else if(role === 'Accountant'){
     // ดูรายงานอย่างเดียว
     html += navSection('หลัก');
-    html += navItem('view-admin-dash','ภาพรวม CN',iGrid,"showView('view-admin-dash','รายงาน (บัญชี)');loadAdmin();");
+    html += navItem('view-admin-dash','ภาพรวม CN',iGrid,"showView('view-admin-dash','รายงาน (บัญชี)');loadViewCached('view-admin-dash',loadAdmin);");
     html += navSection('รายงาน');
     html += navItem('','รายงานรายเดือน',iCal,"openMonthReport();");
     html += navItem('','Export CSV',iDl,"exportCSV();");
@@ -1392,7 +1410,7 @@ function doDelete(id){
       try{
         var d = await apiPost({action:'deleteCN', id:cid, role: ST.user ? ST.user.role : ''});
         L.hide();
-        if(d.success){ toast('ลบรายการ '+cid+' สำเร็จ','success'); await loadAdmin(); }
+        if(d.success){ toast('ลบรายการ '+cid+' สำเร็จ','success'); invalidateCache('view-admin-dash'); await loadAdmin(); }
         else toast(d.message||'เกิดข้อผิดพลาด','error');
       }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
     }
@@ -1837,27 +1855,60 @@ function openStatusModal(id, currentStatus){
     'เสร็จสิ้น':      { icon:'✅', color:'var(--green)', dim:'var(--green-dim)', border:'rgba(63,185,80,.4)',  sub:'ดำเนินการเสร็จสิ้นแล้ว' }
   };
 
+  var isWarehouseRole = ST.user && ST.user.role === 'Warehouse';
+  var statusOrder = ['รอของ','กำลังดำเนินการ','เสร็จสิ้น'];
+  var currentIdx  = statusOrder.indexOf(currentStatus);
+  // Warehouse: เห็นเฉพาะขั้นถัดไป + ปัจจุบัน (ย้อนไม่ได้ ข้ามไม่ได้)
+  // ถ้า "เสร็จสิ้น" แล้ว → lock ทั้งหมด
+  var isLocked = isWarehouseRole && currentStatus === 'เสร็จสิ้น';
+
   var radios = Object.keys(stCfg).map(function(s){
-    var cfg = stCfg[s];
+    var cfg   = stCfg[s];
+    var sIdx  = statusOrder.indexOf(s);
     var active = s === currentStatus;
-    return '<label id="sl-'+s.replace(/[^a-z]/gi,'_')+'" style="'
+    // Warehouse: disable ถ้า (ย้อนกลับ) หรือ (ข้ามขั้น > 1) หรือ (lock)
+    var disabled = false;
+    var disabledReason = '';
+    if(isWarehouseRole){
+      if(isLocked){
+        disabled = true; disabledReason = 'รายการนี้เสร็จสิ้นแล้ว ไม่สามารถแก้ไขได้';
+      } else if(sIdx < currentIdx){
+        disabled = true; disabledReason = 'ไม่สามารถย้อนสถานะกลับได้';
+      } else if(sIdx > currentIdx + 1){
+        disabled = true; disabledReason = 'ต้องเปลี่ยนทีละขั้นเท่านั้น';
+      }
+    }
+    var opacity = disabled && !active ? '0.38' : '1';
+    return '<label style="'
       +'display:flex;align-items:center;gap:13px;'
       +'padding:13px 15px;'
       +'border:2px solid '+(active ? cfg.border : 'var(--border)')+';'
-      +'border-radius:10px;cursor:pointer;margin-bottom:9px;'
+      +'border-radius:10px;margin-bottom:9px;'
       +'background:'+(active ? cfg.dim : 'var(--surface)')+';'
-      +'transition:all .18s;position:relative;'
-      +(active?'box-shadow:0 0 0 1px '+cfg.color+' inset;':'')+'">'
-      +'<input type="radio" name="new-status" value="'+s+'"'+(active?' checked':'')
+      +'transition:all .18s;position:relative;opacity:'+opacity+';'
+      +'cursor:'+(disabled&&!active?'not-allowed':'pointer')+';'
+      +(active?'box-shadow:0 0 0 1px '+cfg.color+' inset;':'')+'"'
+      +(disabledReason?' title="'+disabledReason+'"':'')+' >'
+      +'<input type="radio" name="new-status" value="'+s+'"'
+      +(active?' checked':'')+(disabled?' disabled':'')
       +' style="position:absolute;opacity:0;width:0;height:0;"/>'
       +'<span style="font-size:1.35rem;line-height:1;flex-shrink:0;">'+cfg.icon+'</span>'
       +'<span style="flex:1;">'
       +'<span style="display:block;font-weight:700;font-size:.88rem;color:'+(active?cfg.color:'#E6EDF3')+';">'+s+'</span>'
-      +'<span style="display:block;font-size:.72rem;color:var(--muted);margin-top:2px;">'+cfg.sub+'</span>'
+      +'<span style="display:block;font-size:.72rem;color:var(--muted);margin-top:2px;">'
+      +(disabled&&!active?'<span style="color:var(--red);font-size:.68rem;">🔒 '+disabledReason+'</span>':cfg.sub)
+      +'</span>'
       +'</span>'
       +(active?'<span style="color:'+cfg.color+';font-size:1rem;">●</span>':'<span style="color:var(--border);font-size:1rem;">○</span>')
       +'</label>';
   }).join('');
+
+  // ถ้า lock ทั้งหมด แสดง banner แจ้ง
+  var lockedBanner = isLocked
+    ? '<div style="background:rgba(248,81,73,.12);border:1px solid rgba(248,81,73,.35);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">'
+      +'<span style="font-size:1.1rem;">🔒</span>'
+      +'<span style="font-size:.82rem;color:var(--red);font-weight:600;">รายการนี้ถูก Lock แล้ว — ไม่สามารถเปลี่ยนสถานะได้อีก</span>'
+      +'</div>' : '';
 
   // upload section (แสดงเมื่อเลือก "เสร็จสิ้น")
   var uploadHtml = '<div id="status-modal-upload" style="display:'+(currentStatus==='เสร็จสิ้น'?'block':'none')+';margin-top:4px;">'
@@ -1879,6 +1930,9 @@ function openStatusModal(id, currentStatus){
     +'กำลังอัปโหลด <span id="sm-progress"></span>...</div>'
     +'</div>';
 
+  // ถ้า lock: ปิด upload section ด้วย
+  if(isLocked) uploadHtml = '';
+
   openMdl(
     'เปลี่ยนสถานะรายการ',
     '<input type="hidden" id="status-modal-cid" value="'+cid+'"/>'
@@ -1886,11 +1940,14 @@ function openStatusModal(id, currentStatus){
     +'<span style="font-size:.72rem;color:var(--muted);">เลขที่เอกสาร</span>'
     +'<span style="font-family:var(--mono);color:var(--blue);font-weight:700;font-size:.85rem;">'+cid+'</span>'
     +'</div>'
+    +lockedBanner
     +radios
     +uploadHtml,
-    '<button class="btn btn-primary" id="confirm-status-btn" style="min-width:130px;justify-content:center;">'
-    +'<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>'
-    +'บันทึกสถานะ</button>'
+    (isLocked
+      ? '<button class="btn btn-ghost" style="min-width:130px;justify-content:center;opacity:.4;" disabled>🔒 ไม่สามารถแก้ไขได้</button>'
+      : '<button class="btn btn-primary" id="confirm-status-btn" style="min-width:130px;justify-content:center;">'
+        +'<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>'
+        +'บันทึกสถานะ</button>')
     +'<button class="btn btn-ghost" onclick="closeMdl()">ยกเลิก</button>'
   );
 
@@ -1997,7 +2054,7 @@ async function confirmStatusChange(cnId){
       imageUrl = uploadedUrls.join(',');
     }
 
-    var payload = {action:'updateCN', id:cnId, status:newStatus};
+    var payload = {action:'updateCN', id:cnId, status:newStatus, updaterRole: ST.user ? ST.user.role : '', updaterUID: ST.user ? ST.user.lineUID : ''};
     if(imageUrl) payload.imageUrl = imageUrl;
     if(newStatus==='เสร็จสิ้น') payload.completedAt = new Date().toISOString();
 
@@ -2008,6 +2065,7 @@ async function confirmStatusChange(cnId){
       smImgQueue=[];
       toast('เปลี่ยนสถานะเป็น "'+newStatus+'" สำเร็จ','success');
       // refresh เฉพาะ admin view (ไม่ต้อง reload ทั้งหมด)
+      invalidateCache('view-admin-dash');
       await loadAdmin(true);
       paginateAdmin(adminRecs);
     } else {
@@ -2189,12 +2247,16 @@ function printCNForm(r){
   // ── COMPANY LOGO CONFIG ─────────────────────────────────────────
   // เปลี่ยน BASE_URL ให้ตรงกับ GitHub repo ของคุณ
   // รูปแบบ: https://raw.githubusercontent.com/USERNAME/REPO/main/assets/logos/
-  var LOGO_BASE = 'https://raw.githubusercontent.com/Royald-th/CN/main/assets/logos/';
+  var LOGO_BASE = 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/assets/logos/';
 
   var LOGOS = {
     'บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด': {
       url : LOGO_BASE + 'royal-d.png',
       name: 'บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด'
+    },
+    'บริษัท รอแยล-ดี (ไทยแลนด์)': {
+      url : LOGO_BASE + 'royal-d.png',
+      name: 'บริษัท รอแยล-ดี (ไทยแลนด์)'
     },
     'บริษัท แฟนซีเวิล์ด จำกัด': {
       url : LOGO_BASE + 'fancyworld.png',
@@ -2235,7 +2297,7 @@ function printCNForm(r){
       +'</tr>';
   }
 
-  var css=`
+ var css=`
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
 @page{size:210mm 297mm portrait;margin:6mm 10mm 6mm 10mm;}
 html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background:#fff;width:190mm;}
@@ -2541,33 +2603,104 @@ async function loadUsers(){
 function renderUsersTbl(users){
   var tb = document.getElementById('users-tbl');
   if(!users || !users.length){
-    tb.innerHTML = '<tr><td colspan="6" class="te">ยังไม่มีผู้ใช้งาน</td></tr>';
+    tb.innerHTML = '<tr><td colspan="7" class="te">ยังไม่มีผู้ใช้งาน</td></tr>';
     return;
   }
   // นับ CN ต่อ user จาก adminRecs
   var cnCount = {};
   adminRecs.forEach(function(r){ cnCount[r.lineUID] = (cnCount[r.lineUID]||0)+1; });
 
+  var myRole      = ST.user ? ST.user.role : '';
+  var canManage   = (myRole === 'Admin' || myRole === 'Warehouse');
+  var canSetAdmin = (myRole === 'Admin');
+
   tb.innerHTML = users.map(function(u, i){
-    return '<tr>'
-      +'<td style="color:var(--muted);text-align:center;">'+(i+1)+'</td>'
+    var roleOpts = ''
+      +'<option value="User"'+(u.role==='User'?' selected':'')+'>👤 User</option>'
+      +'<option value="Warehouse"'+(u.role==='Warehouse'?' selected':'')+'>🏭 Warehouse</option>'
+      +'<option value="Accountant"'+(u.role==='Accountant'?' selected':'')+'>📊 Accountant</option>'
+      +(canSetAdmin?'<option value="Admin"'+(u.role==='Admin'?' selected':'')+'>⚙️ Admin</option>':'');
+    var roleCell = canManage
+      ? '<select class="role-select" onchange="changeUserRole(\''+u.lineUID+'\',this.value)">'+roleOpts+'</select>'
+      : roleBadge(u.role);
+    var editBtn = canManage
+      ? '<button class="btn btn-ghost btn-xs" onclick="editUserName(\''+u.lineUID+'\',\''+esc(u.firstName||'')+'\',\''+esc(u.lastName||'')+'\')" title="แก้ไขชื่อ">✏️</button>'
+      : '';
+    var delBtn = canManage
+      ? '<button class="btn btn-danger btn-xs" onclick="deleteUser(\''+u.lineUID+'\',\''+esc((u.firstName||'')+' '+(u.lastName||''))+'\')" title="ลบผู้ใช้">🗑</button>'
+      : '';
+    return '<tr style="height:46px;">'
+      +'<td style="color:var(--muted);text-align:center;font-size:.78rem;">'+(i+1)+'</td>'
       +'<td style="font-weight:600;color:#E6EDF3;">'+(u.firstName||'')+' '+(u.lastName||'')+'</td>'
-      +'<td class="mono" style="font-size:.72rem;color:var(--muted);">'+u.lineUID+'</td>'
-      +'<td>'
-      +'<select class="role-select" onchange="changeUserRole(\''+u.lineUID+'\',this.value)">'      +'<option value="User"'+(u.role==='User'?' selected':'')+'>👤 User</option>'      +'<option value="Warehouse"'+(u.role==='Warehouse'?' selected':'')+'>🏭 Warehouse</option>'      +'<option value="Accountant"'+(u.role==='Accountant'?' selected':'')+'>📊 Accountant</option>'      +'<option value="Admin"'+(u.role==='Admin'?' selected':'')+'>⚙️ Admin</option>'      +'</select>'
-      +'</td>'
+      +'<td class="mono" style="font-size:.7rem;color:var(--muted);">'+u.lineUID+'</td>'
+      +'<td>'+roleCell+'</td>'
       +'<td style="font-size:.76rem;color:var(--muted);">'+fDate(u.createdAt)+'</td>'
       +'<td style="text-align:center;font-weight:600;">'+(cnCount[u.lineUID]||0)+'</td>'
+      +'<td><div style="display:flex;gap:5px;">'+editBtn+delBtn+'</div></td>'
       +'</tr>';
   }).join('');
 }
 
 async function changeUserRole(lineUID, newRole){
+  // Warehouse ห้าม assign Admin
+  if(ST.user && ST.user.role==='Warehouse' && newRole==='Admin'){
+    toast('Warehouse ไม่มีสิทธิ์กำหนด role Admin','error'); loadUsers(); return;
+  }
   try{
     var d = await apiPost({action:'updateUserRole', lineUID:lineUID, role:newRole});
-    if(d.success) toast('เปลี่ยน Role เป็น '+newRole+' สำเร็จ','success');
+    if(d.success) toast('เปลี่ยน Role เป็น '+newRole+' สำเร็จ ✅','success');
     else toast(d.message||'เกิดข้อผิดพลาด','error');
   }catch(e){ toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+}
+
+function editUserName(lineUID, firstName, lastName){
+  // แสดง inline prompt ผ่าน openConfirmMdl
+  var html = '<div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">'
+    +'<div><label style="font-size:.74rem;color:var(--muted);display:block;margin-bottom:4px;">ชื่อ</label>'
+    +'<input id="edit-fn" class="finput" value="'+firstName+'" placeholder="ชื่อ" style="width:100%;"/></div>'
+    +'<div><label style="font-size:.74rem;color:var(--muted);display:block;margin-bottom:4px;">นามสกุล</label>'
+    +'<input id="edit-ln" class="finput" value="'+lastName+'" placeholder="นามสกุล" style="width:100%;"/></div>'
+    +'</div>';
+  openConfirmMdl({
+    icon:'✏️', title:'แก้ไขชื่อผู้ใช้',
+    body: html,
+    okLabel:'บันทึก', okClass:'btn-pri',
+    onOk: async function(){
+      var fn = (document.getElementById('edit-fn')||{value:''}).value.trim();
+      var ln = (document.getElementById('edit-ln')||{value:''}).value.trim();
+      if(!fn||!ln){ toast('กรุณากรอกชื่อและนามสกุล','error'); return; }
+      L.show('กำลังบันทึก...');
+      try{
+        var d = await apiPost({action:'updateUserName', lineUID:lineUID, firstName:fn, lastName:ln});
+        L.hide();
+        if(d.success){ toast('แก้ไขชื่อสำเร็จ ✅','success'); await loadUsers(); }
+        else toast(d.message||'เกิดข้อผิดพลาด','error');
+      }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+    }
+  });
+  // inject html เข้า mdl-body หลัง openConfirmMdl render
+  setTimeout(function(){
+    var b = document.getElementById('confirm-mdl-body');
+    if(b){ b.innerHTML = html; }
+  }, 30);
+}
+
+function deleteUser(lineUID, name){
+  openConfirmMdl({
+    icon:'🗑', title:'ลบผู้ใช้งาน',
+    body:'ต้องการลบ "'+name+'" ออกจากระบบใช่หรือไม่?',
+    detail:'การลบไม่สามารถย้อนคืนได้ รายการ CN ที่สร้างไว้จะยังคงอยู่',
+    okLabel:'ลบเลย', okClass:'btn-danger',
+    onOk: async function(){
+      L.show('กำลังลบผู้ใช้...');
+      try{
+        var d = await apiPost({action:'deleteUser', lineUID:lineUID});
+        L.hide();
+        if(d.success){ toast('ลบ "'+name+'" สำเร็จ ✅','success'); await loadUsers(); }
+        else toast(d.message||'เกิดข้อผิดพลาด','error');
+      }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+    }
+  });
 }
 
 /* ══════════════════════════════════════════
@@ -2732,8 +2865,9 @@ function openConfirmMdl(opts){
   okBtn.style.justifyContent = 'center';
   _confirmCallback = opts.onOk || null;
   okBtn.onclick = function(){
+    var fn = _confirmCallback; // capture ก่อน null
     closeConfirmMdl();
-    if(_confirmCallback) _confirmCallback();
+    if(fn) fn();
   };
   document.getElementById('confirm-mdl').classList.add('on');
 }
@@ -2896,6 +3030,8 @@ document.addEventListener('DOMContentLoaded',function(){
   window.loadAdmin = loadAdmin;
   window.loadUsers = loadUsers;
   window.changeUserRole = changeUserRole;
+  window.editUserName   = editUserName;
+  window.deleteUser     = deleteUser;
   window.showView = showView;
   window.toggleSidebar = toggleSidebar;
   window.removeExistingImg = removeExistingImg;
@@ -2909,7 +3045,9 @@ document.addEventListener('DOMContentLoaded',function(){
   window.doArchiveCompleted  = doArchiveCompleted;
   window.openConfirmMdl      = openConfirmMdl;
   window.closeConfirmMdl     = closeConfirmMdl;
-  window.renderAdminPage = renderAdminPage;
+  window.renderAdminPage  = renderAdminPage;
+  window.loadViewCached   = loadViewCached;
+  window.invalidateCache  = invalidateCache;
 });
 </script>
 </body>
