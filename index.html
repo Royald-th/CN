@@ -961,11 +961,16 @@ function loadViewCached(viewId, loadFn){
   var last = _viewCache[viewId] || 0;
   // ถ้า cache ยังไม่หมด และมีข้อมูลอยู่แล้ว → render จาก memory ทันที
   if(now - last < CACHE_TTL){
-    if(viewId==='view-admin-dash' && adminRecs.length) {
+    if(viewId==='view-admin-dash' && adminRecs.length){
       paginateAdmin(adminRecs);
       return;
     }
-    if(viewId==='view-users') return; // users table render แล้ว
+    if(viewId==='view-users'){
+      // ตรวจว่า table มีข้อมูลแล้วหรือยัง
+      var utb = document.getElementById('users-tbl');
+      if(utb && utb.rows.length > 0 && !utb.querySelector('.te')) return;
+      // ถ้ายังว่าง → โหลดใหม่
+    }
   }
   // หมด cache หรือไม่มีข้อมูล → โหลดใหม่
   _viewCache[viewId] = now;
@@ -1085,7 +1090,7 @@ async function checkUser(uid){
   try{
     var d = await apiGet({action:'getUser', lineUID:uid});
     L.hide();
-    if(d.found){ ST.user=d.user; enterApp(); }
+    if(d.found){ ST.user=d.user; await enterApp(); }
     else{
       document.getElementById('auth-login').style.display='none';
       document.getElementById('auth-reg').style.display='block';
@@ -1097,7 +1102,7 @@ async function checkUser(uid){
       await new Promise(function(r){ setTimeout(r, 2500); });
       var d2 = await apiGet({action:'getUser', lineUID:uid});
       L.hide();
-      if(d2.found){ ST.user=d2.user; enterApp(); }
+      if(d2.found){ ST.user=d2.user; await enterApp(); }
       else{
         document.getElementById('auth-login').style.display='none';
         document.getElementById('auth-reg').style.display='block';
@@ -1117,7 +1122,7 @@ async function doRegister(){
   try{
     var d=await apiPost({action:'register',lineUID:ST.profile.userId,firstName:fn,lastName:ln});
     L.hide();
-    if(d.success){ST.user=d.user;enterApp();}
+    if(d.success){ST.user=d.user; await enterApp();}
     else showErr('reg-err',d.message||'เกิดข้อผิดพลาด');
   }catch(e){L.hide();showErr('reg-err',e.message);}
 }
@@ -1145,31 +1150,35 @@ function roleLabel(role){
   return map[role]||role;
 }
 
-function enterApp(){
+async function enterApp(){
   document.getElementById('page-auth').classList.remove('active');
   document.getElementById('auth-login').style.display='block';
   document.getElementById('auth-reg').style.display='none';
 
-  var u=ST.user;
-  var initials=(u.firstName||'').charAt(0)+(u.lastName||'').charAt(0);
-  document.getElementById('sb-avatar').textContent=initials;
-  document.getElementById('sb-name').textContent=u.firstName+' '+u.lastName;
-  document.getElementById('sb-role').textContent=roleLabel(u.role);
+  var u = ST.user;
+  var initials = (u.firstName||'').charAt(0)+(u.lastName||'').charAt(0);
+  document.getElementById('sb-avatar').textContent = initials;
+  document.getElementById('sb-name').textContent   = u.firstName+' '+u.lastName;
+  document.getElementById('sb-role').textContent   = roleLabel(u.role);
 
   buildNav(u.role);
   gotoPage('page-app');
 
-  // invalidate ทุก view เพื่อให้ login ครั้งใหม่โหลดข้อมูลสดเสมอ
+  // invalidate cache ทุกครั้งที่ login ใหม่ → โหลดข้อมูลสดเสมอ
   invalidateCache();
-  if(u.role==='Admin'){
-    showView('view-admin-dash','Admin Dashboard'); loadAdmin();
-  } else if(u.role==='Warehouse'){
-    showView('view-admin-dash','Warehouse Dashboard'); loadAdmin();
-  } else if(u.role==='Accountant'){
-    showView('view-admin-dash','รายงาน (ฝ่ายบัญชี)'); loadAdmin();
+
+  if(u.role === 'Admin'){
+    showView('view-admin-dash','Admin Dashboard');
+    await loadAdmin();
+  } else if(u.role === 'Warehouse'){
+    showView('view-admin-dash','Warehouse Dashboard');
+    await loadAdmin();
+  } else if(u.role === 'Accountant'){
+    showView('view-admin-dash','รายงาน (ฝ่ายบัญชี)');
+    await loadAdmin();
   } else {
     showView('view-user-dash','Dashboard ของฉัน');
-    loadUser();
+    await loadUser();
     startAutoRefresh();
   }
 }
@@ -1263,6 +1272,7 @@ async function loadUser(silent){
     document.getElementById('s-proc').textContent = r.filter(function(x){return x.status==='กำลังดำเนินการ';}).length;
     document.getElementById('s-done').textContent = r.filter(function(x){return x.status==='เสร็จสิ้น';}).length;
     filterUserTbl();
+    _viewCache['view-user-dash'] = Date.now();
   } catch(e){
     if(!silent) L.hide();
     showLoadError('utbl', 6, loadUser);
@@ -1307,6 +1317,8 @@ async function loadAdmin(silent){
     buildUserDropdown();
     updateAdminStats(adminRecs);
     paginateAdmin(adminRecs);
+    // อัปเดต cache timestamp หลังโหลดสำเร็จ
+    _viewCache['view-admin-dash'] = Date.now();
   } catch(e){
     if(!silent) L.hide();
     showLoadError('atbl', 8, loadAdmin);
@@ -2255,7 +2267,7 @@ function printCNForm(r){
   // ── COMPANY LOGO CONFIG ─────────────────────────────────────────
   // เปลี่ยน BASE_URL ให้ตรงกับ GitHub repo ของคุณ
   // รูปแบบ: https://raw.githubusercontent.com/USERNAME/REPO/main/assets/logos/
-  var LOGO_BASE = 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/assets/logos/';
+  var LOGO_BASE = 'https://raw.githubusercontent.com/Royald-th/CN/main/assets/logos/';
 
   var LOGOS = {
     'บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด': {
@@ -2274,6 +2286,7 @@ function printCNForm(r){
       url : LOGO_BASE + 'qualitat.png',
       name: 'บริษัท ควอลิแทต (ประเทศไทย) จำกัด'
     },
+
   };
 
   // หาโลโก้ตาม company ที่เลือก
@@ -2605,6 +2618,7 @@ async function loadUsers(){
     L.hide();
     if(!d.success){ toast('โหลดข้อมูลผู้ใช้ไม่สำเร็จ','error'); return; }
     renderUsersTbl(d.users);
+    _viewCache['view-users'] = Date.now();
   }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
 }
 
