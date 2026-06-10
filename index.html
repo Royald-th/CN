@@ -916,7 +916,7 @@ select.fc option { background: var(--surface2); }
    ══════════════════════════════════════════ */
 var CFG = {
   GAS : 'https://script.google.com/macros/s/AKfycbwW0jii9UZ1W0vla9mbdL33Pjf_WnfsnqQhzXYTCUKNqVtkVsGsCziBE7frdSXzPsy1/exec',   // << แก้ตรงนี้
-  LIFF: '2010353256-fDHETg8T',            // << แก้ตรงนี้
+  LIFF: '2009828928-QGqi58ee',            // << แก้ตรงนี้
 };
 window.CFG = CFG;
 
@@ -959,10 +959,15 @@ function showView(id, title){
 function loadViewCached(viewId, loadFn){
   var now = Date.now();
   var last = _viewCache[viewId] || 0;
+  // ถ้า cache ยังไม่หมด และมีข้อมูลอยู่แล้ว → render จาก memory ทันที
   if(now - last < CACHE_TTL){
-    if(viewId==='view-admin-dash') { paginateAdmin(adminRecs); return; }
-    return;
+    if(viewId==='view-admin-dash' && adminRecs.length) {
+      paginateAdmin(adminRecs);
+      return;
+    }
+    if(viewId==='view-users') return; // users table render แล้ว
   }
+  // หมด cache หรือไม่มีข้อมูล → โหลดใหม่
   _viewCache[viewId] = now;
   loadFn();
 }
@@ -1154,6 +1159,8 @@ function enterApp(){
   buildNav(u.role);
   gotoPage('page-app');
 
+  // invalidate ทุก view เพื่อให้ login ครั้งใหม่โหลดข้อมูลสดเสมอ
+  invalidateCache();
   if(u.role==='Admin'){
     showView('view-admin-dash','Admin Dashboard'); loadAdmin();
   } else if(u.role==='Warehouse'){
@@ -1677,6 +1684,7 @@ async function saveCN(){
     if(d.success){
       var isCreate = !ST.editId;
       toast(isCreate ? 'สร้างรายการ CN สำเร็จ 🎉' : 'บันทึกการแก้ไขสำเร็จ', 'success');
+      invalidateCache(); // force reload หลัง create/edit
       if(ST.fromAdmin || isAdmin){
         await loadAdmin();
         showView('view-admin-dash','Admin Dashboard');
@@ -3047,6 +3055,8 @@ document.addEventListener('DOMContentLoaded',function(){
   window.closeConfirmMdl     = closeConfirmMdl;
   window.renderAdminPage  = renderAdminPage;
   window.loadViewCached   = loadViewCached;
+  window.loadAdmin        = loadAdmin;
+  window.loadUser         = loadUser;
   window.invalidateCache  = invalidateCache;
 });
 </script>
