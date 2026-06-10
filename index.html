@@ -956,25 +956,30 @@ function showView(id, title){
   document.getElementById(id).classList.add('active');
 }
 
-function loadViewCached(viewId, loadFn){
-  var now = Date.now();
+async function loadViewCached(viewId, loadFn){
+  var now  = Date.now();
   var last = _viewCache[viewId] || 0;
-  // ถ้า cache ยังไม่หมด และมีข้อมูลอยู่แล้ว → render จาก memory ทันที
-  if(now - last < CACHE_TTL){
-    if(viewId==='view-admin-dash' && adminRecs.length){
+  var fresh = now - last < CACHE_TTL;
+
+  if(fresh){
+    // มี cache ยังไม่หมด → render จาก memory ได้เลย ถ้ามีข้อมูล
+    if(viewId === 'view-admin-dash' && adminRecs.length){
       paginateAdmin(adminRecs);
       return;
     }
-    if(viewId==='view-users'){
-      // ตรวจว่า table มีข้อมูลแล้วหรือยัง
+    if(viewId === 'view-users'){
       var utb = document.getElementById('users-tbl');
-      if(utb && utb.rows.length > 0 && !utb.querySelector('.te')) return;
-      // ถ้ายังว่าง → โหลดใหม่
+      var hasData = utb && utb.rows.length > 0 && !utb.querySelector('.te');
+      if(hasData) return;
     }
   }
-  // หมด cache หรือไม่มีข้อมูล → โหลดใหม่
-  _viewCache[viewId] = now;
-  loadFn();
+  // โหลดใหม่ — รอ async function เสร็จก่อน set cache
+  try {
+    await loadFn();
+    _viewCache[viewId] = Date.now(); // set หลัง load สำเร็จจริงๆ
+  } catch(e) {
+    // โหลดไม่สำเร็จ → ไม่ set cache เพื่อให้ retry ได้ครั้งหน้า
+  }
 }
 
 function invalidateCache(viewId){
@@ -1272,7 +1277,6 @@ async function loadUser(silent){
     document.getElementById('s-proc').textContent = r.filter(function(x){return x.status==='กำลังดำเนินการ';}).length;
     document.getElementById('s-done').textContent = r.filter(function(x){return x.status==='เสร็จสิ้น';}).length;
     filterUserTbl();
-    _viewCache['view-user-dash'] = Date.now();
   } catch(e){
     if(!silent) L.hide();
     showLoadError('utbl', 6, loadUser);
@@ -1317,8 +1321,6 @@ async function loadAdmin(silent){
     buildUserDropdown();
     updateAdminStats(adminRecs);
     paginateAdmin(adminRecs);
-    // อัปเดต cache timestamp หลังโหลดสำเร็จ
-    _viewCache['view-admin-dash'] = Date.now();
   } catch(e){
     if(!silent) L.hide();
     showLoadError('atbl', 8, loadAdmin);
@@ -1359,7 +1361,13 @@ function updateAdminStats(recs){
 function renderAdminTbl(recs){
   var tb=document.getElementById('atbl');
   if(!recs.length){
-    tb.innerHTML='<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">ไม่พบรายการ</div><div class="empty-sub">ลองเปลี่ยนเงื่อนไขการค้นหา</div></div></td></tr>';
+    // ถ้า adminRecs ก็ว่างด้วย แสดงว่ายังไม่มีข้อมูลเลย (ไม่ใช่ filter ไม่เจอ)
+    var isEmpty = !adminRecs.length;
+    tb.innerHTML='<tr><td colspan="8"><div class="empty-state">'
+      +'<div class="empty-icon">'+(isEmpty?'📋':'🔍')+'</div>'
+      +'<div class="empty-title">'+(isEmpty?'ยังไม่มีรายการ CN':'ไม่พบรายการ')+'</div>'
+      +'<div class="empty-sub">'+(isEmpty?'กดปุ่มสร้างรายการ CN เพื่อเริ่มต้น':'ลองเปลี่ยนเงื่อนไขการค้นหา')+'</div>'
+      +'</div></td></tr>';
     return;
   }
   var canEdit    = isAdminLevel();
@@ -2267,7 +2275,7 @@ function printCNForm(r){
   // ── COMPANY LOGO CONFIG ─────────────────────────────────────────
   // เปลี่ยน BASE_URL ให้ตรงกับ GitHub repo ของคุณ
   // รูปแบบ: https://raw.githubusercontent.com/USERNAME/REPO/main/assets/logos/
-  var LOGO_BASE = 'https://raw.githubusercontent.com/Royald-th/CN/main/assets/logos/';
+  var LOGO_BASE = 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/assets/logos/';
 
   var LOGOS = {
     'บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด': {
@@ -2286,7 +2294,6 @@ function printCNForm(r){
       url : LOGO_BASE + 'qualitat.png',
       name: 'บริษัท ควอลิแทต (ประเทศไทย) จำกัด'
     },
-
   };
 
   // หาโลโก้ตาม company ที่เลือก
@@ -2618,7 +2625,6 @@ async function loadUsers(){
     L.hide();
     if(!d.success){ toast('โหลดข้อมูลผู้ใช้ไม่สำเร็จ','error'); return; }
     renderUsersTbl(d.users);
-    _viewCache['view-users'] = Date.now();
   }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
 }
 
