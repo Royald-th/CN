@@ -2644,14 +2644,23 @@ function stopAutoRefresh(){
 /* ══════════════════════════════════════════
    USER MANAGEMENT (Admin)
    ══════════════════════════════════════════ */
-async function loadUsers(){
-  L.show('กำลังโหลดข้อมูลผู้ใช้...');
+async function loadUsers(silent){
+  if(!silent) L.show('กำลังโหลดข้อมูลผู้ใช้...');
   try{
     var d = await apiGet({action:'getUserList'});
-    L.hide();
-    if(!d.success){ toast('โหลดข้อมูลผู้ใช้ไม่สำเร็จ','error'); return; }
+    if(!silent) L.hide();
+    if(!d.success){
+      if(!silent) toast('โหลดข้อมูลผู้ใช้ไม่สำเร็จ','error');
+      else showLoadError('users-tbl', 7, loadUsers);
+      return;
+    }
     renderUsersTbl(d.users);
-  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+  }catch(e){
+    if(!silent) L.hide();
+    if(!silent) toast('เกิดข้อผิดพลาด: '+e.message,'error');
+    else showLoadError('users-tbl', 7, loadUsers);
+    throw e; // re-throw เพื่อให้ loadViewCached รู้ว่าโหลดไม่สำเร็จ (ไม่ set cache)
+  }
 }
 
 function renderUsersTbl(users){
@@ -2798,17 +2807,26 @@ function renderAdminPage(){
    ══════════════════════════════════════════ */
 var archiveRecs = [];  // cache
 
-async function loadArchive(){
-  L.show('กำลังโหลด Archive...');
+async function loadArchive(silent){
+  if(!silent) L.show('กำลังโหลด Archive...');
   try{
     var d = await apiGet({action:'getArchiveList', lineUID:ST.user.lineUID, role:ST.user.role});
-    L.hide();
-    if(!d.success){ toast('โหลด Archive ไม่สำเร็จ','error'); return; }
+    if(!silent) L.hide();
+    if(!d.success){
+      if(!silent) toast('โหลด Archive ไม่สำเร็จ','error');
+      else showLoadError('arc-tbl', 7, loadArchive);
+      return;
+    }
     archiveRecs = d.records || [];
     document.getElementById('arc-total').textContent = archiveRecs.length;
     document.getElementById('arc-done').textContent  = archiveRecs.filter(function(r){ return r.status==='เสร็จสิ้น'; }).length;
     renderArchiveTbl(archiveRecs);
-  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+  }catch(e){
+    if(!silent) L.hide();
+    if(!silent) toast('เกิดข้อผิดพลาด: '+e.message,'error');
+    else showLoadError('arc-tbl', 7, loadArchive);
+    throw e;
+  }
 }
 
 function renderArchiveTbl(recs){
@@ -2936,14 +2954,23 @@ function closeConfirmMdl(e){
 /* ══════════════════════════════════════════
    BACKUP SYSTEM — Frontend
    ══════════════════════════════════════════ */
-async function loadBackups(){
-  L.show('กำลังโหลดประวัติ Backup...');
+async function loadBackups(silent){
+  if(!silent) L.show('กำลังโหลดประวัติ Backup...');
   try{
     var d = await apiGet({action:'getBackupList'});
-    L.hide();
-    if(!d.success){ toast('โหลดข้อมูล Backup ไม่สำเร็จ','error'); return; }
+    if(!silent) L.hide();
+    if(!d.success){
+      if(!silent) toast('โหลดข้อมูล Backup ไม่สำเร็จ','error');
+      else showLoadError('bk-tbl', 7, loadBackups);
+      return;
+    }
     renderBackupTbl(d.backups||[]);
-  }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+  }catch(e){
+    if(!silent) L.hide();
+    if(!silent) toast('เกิดข้อผิดพลาด: '+e.message,'error');
+    else showLoadError('bk-tbl', 7, loadBackups);
+    throw e;
+  }
 }
 
 function renderBackupTbl(backups){
