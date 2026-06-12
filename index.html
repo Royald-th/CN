@@ -967,18 +967,27 @@ async function loadViewCached(viewId, loadFn){
       paginateAdmin(adminRecs);
       return;
     }
+    if(viewId === 'view-user-dash' && ST.cnList && ST.cnList.length){
+      filterUserTbl();
+      return;
+    }
     if(viewId === 'view-users'){
       var utb = document.getElementById('users-tbl');
       var hasData = utb && utb.rows.length > 0 && !utb.querySelector('.te');
       if(hasData) return;
     }
   }
-  // โหลดใหม่ — รอ async function เสร็จก่อน set cache
+  // โหลดใหม่ — คลุมด้วย L.show เพื่อกัน Empty State แวบขึ้นระหว่างรอข้อมูล
+  // (loadFn เรียกแบบ silent=true เพื่อไม่ให้ L.hide() ซ้อนกันก่อนเวลา)
+  L.show('กำลังโหลดข้อมูล...');
   try {
-    await loadFn();
+    await loadFn(true);
     _viewCache[viewId] = Date.now(); // set หลัง load สำเร็จจริงๆ
   } catch(e) {
     // โหลดไม่สำเร็จ → ไม่ set cache เพื่อให้ retry ได้ครั้งหน้า
+  } finally {
+    // เคลียร์ spinner เสมอ ไม่ให้ค้าง ไม่ว่าจะสำเร็จหรือ error
+    L.hide();
   }
 }
 
@@ -1094,9 +1103,13 @@ async function initLiff(){
 async function checkUser(uid){
   try{
     var d = await apiGet({action:'getUser', lineUID:uid});
-    L.hide();
-    if(d.found){ ST.user=d.user; await enterApp(); }
-    else{
+    if(d.found){
+      ST.user = d.user;
+      // คง L.show() ไว้ — enterApp() จะ L.hide() เองหลังโหลดข้อมูลตารางเสร็จ
+      L.show('กำลังโหลดข้อมูล...');
+      await enterApp();
+    } else {
+      L.hide();
       document.getElementById('auth-login').style.display='none';
       document.getElementById('auth-reg').style.display='block';
     }
@@ -1106,9 +1119,12 @@ async function checkUser(uid){
     try{
       await new Promise(function(r){ setTimeout(r, 2500); });
       var d2 = await apiGet({action:'getUser', lineUID:uid});
-      L.hide();
-      if(d2.found){ ST.user=d2.user; await enterApp(); }
-      else{
+      if(d2.found){
+        ST.user = d2.user;
+        L.show('กำลังโหลดข้อมูล...');
+        await enterApp();
+      } else {
+        L.hide();
         document.getElementById('auth-login').style.display='none';
         document.getElementById('auth-reg').style.display='block';
       }
@@ -1156,6 +1172,9 @@ function roleLabel(role){
 }
 
 async function enterApp(){
+  // L.show() ถูกเปิดค้างไว้จาก checkUser() แล้ว — คงไว้จนข้อมูลตารางพร้อม
+  L.show('กำลังโหลดข้อมูล...');
+
   document.getElementById('page-auth').classList.remove('active');
   document.getElementById('auth-login').style.display='block';
   document.getElementById('auth-reg').style.display='none';
@@ -1172,19 +1191,26 @@ async function enterApp(){
   // invalidate cache ทุกครั้งที่ login ใหม่ → โหลดข้อมูลสดเสมอ
   invalidateCache();
 
-  if(u.role === 'Admin'){
-    showView('view-admin-dash','Admin Dashboard');
-    await loadAdmin();
-  } else if(u.role === 'Warehouse'){
-    showView('view-admin-dash','Warehouse Dashboard');
-    await loadAdmin();
-  } else if(u.role === 'Accountant'){
-    showView('view-admin-dash','รายงาน (ฝ่ายบัญชี)');
-    await loadAdmin();
-  } else {
-    showView('view-user-dash','Dashboard ของฉัน');
-    await loadUser();
-    startAutoRefresh();
+  // กำหนด view + load function ตาม role แล้ว "โหลดข้อมูลให้เสร็จก่อน"
+  // จึงค่อย showView() เพื่อกัน Empty State แวบขึ้นมาก่อนข้อมูลมา
+  try{
+    if(u.role === 'Admin'){
+      await loadAdmin(true);            // silent: ไม่ให้ loadAdmin ไป L.hide() เอง
+      showView('view-admin-dash','Admin Dashboard');
+    } else if(u.role === 'Warehouse'){
+      await loadAdmin(true);
+      showView('view-admin-dash','Warehouse Dashboard');
+    } else if(u.role === 'Accountant'){
+      await loadAdmin(true);
+      showView('view-admin-dash','รายงาน (ฝ่ายบัญชี)');
+    } else {
+      await loadUser(true);
+      showView('view-user-dash','Dashboard ของฉัน');
+      startAutoRefresh();
+    }
+  } finally {
+    // ปิด overlay หลังข้อมูลพร้อมและ view ถูกเรนเดอร์แล้วเท่านั้น
+    L.hide();
   }
 }
 
@@ -1253,7 +1279,7 @@ function buildNav(role){
   } else {
     // User
     html += navSection('หลัก');
-    html += navItem('view-user-dash','รายการของฉัน',iGrid,"showView('view-user-dash','Dashboard ของฉัน');loadUser();");
+    html += navItem('view-user-dash','รายการของฉัน',iGrid,"showView('view-user-dash','Dashboard ของฉัน');loadViewCached('view-user-dash',loadUser);");
     html += navSection('รายการ');
     html += navItem('view-form','สร้างรายการ CN',iPlus,"openForm(null,false);");
   }
