@@ -957,36 +957,38 @@ function showView(id, title){
 }
 
 async function loadViewCached(viewId, loadFn){
+  // บังคับโหลดข้อมูลสดใหม่เสมอสำหรับหน้า Dashboard และหน้าจัดการผู้ใช้งาน
+  // เพื่อตัดปัญหา cache ค้างที่ทำให้ตารางไม่ขึ้นข้อมูลในการกดเมนูครั้งแรก
+  if(viewId === 'view-user-dash' || viewId === 'view-admin-dash' || viewId === 'view-users'){
+    L.show('กำลังโหลดข้อมูล...');
+    try{
+      await loadFn(true); // silent:true กัน L.hide() ซ้อนจาก loadFn เอง
+      _viewCache[viewId] = Date.now();
+    } catch(e){
+      console.error(e);
+      // โหลดไม่สำเร็จ → ไม่ set cache เพื่อให้ retry ได้ครั้งหน้า
+    } finally{
+      L.hide(); // ปิด overlay เสมอ หลัง render เสร็จเท่านั้น ไม่ว่าสำเร็จหรือ error
+    }
+    return;
+  }
+
+  // หน้าอื่นๆ (Archive, Backup ฯลฯ) ใช้ TTL cache ตามปกติ
   var now  = Date.now();
   var last = _viewCache[viewId] || 0;
   var fresh = now - last < CACHE_TTL;
 
   if(fresh){
-    // มี cache ยังไม่หมด → render จาก memory ได้เลย ถ้ามีข้อมูล
-    if(viewId === 'view-admin-dash' && adminRecs.length){
-      paginateAdmin(adminRecs);
-      return;
-    }
-    if(viewId === 'view-user-dash' && ST.cnList && ST.cnList.length){
-      filterUserTbl();
-      return;
-    }
-    if(viewId === 'view-users'){
-      var utb = document.getElementById('users-tbl');
-      var hasData = utb && utb.rows.length > 0 && !utb.querySelector('.te');
-      if(hasData) return;
-    }
+    return; // ยังไม่หมดอายุ cache → ไม่ต้องโหลดใหม่ (ข้อมูลที่ render ไว้ยังใช้ได้)
   }
-  // โหลดใหม่ — คลุมด้วย L.show เพื่อกัน Empty State แวบขึ้นระหว่างรอข้อมูล
-  // (loadFn เรียกแบบ silent=true เพื่อไม่ให้ L.hide() ซ้อนกันก่อนเวลา)
+
   L.show('กำลังโหลดข้อมูล...');
-  try {
+  try{
     await loadFn(true);
-    _viewCache[viewId] = Date.now(); // set หลัง load สำเร็จจริงๆ
-  } catch(e) {
-    // โหลดไม่สำเร็จ → ไม่ set cache เพื่อให้ retry ได้ครั้งหน้า
-  } finally {
-    // เคลียร์ spinner เสมอ ไม่ให้ค้าง ไม่ว่าจะสำเร็จหรือ error
+    _viewCache[viewId] = Date.now();
+  } catch(e){
+    console.error(e);
+  } finally{
     L.hide();
   }
 }
@@ -1243,35 +1245,35 @@ function buildNav(role){
 
   if(role === 'Admin'){
     html += navSection('หลัก');
-    html += navItem('view-admin-dash','ภาพรวม',iGrid,"showView('view-admin-dash','Admin Dashboard');loadViewCached('view-admin-dash',loadAdmin);");
+    html += navItem('view-admin-dash','ภาพรวม',iGrid,"showView('view-admin-dash','Admin Dashboard');(async()=>{await loadViewCached('view-admin-dash',loadAdmin);})();");
     html += navSection('รายการ');
     html += navItem('view-form','สร้างรายการ CN',iPlus,"openForm(null,true);");
     html += navSection('จัดการ');
-    html += navItem('view-users','ผู้ใช้งาน',iUser,"showView('view-users','จัดการผู้ใช้งาน');loadViewCached('view-users',loadUsers);");
+    html += navItem('view-users','ผู้ใช้งาน',iUser,"showView('view-users','จัดการผู้ใช้งาน');(async()=>{await loadViewCached('view-users',loadUsers);})();");
     html += navSection('รายงาน');
     html += navItem('','รายงานรายเดือน',iCal,"openMonthReport();");
     html += navItem('','Export CSV',iDl,"exportCSV();");
     html += navSection('ข้อมูล');
-    html += navItem('view-archive','Archive',iArc,"showView('view-archive','รายการ CN ที่ Archive');loadViewCached('view-archive',loadArchive);");
-    html += navItem('view-backup','Backup & Restore',iBk,"showView('view-backup','Backup & Restore');loadViewCached('view-backup',loadBackups);");
+    html += navItem('view-archive','Archive',iArc,"showView('view-archive','รายการ CN ที่ Archive');(async()=>{await loadViewCached('view-archive',loadArchive);})();");
+    html += navItem('view-backup','Backup & Restore',iBk,"showView('view-backup','Backup & Restore');(async()=>{await loadViewCached('view-backup',loadBackups);})();");
 
   } else if(role === 'Warehouse'){
     html += navSection('หลัก');
-    html += navItem('view-admin-dash','ภาพรวม',iGrid,"showView('view-admin-dash','Warehouse Dashboard');loadViewCached('view-admin-dash',loadAdmin);");
+    html += navItem('view-admin-dash','ภาพรวม',iGrid,"showView('view-admin-dash','Warehouse Dashboard');(async()=>{await loadViewCached('view-admin-dash',loadAdmin);})();");
     html += navSection('รายการ');
     html += navItem('view-form','สร้างรายการ CN',iPlus,"openForm(null,true);");
     html += navSection('จัดการ');
-    html += navItem('view-users','ผู้ใช้งาน',iUser,"showView('view-users','จัดการผู้ใช้งาน');loadViewCached('view-users',loadUsers);");
+    html += navItem('view-users','ผู้ใช้งาน',iUser,"showView('view-users','จัดการผู้ใช้งาน');(async()=>{await loadViewCached('view-users',loadUsers);})();");
     html += navSection('รายงาน');
     html += navItem('','รายงานรายเดือน',iCal,"openMonthReport();");
     html += navItem('','Export CSV',iDl,"exportCSV();");
     html += navSection('ข้อมูล');
-    html += navItem('view-archive','Archive',iArc,"showView('view-archive','รายการ CN ที่ Archive');loadViewCached('view-archive',loadArchive);");
+    html += navItem('view-archive','Archive',iArc,"showView('view-archive','รายการ CN ที่ Archive');(async()=>{await loadViewCached('view-archive',loadArchive);})();");
 
   } else if(role === 'Accountant'){
     // ดูรายงานอย่างเดียว
     html += navSection('หลัก');
-    html += navItem('view-admin-dash','ภาพรวม CN',iGrid,"showView('view-admin-dash','รายงาน (บัญชี)');loadViewCached('view-admin-dash',loadAdmin);");
+    html += navItem('view-admin-dash','ภาพรวม CN',iGrid,"showView('view-admin-dash','รายงาน (บัญชี)');(async()=>{await loadViewCached('view-admin-dash',loadAdmin);})();");
     html += navSection('รายงาน');
     html += navItem('','รายงานรายเดือน',iCal,"openMonthReport();");
     html += navItem('','Export CSV',iDl,"exportCSV();");
@@ -1279,7 +1281,7 @@ function buildNav(role){
   } else {
     // User
     html += navSection('หลัก');
-    html += navItem('view-user-dash','รายการของฉัน',iGrid,"showView('view-user-dash','Dashboard ของฉัน');loadViewCached('view-user-dash',loadUser);");
+    html += navItem('view-user-dash','รายการของฉัน',iGrid,"showView('view-user-dash','Dashboard ของฉัน');(async()=>{await loadViewCached('view-user-dash',loadUser);})();");
     html += navSection('รายการ');
     html += navItem('view-form','สร้างรายการ CN',iPlus,"openForm(null,false);");
   }
