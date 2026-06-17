@@ -1058,8 +1058,13 @@ function _safeFetch(url, opts, _retried){
   });
 }
 function apiGet(p){
-  var url = CFG.GAS+'?'+new URLSearchParams(p);
-  return _safeFetch(url, {redirect:'follow'});
+  // เพิ่ม cache-busting timestamp (_t) ป้องกัน browser/CDN cache response เก่า
+  // ของ GET request ที่มี query string ซ้ำกันทุกครั้ง (เช่น getUserList ที่ไม่มี
+  // parameter อื่นเปลี่ยนแปลงเลย) ซึ่งอาจทำให้ได้ response แรกที่เคย fetch ไว้
+  // ซ้ำๆ (รวมถึง cold-start error page ของ GAS) จนกว่าจะ hard refresh
+  var params = Object.assign({}, p, { _t: Date.now() });
+  var url = CFG.GAS+'?'+new URLSearchParams(params);
+  return _safeFetch(url, {redirect:'follow', cache:'no-store'});
 }
 function apiPost(body){
   var fd = new URLSearchParams();
@@ -1067,7 +1072,7 @@ function apiPost(body){
   return _safeFetch(CFG.GAS, {
     method:'POST',
     headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body: fd.toString(), redirect:'follow'
+    body: fd.toString(), redirect:'follow', cache:'no-store'
   });
 }
 
