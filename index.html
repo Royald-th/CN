@@ -957,32 +957,27 @@ function showView(id, title){
 }
 
 async function loadViewCached(viewId, loadFn){
-  // บังคับโหลดข้อมูลสดใหม่เสมอสำหรับหน้า Dashboard และหน้าจัดการผู้ใช้งาน
-  // เพื่อตัดปัญหา cache ค้างที่ทำให้ตารางไม่ขึ้นข้อมูลในการกดเมนูครั้งแรก
+  // บังคับให้ดึงข้อมูลสดใหม่เสมอสำหรับหน้า Dashboard และหน้าจัดการผู้ใช้งาน
+  // เพื่อป้องกันปัญหา cache ค้างที่ทำให้ตารางไม่ขึ้นข้อมูลตอนกดเมนูครั้งแรก
   if(viewId === 'view-user-dash' || viewId === 'view-admin-dash' || viewId === 'view-users'){
-    L.show('กำลังโหลดข้อมูล...');
+    L.show('กำลังอัปเดตข้อมูล...');
     try{
-      await loadFn(true); // silent:true กัน L.hide() ซ้อนจาก loadFn เอง
+      await loadFn(true); // silent:true กัน loadFn ไป L.hide() ซ้อนก่อนเวลา
       _viewCache[viewId] = Date.now();
     } catch(e){
       console.error(e);
-      // โหลดไม่สำเร็จ → ไม่ set cache เพื่อให้ retry ได้ครั้งหน้า
     } finally{
-      L.hide(); // ปิด overlay เสมอ หลัง render เสร็จเท่านั้น ไม่ว่าสำเร็จหรือ error
+      L.hide();
     }
     return;
   }
 
-  // หน้าอื่นๆ (Archive, Backup ฯลฯ) ใช้ TTL cache ตามปกติ
+  // หน้าอื่นๆ (Archive, Backup ฯลฯ) ยังใช้ TTL cache ตามปกติ
   var now  = Date.now();
   var last = _viewCache[viewId] || 0;
-  var fresh = now - last < CACHE_TTL;
+  if(now - last < CACHE_TTL) return; // cache ยังไม่หมดอายุ ไม่ต้องโหลดใหม่
 
-  if(fresh){
-    return; // ยังไม่หมดอายุ cache → ไม่ต้องโหลดใหม่ (ข้อมูลที่ render ไว้ยังใช้ได้)
-  }
-
-  L.show('กำลังโหลดข้อมูล...');
+  L.show('กำลังโหลด...');
   try{
     await loadFn(true);
     _viewCache[viewId] = Date.now();
@@ -1039,33 +1034,26 @@ function thMonth(iso){if(!iso)return'';return new Date(iso).toLocaleDateString('
 /* ══════════════════════════════════════════
    API
    ══════════════════════════════════════════ */
-/* ── API helpers: content-type guard + 1 auto-retry on HTML/network error ── */
-var _apiRetrying = false;
-function _safeFetch(url, opts){
+/* ── API helpers: content-type guard + retry ต่อ request (ไม่ share flag) ──
+   เดิมใช้ตัวแปร _apiRetrying ตัวเดียวร่วมกันทุก request ทำให้ถ้ามีหลาย
+   fetch ยิงพร้อมกัน (เช่น loadAdmin/loadUser ตอน enterApp ชนกับ loadUsers
+   ตอนสลับเมนูเร็วๆ) request ที่มาทีหลังจะไม่ได้ retry แม้เจอ cold-start จริง
+   → throw error ทันที → หน้าที่เรียกตอนนั้นค้าง error/loading
+   แก้โดยให้ retry counter เป็นของแต่ละ request เอง (ผ่าน parameter) */
+function _safeFetch(url, opts, _retried){
   return fetch(url, opts).then(function(r){
     var ct = r.headers.get('content-type') || '';
     if(!ct.includes('application/json') && !ct.includes('text/plain')){
-      // GAS ส่ง HTML (cold-start redirect / error page) → retry 1 ครั้ง
-      if(!_apiRetrying){
-        _apiRetrying = true;
+      // GAS ส่ง HTML (cold-start redirect / error page)
+      if(!_retried){
+        // retry 1 ครั้งสำหรับ "request นี้เท่านั้น" หลัง delay สั้นๆ
         return new Promise(function(res){ setTimeout(res, 1800); })
-          .then(function(){ return fetch(url, opts); })
-          .then(function(r2){
-            _apiRetrying = false;
-            var ct2 = r2.headers.get('content-type') || '';
-            if(!ct2.includes('application/json') && !ct2.includes('text/plain')){
-              return r2.text().then(function(t){
-                throw new Error('GAS ส่งข้อมูลผิดรูปแบบ (HTML) — อาจ cold start หรือ quota หมด');
-              });
-            }
-            return r2.json();
-          });
+          .then(function(){ return _safeFetch(url, opts, true); });
       }
-      return r.text().then(function(t){
+      return r.text().then(function(){
         throw new Error('GAS ส่งข้อมูลผิดรูปแบบ (HTML) — อาจ cold start หรือ quota หมด');
       });
     }
-    _apiRetrying = false;
     return r.json();
   });
 }
