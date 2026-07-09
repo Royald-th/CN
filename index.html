@@ -109,21 +109,24 @@ body {
 .brand-text { font-size: .8rem; font-weight: 600; color: #E6EDF3; }
 .brand-sub  { font-size: .68rem; color: var(--muted); margin-top: 1px; }
 
-.sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
-.nav-section { padding: 6px 16px 3px; font-size: .66rem; font-weight: 600; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.sidebar-nav { flex: 1; padding: 14px 10px; overflow-y: auto; }
+.nav-section { padding: 14px 10px 5px; font-size: .65rem; font-weight: 700; color: var(--muted); letter-spacing: .09em; text-transform: uppercase; opacity:.75; }
+.nav-section:first-child { padding-top: 4px; }
 .nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 16px;
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 12px;
+  margin: 1px 0;
   cursor: pointer;
-  font-size: .82rem; font-weight: 500;
+  font-size: .83rem; font-weight: 500;
   color: var(--muted);
-  border-left: 3px solid transparent;
-  transition: all .15s;
+  border-radius: 8px;
+  transition: all .15s var(--ease);
   user-select: none;
 }
 .nav-item:hover { color: #E6EDF3; background: var(--surface2); }
-.nav-item.active { color: var(--blue); border-left-color: var(--blue); background: var(--blue-dim); }
-.nav-item svg { flex-shrink: 0; opacity: .7; }
+.nav-item.active { color: var(--blue); background: var(--blue-dim); font-weight: 600; }
+.nav-item svg { flex-shrink: 0; opacity: .65; transition: opacity .15s; }
+.nav-item:hover svg { opacity: .9; }
 .nav-item.active svg { opacity: 1; }
 
 .sidebar-footer {
@@ -165,6 +168,40 @@ body {
 .topbar-title { font-size: .95rem; font-weight: 600; color: #E6EDF3; }
 .topbar-actions { display: flex; gap: 8px; align-items: center; }
 
+/* ── SWR indicators: progress bar บาง ๆ + pulse dot (ไม่บล็อก UI) ── */
+.top-progress {
+  position: absolute; left: 0; right: 0; bottom: -1px;
+  height: 2px; overflow: hidden; pointer-events: none;
+  opacity: 0; transition: opacity .2s;
+}
+.top-progress.on { opacity: 1; }
+.top-progress-bar {
+  position: absolute; top:0; left:-30%; width: 30%; height: 100%;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--blue), transparent);
+  animation: swrSlide 1.1s ease-in-out infinite;
+}
+@keyframes swrSlide {
+  0%   { left: -30%; }
+  100% { left: 100%; }
+}
+.swr-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--blue); display: none; flex-shrink: 0;
+  animation: swrPulse 1.1s ease-in-out infinite;
+}
+.swr-dot.on { display: inline-block; }
+@keyframes swrPulse {
+  0%,100% { opacity: .35; transform: scale(.85); }
+  50%     { opacity: 1;   transform: scale(1); }
+}
+
+/* view สลับหน้าแบบ fade เบา ๆ ให้รู้สึกลื่นไหล ไม่กระตุก */
+.view-fade { animation: viewFadeIn .22s var(--ease); }
+@keyframes viewFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* PAGE CONTENT */
 .content { padding: 24px; }
 
@@ -204,25 +241,31 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r2);
-  padding: 16px;
+  padding: 16px 18px;
   position: relative;
   overflow: hidden;
-  transition: border-color .2s;
+  transition: border-color .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease);
 }
 .stat-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 2px;
+  height: 3px;
+  border-radius: var(--r2) var(--r2) 0 0;
 }
-.stat-card.s-total::before { background: var(--blue); }
-.stat-card.s-wait::before  { background: var(--amber); }
-.stat-card.s-proc::before  { background: var(--purple); }
-.stat-card.s-done::before  { background: var(--green); }
-.stat-card:hover { border-color: var(--border2); }
-.stat-num   { font-size: 1.8rem; font-weight: 700; color: #E6EDF3; font-family: var(--mono); line-height: 1.1; }
-.stat-label { font-size: .7rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .05em; }
-.stat-icon  { position: absolute; top: 14px; right: 14px; opacity: .12; font-size: 1.6rem; }
+.stat-card.s-total::before { background: linear-gradient(90deg, var(--blue), transparent); }
+.stat-card.s-wait::before  { background: linear-gradient(90deg, var(--amber), transparent); }
+.stat-card.s-proc::before  { background: linear-gradient(90deg, var(--purple), transparent); }
+.stat-card.s-done::before  { background: linear-gradient(90deg, var(--green), transparent); }
+.stat-card:hover {
+  border-color: var(--border2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+}
+.stat-num   { font-size: 1.9rem; font-weight: 700; color: #E6EDF3; font-family: var(--mono); line-height: 1.1; }
+.stat-label { font-size: .71rem; color: var(--muted); margin-top: 5px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.stat-icon  { position: absolute; top: 16px; right: 16px; opacity: .15; font-size: 1.9rem; transition: opacity .2s, transform .2s; }
+.stat-card:hover .stat-icon { opacity: .28; transform: scale(1.08); }
 
 /* Buttons */
 .btn {
@@ -233,11 +276,12 @@ body {
   font-family: var(--font);
   font-size: .8rem; font-weight: 600;
   cursor: pointer;
-  transition: all .15s;
+  transition: all .15s var(--ease);
   text-decoration: none;
   white-space: nowrap;
   outline: none;
 }
+.btn:active { transform: translateY(0) scale(.97); }
 .btn-primary {
   background: var(--accent);
   border-color: var(--accent-h);
@@ -279,14 +323,15 @@ body {
 .tw { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: .82rem; }
 th {
-  padding: 9px 12px;
+  padding: 10px 13px;
   text-align: left;
   font-size: .68rem; font-weight: 700;
   letter-spacing: .07em; text-transform: uppercase;
   color: var(--muted);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1.5px solid var(--border2);
   background: var(--surface2);
   white-space: nowrap;
+  position: sticky; top: 0; z-index: 5;
 }
 td {
   padding: 11px 13px;
@@ -295,9 +340,10 @@ td {
   color: #C9D1D9;
 }
 tr:last-child td { border-bottom: none; }
-tbody tr { transition: background .15s; }
-tbody tr:hover { background: rgba(88,166,255,.07); cursor: pointer; }
-tbody tr:hover td { background: var(--surface2); }
+tbody tr { transition: background .15s var(--ease); }
+tbody tr:nth-child(even) { background: rgba(255,255,255,.012); }
+tbody tr:hover { background: rgba(88,166,255,.08); cursor: pointer; }
+tbody tr:hover td { background: transparent; }
 .te { text-align: center; padding: 40px; color: var(--muted); font-size: .85rem; }
 .mono { font-family: var(--mono); font-size: .76rem; color: var(--blue); }
 
@@ -404,10 +450,17 @@ select.fc option { background: var(--surface2); }
 .piw a { display: inline-flex; align-items: center; gap: 4px; font-size: .76rem; color: var(--blue); margin-top: 5px; }
 
 /* Empty state */
-.empty-state { text-align: center; padding: 52px 20px; }
-.empty-icon { font-size: 2.4rem; margin-bottom: 10px; opacity: .4; }
-.empty-title { font-size: .95rem; font-weight: 600; color: #E6EDF3; margin-bottom: 5px; }
-.empty-sub { font-size: .8rem; color: var(--muted); }
+.empty-state { text-align: center; padding: 56px 20px; }
+.empty-icon {
+  font-size: 2.6rem; margin-bottom: 12px; opacity: .35;
+  display: inline-block; animation: emptyFloat 3s ease-in-out infinite;
+}
+@keyframes emptyFloat {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-6px); }
+}
+.empty-title { font-size: .96rem; font-weight: 700; color: #E6EDF3; margin-bottom: 6px; }
+.empty-sub { font-size: .81rem; color: var(--muted); line-height: 1.5; }
 
 /* Month report modal */
 .month-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap: 8px; margin-top: 12px; }
@@ -432,6 +485,7 @@ select.fc option { background: var(--surface2); }
 .toast-success{ border-left:3px solid var(--green); }
 .toast-error  { border-left:3px solid var(--red);   }
 .toast-info   { border-left:3px solid var(--blue);  }
+.toast-warn   { border-left:3px solid var(--amber); }
 
 /* ── USER MANAGEMENT (Admin view) ── */
 .role-select{ background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:#E6EDF3;font-family:var(--font);font-size:.78rem;padding:3px 7px;cursor:pointer;outline:none; }
@@ -586,12 +640,14 @@ select.fc option { background: var(--surface2); }
     <div class="main-content">
 
       <!-- TOP BAR -->
-      <div class="topbar">
+      <div class="topbar" style="position:relative;">
         <div style="display:flex;align-items:center;gap:10px;">
           <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
           <span class="topbar-title" id="topbar-title">Dashboard</span>
+          <span id="swr-dot" class="swr-dot" title="กำลังอัปเดตข้อมูล..."></span>
         </div>
         <div class="topbar-actions" id="topbar-actions"></div>
+        <div id="topProgress" class="top-progress"><div class="top-progress-bar"></div></div>
       </div>
 
       <!-- VIEWS (toggled by JS) -->
@@ -926,8 +982,20 @@ var ST       = { user:null, profile:null, cnList:[], fromAdmin:false, editId:nul
 var IMG      = { b64:null, mime:null, url:null };
 var rowIdx   = 0;
 var adminRecs= [];
+var usersState = [];  // เก็บ users list ไว้สำหรับ SWR (เดิมไม่มีการเก็บถาวร)
 var allUsers = [];   // รายชื่อ users สำหรับ dropdown filter
 window.ST = ST; window.IMG = IMG;
+
+/* ══════════════════════════════════════════
+   SWR (Stale-While-Revalidate) STATE
+   ══════════════════════════════════════════ */
+// แยก "ยังไม่เคยโหลดเลย" ออกจาก "โหลดแล้วว่างจริง" — กันปัญหา empty-state แวบ
+var _dataLoaded = { 'view-admin-dash':false, 'view-user-dash':false, 'view-users':false,
+                     'view-archive':false, 'view-backup':false };
+// request generation counter ต่อ view — กัน race condition เมื่อสลับเมนูเร็ว ๆ
+var _fetchGen = { 'view-admin-dash':0, 'view-user-dash':0, 'view-users':0,
+                   'view-archive':0, 'view-backup':0 };
+var _lastView = null; // view ปัจจุบัน กันการยิง fetch ซ้ำเมื่อคลิกเมนูเดิม
 
 /* ══════════════════════════════════════════
    LOADING
@@ -938,16 +1006,16 @@ var L={
 };
 
 /* ══════════════════════════════════════════
-   VIEW SWITCHING (SPA)
+   VIEW SWITCHING (SPA) — Stale-While-Revalidate
    ══════════════════════════════════════════ */
-// cache timestamps: ป้องกัน reload ซ้ำถ้าเพิ่งโหลดไปไม่นาน
-var _viewCache = {};
-var CACHE_TTL  = 5 * 60 * 1000; // 5 นาที
-
 function showView(id, title){
   document.querySelectorAll('[id^="view-"]').forEach(function(el){el.style.display='none';});
   var el = document.getElementById(id);
-  if(el) el.style.display='block';
+  if(el){
+    el.style.display='block';
+    // fade-in เบา ๆ ตอนสลับหน้า ให้ความรู้สึกลื่นไหลสอดคล้องกับ SWR
+    el.classList.remove('view-fade'); void el.offsetWidth; el.classList.add('view-fade');
+  }
   if(title){ var ptEl = document.getElementById('topbar-title'); if(ptEl) ptEl.textContent = title; }
   document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
   var activeNav = document.querySelector('.nav-item[data-view="'+id+'"]');
@@ -955,41 +1023,55 @@ function showView(id, title){
   document.getElementById(id).classList.add('active');
 }
 
+// เปิด/ปิด indicator เบาๆ (progress bar + pulse dot) — ไม่บล็อก UI เลย
+function _swrIndicatorOn(){
+  var pb = document.getElementById('topProgress'); if(pb) pb.classList.add('on');
+  var dot = document.getElementById('swr-dot');    if(dot) dot.classList.add('on');
+}
+function _swrIndicatorOff(){
+  var pb = document.getElementById('topProgress'); if(pb) pb.classList.remove('on');
+  var dot = document.getElementById('swr-dot');    if(dot) dot.classList.remove('on');
+}
+
+/* SWR core: สลับหน้าแสดงข้อมูลเดิม(ถ้ามี)ทันที ไม่บล็อก แล้ว revalidate เบื้องหลัง
+   - ครั้งแรกที่ยังไม่เคยมีข้อมูลเลย: แสดง empty-state ปกติ + indicator ระหว่างรอ
+   - เคยมีข้อมูลแล้ว (stale): คงข้อมูลเดิมไว้เต็มจอ + indicator บาง ๆ มุมบน ระหว่าง revalidate
+   - error ระหว่าง revalidate: เก็บข้อมูล stale ไว้ต่อ + toast แจ้งเบา ๆ (ไม่ล้างตาราง)
+   - error ตอนยังไม่เคยมีข้อมูลเลย: แสดง error state พร้อมปุ่มลองใหม่ (เหมือนเดิม) */
 async function loadViewCached(viewId, loadFn){
-  // บังคับให้ดึงข้อมูลสดใหม่เสมอสำหรับหน้า Dashboard และหน้าจัดการผู้ใช้งาน
-  // เพื่อป้องกันปัญหา cache ค้างที่ทำให้ตารางไม่ขึ้นข้อมูลตอนกดเมนูครั้งแรก
-  if(viewId === 'view-user-dash' || viewId === 'view-admin-dash' || viewId === 'view-users'){
-    L.show('กำลังอัปเดตข้อมูล...');
-    try{
-      await loadFn(true); // silent:true กัน loadFn ไป L.hide() ซ้อนก่อนเวลา
-      _viewCache[viewId] = Date.now();
-    } catch(e){
-      console.error(e);
-    } finally{
-      L.hide();
-    }
-    return;
-  }
+  var isSameView = (_lastView === viewId);
+  _lastView = viewId;
 
-  // หน้าอื่นๆ (Archive, Backup ฯลฯ) ยังใช้ TTL cache ตามปกติ
-  var now  = Date.now();
-  var last = _viewCache[viewId] || 0;
-  if(now - last < CACHE_TTL) return; // cache ยังไม่หมดอายุ ไม่ต้องโหลดใหม่
+  // คลิกเมนูเดิมซ้ำ (ยังอยู่หน้านี้อยู่แล้ว) และเคยโหลดแล้ว → ไม่ต้อง revalidate ซ้ำ กันคลิกรัว
+  if(isSameView && _dataLoaded[viewId]) return;
 
-  L.show('กำลังโหลด...');
+  var gen = ++_fetchGen[viewId]; // ตั๋วของ request รอบนี้
+  var hadData = _dataLoaded[viewId];
+
+  _swrIndicatorOn();
   try{
-    await loadFn(true);
-    _viewCache[viewId] = Date.now();
+    await loadFn(true, gen, viewId);
+    // ใช้ผลลัพธ์นี้ได้ก็ต่อเมื่อยังเป็น request ล่าสุดของ view นี้เท่านั้น
+    if(gen === _fetchGen[viewId]){
+      _dataLoaded[viewId] = true;
+    }
   } catch(e){
     console.error(e);
+    if(gen === _fetchGen[viewId]){
+      if(hadData){
+        // มีข้อมูล stale อยู่แล้ว → เก็บไว้ต่อเงียบ ๆ แค่แจ้งเตือนเบา ๆ
+        toast('อัปเดตข้อมูลไม่สำเร็จ กำลังแสดงข้อมูลล่าสุดที่มี','warn');
+      }
+      // ถ้ายังไม่เคยมีข้อมูลเลย loadFn ควรจัดการแสดง error state เองแล้ว (ผ่าน showLoadError)
+    }
   } finally{
-    L.hide();
+    if(gen === _fetchGen[viewId]) _swrIndicatorOff();
   }
 }
 
 function invalidateCache(viewId){
-  if(viewId) delete _viewCache[viewId];
-  else _viewCache = {};
+  if(viewId){ _dataLoaded[viewId] = false; }
+  else { Object.keys(_dataLoaded).forEach(function(k){ _dataLoaded[k] = false; }); }
 }
 
 function goBack(){
@@ -1182,26 +1264,30 @@ async function enterApp(){
   buildNav(u.role);
   gotoPage('page-app');
 
-  // invalidate cache ทุกครั้งที่ login ใหม่ → โหลดข้อมูลสดเสมอ
+  // reset สถานะ SWR ทุกครั้งที่ login ใหม่ → บังคับโหลดข้อมูลสดเสมอ
   invalidateCache();
+  _lastView = null;
 
-  // กำหนด view + load function ตาม role แล้ว "โหลดข้อมูลให้เสร็จก่อน"
+  // กำหนด view + load function ตาม role แล้ว "โหลดข้อมูลให้เสร็จก่อน" (ครั้งแรกสุดเท่านั้น)
   // จึงค่อย showView() เพื่อกัน Empty State แวบขึ้นมาก่อนข้อมูลมา
+  // (ครั้งถัดไปที่สลับเมนูจะใช้ SWR ผ่าน loadViewCached แทน ไม่มี L.show อีก)
   try{
+    var targetView, targetTitle, loadFn;
     if(u.role === 'Admin'){
-      await loadAdmin(true);            // silent: ไม่ให้ loadAdmin ไป L.hide() เอง
-      showView('view-admin-dash','Admin Dashboard');
+      targetView='view-admin-dash'; targetTitle='Admin Dashboard'; loadFn=loadAdmin;
     } else if(u.role === 'Warehouse'){
-      await loadAdmin(true);
-      showView('view-admin-dash','Warehouse Dashboard');
+      targetView='view-admin-dash'; targetTitle='Warehouse Dashboard'; loadFn=loadAdmin;
     } else if(u.role === 'Accountant'){
-      await loadAdmin(true);
-      showView('view-admin-dash','รายงาน (ฝ่ายบัญชี)');
+      targetView='view-admin-dash'; targetTitle='รายงาน (ฝ่ายบัญชี)'; loadFn=loadAdmin;
     } else {
-      await loadUser(true);
-      showView('view-user-dash','Dashboard ของฉัน');
-      startAutoRefresh();
+      targetView='view-user-dash'; targetTitle='Dashboard ของฉัน'; loadFn=loadUser;
     }
+    var gen = ++_fetchGen[targetView];
+    await loadFn(true, gen, targetView);
+    _dataLoaded[targetView] = true;
+    _lastView = targetView;
+    showView(targetView, targetTitle);
+    if(u.role === 'User') startAutoRefresh();
   } finally {
     // ปิด overlay หลังข้อมูลพร้อมและ view ถูกเรนเดอร์แล้วเท่านั้น
     L.hide();
@@ -1284,12 +1370,20 @@ function buildNav(role){
 /* ══════════════════════════════════════════
    USER DASHBOARD
    ══════════════════════════════════════════ */
-async function loadUser(silent){
+async function loadUser(silent, gen, viewId){
+  viewId = viewId || 'view-user-dash';
   if(!silent) L.show('กำลังโหลดรายการ...');
   try{
     var d = await apiGet({action:'getCNList', lineUID:ST.user.lineUID, role:'User'});
     if(!silent) L.hide();
-    if(!d.success){ showLoadError('utbl', 6, loadUser); return; }
+    // ถ้ามี request ใหม่กว่าแซงไปแล้วระหว่างรอ response นี้ → ทิ้งผลลัพธ์นี้ไปเลย (กัน race condition)
+    if(gen !== undefined && gen !== _fetchGen[viewId]) return;
+    if(!d.success){
+      if(!silent) toast('โหลดรายการไม่สำเร็จ','error');
+      if(!_dataLoaded[viewId]) showLoadError('utbl', 6, loadUser);
+      else throw new Error('getCNList unsuccessful');
+      return;
+    }
     ST.cnList = d.records;
     var r = d.records;
     document.getElementById('s-all').textContent  = r.length;
@@ -1299,7 +1393,14 @@ async function loadUser(silent){
     filterUserTbl();
   } catch(e){
     if(!silent) L.hide();
-    showLoadError('utbl', 6, loadUser);
+    if(gen !== undefined && gen !== _fetchGen[viewId]) return;
+    if(!_dataLoaded[viewId]){
+      // ยังไม่เคยมีข้อมูลเลย → แสดง error state พร้อมปุ่มลองใหม่
+      showLoadError('utbl', 6, loadUser);
+    } else {
+      // มี stale data อยู่แล้ว → ปล่อยให้ loadViewCached จัดการ toast แทน (throw ต่อ)
+      throw e;
+    }
   }
 }
 
@@ -1328,12 +1429,19 @@ function renderUserTbl(recs){
 /* ══════════════════════════════════════════
    ADMIN DASHBOARD
    ══════════════════════════════════════════ */
-async function loadAdmin(silent){
+async function loadAdmin(silent, gen, viewId){
+  viewId = viewId || 'view-admin-dash';
   if(!silent) L.show('กำลังโหลดรายการ...');
   try{
     var d = await apiGet({action:'getCNList', lineUID:ST.user.lineUID, role:'Admin'});
     if(!silent) L.hide();
-    if(!d.success){ showLoadError('atbl', 8, loadAdmin); return; }
+    if(gen !== undefined && gen !== _fetchGen[viewId]) return;
+    if(!d.success){
+      if(!silent) toast('โหลดรายการไม่สำเร็จ','error');
+      if(!_dataLoaded[viewId]) showLoadError('atbl', 8, loadAdmin);
+      else throw new Error('getCNList unsuccessful');
+      return;
+    }
     adminRecs = d.records;
     var userMap = {};
     adminRecs.forEach(function(r){ if(r.lineUID&&!userMap[r.lineUID]) userMap[r.lineUID]=r.creatorName; });
@@ -1343,7 +1451,12 @@ async function loadAdmin(silent){
     paginateAdmin(adminRecs);
   } catch(e){
     if(!silent) L.hide();
-    showLoadError('atbl', 8, loadAdmin);
+    if(gen !== undefined && gen !== _fetchGen[viewId]) return;
+    if(!_dataLoaded[viewId]){
+      showLoadError('atbl', 8, loadAdmin);
+    } else {
+      throw e;
+    }
   }
 }
 
@@ -1722,7 +1835,9 @@ async function saveCN(){
     if(d.success){
       var isCreate = !ST.editId;
       toast(isCreate ? 'สร้างรายการ CN สำเร็จ 🎉' : 'บันทึกการแก้ไขสำเร็จ', 'success');
-      invalidateCache(); // force reload หลัง create/edit
+      // invalidate เฉพาะ view ที่เกี่ยวข้อง (ไม่ต้องเคลียร์ Archive/Backup/Users ที่ไม่กระทบ)
+      invalidateCache('view-admin-dash');
+      invalidateCache('view-user-dash');
       if(ST.fromAdmin || isAdmin){
         await loadAdmin();
         showView('view-admin-dash','Admin Dashboard');
@@ -2616,7 +2731,7 @@ function filterUserTbl(){
 }
 
 /* ══════════════════════════════════════════
-   AUTO-REFRESH (User dashboard: ทุก 2 นาที)
+   AUTO-REFRESH (User dashboard: ทุก 2 นาที) — ใช้ SWR pattern เดียวกัน
    ══════════════════════════════════════════ */
 var _autoRefreshTimer = null;
 function startAutoRefresh(){
@@ -2625,7 +2740,12 @@ function startAutoRefresh(){
     var activeView = document.querySelector('[id^="view-"][style*="block"]');
     if(!activeView) return;
     if(activeView.id === 'view-user-dash' && ST.user && ST.user.role !== 'Admin'){
-      loadUser(true); // silent = true → ไม่แสดง loading overlay
+      // background revalidate แบบเดียวกับตอนสลับเมนู — มี indicator เบา ๆ + gen guard
+      var gen = ++_fetchGen['view-user-dash'];
+      _swrIndicatorOn();
+      loadUser(true, gen, 'view-user-dash')
+        .catch(function(e){ console.error(e); })
+        .finally(function(){ if(gen === _fetchGen['view-user-dash']) _swrIndicatorOff(); });
     }
   }, 120000); // 2 นาที
 }
@@ -2636,22 +2756,30 @@ function stopAutoRefresh(){
 /* ══════════════════════════════════════════
    USER MANAGEMENT (Admin)
    ══════════════════════════════════════════ */
-async function loadUsers(silent){
+async function loadUsers(silent, gen, viewId){
+  viewId = viewId || 'view-users';
   if(!silent) L.show('กำลังโหลดข้อมูลผู้ใช้...');
   try{
     var d = await apiGet({action:'getUserList'});
     if(!silent) L.hide();
+    if(gen !== undefined && gen !== _fetchGen[viewId]) return;
     if(!d.success){
       if(!silent) toast('โหลดข้อมูลผู้ใช้ไม่สำเร็จ','error');
-      else showLoadError('users-tbl', 7, loadUsers);
+      if(!_dataLoaded[viewId]) showLoadError('users-tbl', 7, loadUsers);
+      else throw new Error('getUserList unsuccessful');
       return;
     }
-    renderUsersTbl(d.users);
+    usersState = d.users || [];
+    renderUsersTbl(usersState);
   }catch(e){
     if(!silent) L.hide();
-    if(!silent) toast('เกิดข้อผิดพลาด: '+e.message,'error');
-    else showLoadError('users-tbl', 7, loadUsers);
-    throw e; // re-throw เพื่อให้ loadViewCached รู้ว่าโหลดไม่สำเร็จ (ไม่ set cache)
+    if(gen !== undefined && gen !== _fetchGen[viewId]) return;
+    if(!_dataLoaded[viewId]){
+      if(!silent) toast('เกิดข้อผิดพลาด: '+e.message,'error');
+      showLoadError('users-tbl', 7, loadUsers);
+    } else {
+      throw e; // ปล่อยให้ loadViewCached จัดการ toast (มี stale data อยู่แล้ว)
+    }
   }
 }
 
@@ -2799,14 +2927,17 @@ function renderAdminPage(){
    ══════════════════════════════════════════ */
 var archiveRecs = [];  // cache
 
-async function loadArchive(silent){
+async function loadArchive(silent, gen, viewId){
+  viewId = viewId || 'view-archive';
   if(!silent) L.show('กำลังโหลด Archive...');
   try{
     var d = await apiGet({action:'getArchiveList', lineUID:ST.user.lineUID, role:ST.user.role});
     if(!silent) L.hide();
+    if(gen !== undefined && gen !== _fetchGen[viewId]) return;
     if(!d.success){
       if(!silent) toast('โหลด Archive ไม่สำเร็จ','error');
-      else showLoadError('arc-tbl', 7, loadArchive);
+      if(!_dataLoaded[viewId]) showLoadError('arc-tbl', 7, loadArchive);
+      else throw new Error('getArchiveList unsuccessful');
       return;
     }
     archiveRecs = d.records || [];
@@ -2815,9 +2946,13 @@ async function loadArchive(silent){
     renderArchiveTbl(archiveRecs);
   }catch(e){
     if(!silent) L.hide();
-    if(!silent) toast('เกิดข้อผิดพลาด: '+e.message,'error');
-    else showLoadError('arc-tbl', 7, loadArchive);
-    throw e;
+    if(gen !== undefined && gen !== _fetchGen[viewId]) return;
+    if(!_dataLoaded[viewId]){
+      if(!silent) toast('เกิดข้อผิดพลาด: '+e.message,'error');
+      showLoadError('arc-tbl', 7, loadArchive);
+    } else {
+      throw e;
+    }
   }
 }
 
@@ -2946,22 +3081,32 @@ function closeConfirmMdl(e){
 /* ══════════════════════════════════════════
    BACKUP SYSTEM — Frontend
    ══════════════════════════════════════════ */
-async function loadBackups(silent){
+var backupsState = []; // เก็บ backup list ไว้สำหรับ SWR
+
+async function loadBackups(silent, gen, viewId){
+  viewId = viewId || 'view-backup';
   if(!silent) L.show('กำลังโหลดประวัติ Backup...');
   try{
     var d = await apiGet({action:'getBackupList'});
     if(!silent) L.hide();
+    if(gen !== undefined && gen !== _fetchGen[viewId]) return;
     if(!d.success){
       if(!silent) toast('โหลดข้อมูล Backup ไม่สำเร็จ','error');
-      else showLoadError('bk-tbl', 7, loadBackups);
+      if(!_dataLoaded[viewId]) showLoadError('bk-tbl', 7, loadBackups);
+      else throw new Error('getBackupList unsuccessful');
       return;
     }
-    renderBackupTbl(d.backups||[]);
+    backupsState = d.backups || [];
+    renderBackupTbl(backupsState);
   }catch(e){
     if(!silent) L.hide();
-    if(!silent) toast('เกิดข้อผิดพลาด: '+e.message,'error');
-    else showLoadError('bk-tbl', 7, loadBackups);
-    throw e;
+    if(gen !== undefined && gen !== _fetchGen[viewId]) return;
+    if(!_dataLoaded[viewId]){
+      if(!silent) toast('เกิดข้อผิดพลาด: '+e.message,'error');
+      showLoadError('bk-tbl', 7, loadBackups);
+    } else {
+      throw e;
+    }
   }
 }
 
