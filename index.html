@@ -11,6 +11,9 @@
 <noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/></noscript>
 <!-- LIFF SDK โหลด async เพื่อไม่ block render -->
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" defer></script>
+<!-- Tom Select: dropdown ค้นหาจังหวัด/อำเภอ -->
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js" defer></script>
 <style>
 /* ══════════════════════════════════════════
    DESIGN SYSTEM — Industrial Precision
@@ -372,6 +375,47 @@ tbody tr:hover td { background: transparent; }
 textarea.fc { resize: vertical; min-height: 72px; }
 select.fc { cursor: pointer; }
 select.fc option { background: var(--surface2); }
+
+/* ── Tom Select: override เป็น dark theme ให้เข้ากับระบบ ── */
+.ts-wrapper.single .ts-control,
+.ts-wrapper.multi .ts-control {
+  background: var(--surface2) !important;
+  border: 1px solid var(--border2) !important;
+  border-radius: var(--r) !important;
+  color: #E6EDF3 !important;
+  padding: 8px 12px !important;
+  font-family: var(--font) !important;
+  font-size: .85rem !important;
+  min-height: unset !important;
+  box-shadow: none !important;
+}
+.ts-wrapper.focus .ts-control {
+  border-color: var(--blue) !important;
+  box-shadow: 0 0 0 3px rgba(88,166,255,.15) !important;
+}
+.ts-control input { color: #E6EDF3 !important; font-family: var(--font) !important; }
+.ts-control input::placeholder { color: var(--muted) !important; }
+.ts-dropdown {
+  background: var(--surface2) !important;
+  border: 1px solid var(--border2) !important;
+  border-radius: var(--r) !important;
+  color: #E6EDF3 !important;
+  font-family: var(--font) !important;
+  font-size: .85rem !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4) !important;
+  z-index: 200 !important;
+}
+.ts-dropdown .ts-dropdown-content { padding: 4px; }
+.ts-dropdown [data-selectable] {
+  padding: 8px 10px !important;
+  border-radius: 5px !important;
+  color: #C9D1D9 !important;
+}
+.ts-dropdown .active { background: var(--blue-dim) !important; color: var(--blue) !important; }
+.ts-dropdown .no-results { padding: 10px; color: var(--muted) !important; font-size: .8rem; }
+.ts-wrapper.single .ts-control::after { border-color: var(--muted) transparent transparent transparent !important; }
+.ts-wrapper .plugin-clear_button .clear { color: var(--muted) !important; }
+.ts-wrapper.disabled .ts-control { opacity: .5; background: var(--surface) !important; }
 
 /* Radio */
 .rg { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -762,11 +806,11 @@ select.fc option { background: var(--surface2); }
               </div>
               <div class="g2">
                 <div class="fg" style="margin:0;"><label class="lbl">ชื่อลูกค้า <span class="req">*</span></label><input type="text" id="f-cust" class="fc" placeholder="ชื่อลูกค้า"/></div>
-                <div class="fg" style="margin:0;"><label class="lbl">จังหวัด <span class="req">*</span></label><input type="text" id="f-prov" class="fc" placeholder="เช่น นนทบุรี"/></div>
+                <div class="fg" style="margin:0;"><label class="lbl">รหัสลูกค้า</label><input type="text" id="f-custcode" class="fc" placeholder="เช่น C00123 (ไม่บังคับ)"/></div>
               </div>
               <div class="g2">
-                <div class="fg" style="margin:0;"><label class="lbl">เขต / อำเภอ <span class="req">*</span></label><input type="text" id="f-district" class="fc" placeholder="เช่น บางใหญ่"/></div>
-                <div class="fg" style="margin:0;"></div>
+                <div class="fg" style="margin:0;"><label class="lbl">จังหวัด <span class="req">*</span></label><select id="f-prov" class="fc"><option value="">-- เลือกจังหวัด --</option></select></div>
+                <div class="fg" style="margin:0;"><label class="lbl">เขต / อำเภอ <span class="req">*</span></label><select id="f-district" class="fc"><option value="">-- เลือกจังหวัดก่อน --</option></select></div>
               </div>
               <div class="gap"></div>
               <div class="fg">
@@ -978,6 +1022,12 @@ window.CFG = CFG;
 /* ══════════════════════════════════════════
    STATE
    ══════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   ข้อมูลจังหวัด/อำเภอไทย (Hardcoded) — สำหรับ Tom Select
+   ══════════════════════════════════════════ */
+var THAI_PROVINCES = {"กรุงเทพมหานคร":["เขตพระนคร","เขตดุสิต","เขตหนองจอก","เขตบางรัก","เขตบางเขน","เขตบางกะปิ","เขตปทุมวัน","เขตป้อมปราบศัตรูพ่าย","เขตพระโขนง","เขตมีนบุรี","เขตลาดกระบัง","เขตยานนาวา","เขตสัมพันธวงศ์","เขตพญาไท","เขตธนบุรี","เขตบางกอกใหญ่","เขตห้วยขวาง","เขตคลองสาน","เขตตลิ่งชัน","เขตบางกอกน้อย","เขตบางขุนเทียน","เขตภาษีเจริญ","เขตหนองแขม","เขตราษฎร์บูรณะ","เขตบางพลัด","เขตดินแดง","เขตบึงกุ่ม","เขตสาทร","เขตบางซื่อ","เขตจตุจักร","เขตบางคอแหลม","เขตประเวศ","เขตคลองเตย","เขตสวนหลวง","เขตจอมทอง","เขตดอนเมือง","เขตราชเทวี","เขตลาดพร้าว","เขตวัฒนา","เขตบางแค","เขตหลักสี่","เขตสายไหม","เขตคันนายาว","เขตสะพานสูง","เขตวังทองหลาง","เขตคลองสามวา","เขตบางนา","เขตทวีวัฒนา","เขตทุ่งครุ","เขตบางบอน","เขตหนองแขม"],"กระบี่":["เมืองกระบี่","เขาพนม","เกาะลันตา","คลองท่อม","อ่าวลึก","ปลายพระยา","ลำทับ","เหนือคลอง"],"กาญจนบุรี":["เมืองกาญจนบุรี","ไทรโยค","บ่อพลอย","ศรีสวัสดิ์","ท่ามะกา","ท่าม่วง","ทองผาภูมิ","สังขละบุรี","พนมทวน","เลาขวัญ","ด่านมะขามเตี้ย","หนองปรือ","ห้วยกระเจา"],"กาฬสินธุ์":["เมืองกาฬสินธุ์","นามน","กมลาไสย","ร่องคำ","กุฉินารายณ์","เขาวง","ยางตลาด","ห้วยเม็ก","สหัสขันธ์","คำม่วง","ท่าคันโท","หนองกุงศรี","สมเด็จ","ห้วยผึ้ง","สามชัย","นาคู","ดอนจาน","ฆ้องชัย"],"กำแพงเพชร":["เมืองกำแพงเพชร","ไทรงาม","คลองลาน","ขาณุวรลักษบุรี","คลองขลุง","พรานกระต่าย","ลานกระบือ","ทรายทองวัฒนา","ปางศิลาทอง","บึงสามัคคี","โกสัมพีนคร"],"ขอนแก่น":["เมืองขอนแก่น","บ้านฝาง","พระยืน","หนองเรือ","ชุมแพ","สีชมพู","น้ำพอง","อุบลรัตน์","กระนวน","บ้านไผ่","เปือยน้อย","พล","แวงใหญ่","แวงน้อย","หนองสองห้อง","ภูเวียง","มัญจาคีรี","ชนบท","เขาสวนกวาง","ภูผาม่าน","ซำสูง","โคกโพธิ์ไชย","หนองนาคำ","บ้านแฮด","โนนศิลา","เวียงเก่า"],"จันทบุรี":["เมืองจันทบุรี","ขลุง","ท่าใหม่","โป่งน้ำร้อน","มะขาม","แหลมสิงห์","สอยดาว","แก่งหางแมว","นายายอาม","เขาคิชฌกูฏ"],"ฉะเชิงเทรา":["เมืองฉะเชิงเทรา","บางคล้า","บางน้ำเปรี้ยว","บางปะกง","บ้านโพธิ์","พนมสารคาม","ราชสาส์น","สนามชัยเขต","แปลงยาว","ท่าตะเกียบ","คลองเขื่อน"],"ชลบุรี":["เมืองชลบุรี","บ้านบึง","หนองใหญ่","บางละมุง","พานทอง","พนัสนิคม","ศรีราชา","เกาะสีชัง","สัตหีบ","บ่อทอง","เกาะจันทร์"],"ชัยนาท":["เมืองชัยนาท","มโนรมย์","วัดสิงห์","สรรพยา","สรรคบุรี","หันคา","หนองมะโมง","เนินขาม"],"ชัยภูมิ":["เมืองชัยภูมิ","บ้านเขว้า","คอนสวรรค์","เกษตรสมบูรณ์","หนองบัวแดง","จัตุรัส","บำเหน็จณรงค์","หนองบัวระเหว","เทพสถิต","ภูเขียว","บ้านแท่น","แก้งคร้อ","คอนสาร","ภักดีชุมพล","เนินสง่า","ซับใหญ่","เกษตรสมบูรณ์"],"ชุมพร":["เมืองชุมพร","ท่าแซะ","ปะทิว","หลังสวน","ละแม","พะโต๊ะ","สวี","ทุ่งตะโก"],"เชียงราย":["เมืองเชียงราย","เวียงชัย","เชียงของ","เทิง","พาน","ป่าแดด","แม่จัน","เชียงแสน","แม่สาย","แม่สรวย","เวียงป่าเป้า","พญาเม็งราย","เวียงแก่น","ขุนตาล","แม่ฟ้าหลวง","แม่ลาว","เวียงเชียงรุ้ง","ดอยหลวง"],"เชียงใหม่":["เมืองเชียงใหม่","จอมทอง","แม่แจ่ม","เชียงดาว","ดอยสะเก็ด","แม่แตง","แม่ริม","สะเมิง","ฝาง","แม่อาย","พร้าว","สันป่าตอง","สันกำแพง","สันทราย","หางดง","ฮอด","ดอยเต่า","อมก๋อย","สารภี","เวียงแหง","ไชยปราการ","แม่วาง","แม่ออน","ดอยหล่อ","กัลยาณิวัฒนา"],"ตรัง":["เมืองตรัง","กันตัง","ย่านตาขาว","ปะเหลียน","สิเกา","ห้วยยอด","วังวิเศษ","นาโยง","รัษฎา","หาดสำราญ"],"ตราด":["เมืองตราด","คลองใหญ่","เขาสมิง","บ่อไร่","แหลมงอบ","เกาะกูด","เกาะช้าง"],"ตาก":["เมืองตาก","บ้านตาก","สามเงา","แม่ระมาด","ท่าสองยาง","แม่สอด","พบพระ","อุ้มผาง","วังเจ้า"],"นครนายก":["เมืองนครนายก","ปากพลี","บ้านนา","องครักษ์"],"นครปฐม":["เมืองนครปฐม","กำแพงแสน","นครชัยศรี","ดอนตูม","บางเลน","สามพราน","พุทธมณฑล"],"นครพนม":["เมืองนครพนม","ปลาปาก","ท่าอุเทน","บ้านแพง","ธาตุพนม","เรณูนคร","นาแก","ศรีสงคราม","นาหว้า","โพนสวรรค์","นาทม","วังยาง"],"นครราชสีมา":["เมืองนครราชสีมา","ครบุรี","เสิงสาง","คง","บ้านเหลื่อม","จักราช","โชคชัย","ด่านขุนทด","โนนไทย","โนนสูง","ขามสะแกแสง","บัวใหญ่","ประทาย","ปักธงชัย","พิมาย","ห้วยแถลง","ชุมพวง","สูงเนิน","ขามทะเลสอ","สีคิ้ว","ปากช่อง","หนองบุญมาก","แก้งสนามนาง","โนนแดง","วังน้ำเขียว","เทพารักษ์","เมืองยาง","พระทองคำ","ลำทะเมนชัย","บัวลาย","สีดา","เฉลิมพระเกียรติ"],"นครศรีธรรมราช":["เมืองนครศรีธรรมราช","พรหมคีรี","ลานสกา","ฉวาง","พิปูน","เชียรใหญ่","ชะอวด","ท่าศาลา","ทุ่งสง","นาบอน","ทุ่งใหญ่","ปากพนัง","ร่อนพิบูลย์","สิชล","ขนอม","หัวไทร","บางขัน","ถ้ำพรรณรา","จุฬาภรณ์","พระพรหม","นบพิตำ","ช้างกลาง","เฉลิมพระเกียรติ"],"นครสวรรค์":["เมืองนครสวรรค์","โกรกพระ","ชุมแสง","หนองบัว","บรรพตพิสัย","เก้าเลี้ยว","ตาคลี","ท่าตะโก","ไพศาลี","พยุหะคีรี","ลาดยาว","ตากฟ้า","แม่วงก์","แม่เปิน","ชุมตาบง"],"นนทบุรี":["เมืองนนทบุรี","บางกรวย","บางใหญ่","บางบัวทอง","ไทรน้อย","ปากเกร็ด"],"นราธิวาส":["เมืองนราธิวาส","ตากใบ","บาเจาะ","ยี่งอ","ระแงะ","รือเสาะ","ศรีสาคร","แว้ง","สุคิริน","สุไหงโก-ลก","สุไหงปาดี","จะแนะ","เจาะไอร้อง"],"น่าน":["เมืองน่าน","แม่จริม","บ้านหลวง","นาน้อย","ปัว","ท่าวังผา","เวียงสา","ทุ่งช้าง","เชียงกลาง","นาหมื่น","สันติสุข","บ่อเกลือ","สองแคว","ภูเพียง","เฉลิมพระเกียรติ"],"บึงกาฬ":["เมืองบึงกาฬ","พรเจริญ","โซ่พิสัย","เซกา","ปากคาด","บึงโขงหลง","ศรีวิไล","บุ่งคล้า"],"บุรีรัมย์":["เมืองบุรีรัมย์","คูเมือง","กระสัง","นางรอง","หนองกี่","ละหานทราย","ประโคนชัย","บ้านกรวด","พุทไธสง","ลำปลายมาศ","สตึก","ปะคำ","นาโพธิ์","หนองหงส์","พลับพลาชัย","ห้วยราช","โนนสุวรรณ","ชำนิ","บ้านใหม่ไชยพจน์","โนนดินแดง","บ้านด่าน","แคนดง","เฉลิมพระเกียรติ"],"ปทุมธานี":["เมืองปทุมธานี","คลองหลวง","ธัญบุรี","หนองเสือ","ลาดหลุมแก้ว","ลำลูกกา","สามโคก"],"ประจวบคีรีขันธ์":["เมืองประจวบคีรีขันธ์","กุยบุรี","ทับสะแก","บางสะพาน","บางสะพานน้อย","ปราณบุรี","หัวหิน","สามร้อยยอด"],"ปราจีนบุรี":["เมืองปราจีนบุรี","กบินทร์บุรี","นาดี","บ้านสร้าง","ประจันตคาม","ศรีมหาโพธิ","ศรีมโหสถ"],"ปัตตานี":["เมืองปัตตานี","โคกโพธิ์","หนองจิก","ปะนาเระ","มายอ","ทุ่งยางแดง","สายบุรี","ไม้แก่น","ยะหริ่ง","ยะรัง","กะพ้อ","แม่ลาน"],"พระนครศรีอยุธยา":["พระนครศรีอยุธยา","ท่าเรือ","นครหลวง","บางไทร","บางบาล","บางปะอิน","บางปะหัน","ผักไห่","ภาชี","ลาดบัวหลวง","วังน้อย","เสนา","บางซ้าย","อุทัย","มหาราช","บ้านแพรก"],"พะเยา":["เมืองพะเยา","จุน","เชียงคำ","เชียงม่วน","ดอกคำใต้","ปง","แม่ใจ","ภูซาง","ภูกามยาว"],"พังงา":["เมืองพังงา","เกาะยาว","กะปง","ตะกั่วทุ่ง","ตะกั่วป่า","คุระบุรี","ทับปุด","ท้ายเหมือง"],"พัทลุง":["เมืองพัทลุง","กงหรา","เขาชัยสน","ตะโหมด","ควนขนุน","ปากพะยูน","ศรีบรรพต","ป่าบอน","บางแก้ว","ป่าพะยอม","ศรีนครินทร์"],"พิจิตร":["เมืองพิจิตร","วังทรายพูน","โพธิ์ประทับช้าง","ตะพานหิน","บางมูลนาก","โพทะเล","สามง่าม","ทับคล้อ","สากเหล็ก","บึงนาราง","ดงเจริญ","วชิรบารมี"],"พิษณุโลก":["เมืองพิษณุโลก","นครไทย","ชาติตระการ","บางระกำ","บางกระทุ่ม","พรหมพิราม","วัดโบสถ์","วังทอง","เนินมะปราง"],"เพชรบุรี":["เมืองเพชรบุรี","เขาย้อย","หนองหญ้าปล้อง","ชะอำ","ท่ายาง","บ้านลาด","บ้านแหลม","แก่งกระจาน"],"เพชรบูรณ์":["เมืองเพชรบูรณ์","ชนแดน","หล่มสัก","หล่มเก่า","วิเชียรบุรี","ศรีเทพ","หนองไผ่","บึงสามพัน","น้ำหนาว","วังโป่ง","เขาค้อ"],"แพร่":["เมืองแพร่","ร้องกวาง","ลอง","สูงเม่น","เด่นชัย","สอง","วังชิ้น","หนองม่วงไข่"],"ภูเก็ต":["เมืองภูเก็ต","กะทู้","ถลาง"],"มหาสารคาม":["เมืองมหาสารคาม","แกดำ","โกสุมพิสัย","กันทรวิชัย","เชียงยืน","บรบือ","นาเชือก","พยัคฆภูมิพิสัย","วาปีปทุม","นาดูน","ยางสีสุราช","กุดรัง","ชื่นชม"],"มุกดาหาร":["เมืองมุกดาหาร","นิคมคำสร้อย","ดอนตาล","ดงหลวง","คำชะอี","หว้านใหญ่","หนองสูง"],"แม่ฮ่องสอน":["เมืองแม่ฮ่องสอน","ขุนยวม","ปาย","แม่สะเรียง","แม่ลาน้อย","สบเมย","ปางมะผ้า"],"ยโสธร":["เมืองยโสธร","ทรายมูล","กุดชุม","คำเขื่อนแก้ว","ป่าติ้ว","มหาชนะชัย","ค้อวัง","เลิงนกทา","ไทยเจริญ"],"ยะลา":["เมืองยะลา","เบตง","บันนังสตา","ธารโต","ยะหา","รามัน","กาบัง","กรงปินัง"],"ร้อยเอ็ด":["เมืองร้อยเอ็ด","เกษตรวิสัย","ปทุมรัตต์","จตุรพักตรพิมาน","ธวัชบุรี","พนมไพร","โพนทอง","โพธิ์ชัย","หนองพอก","เสลภูมิ","สุวรรณภูมิ","เมืองสรวง","โพนทราย","อาจสามารถ","เมยวดี","ศรีสมเด็จ","จังหาร","เชียงขวัญ","หนองฮี","ทุ่งเขาหลวง"],"ระนอง":["เมืองระนอง","ละอุ่น","กะเปอร์","กระบุรี","สุขสำราญ"],"ระยอง":["เมืองระยอง","บ้านฉาง","แกลง","วังจันทร์","บ้านค่าย","ปลวกแดง","เขาชะเมา","นิคมพัฒนา"],"ราชบุรี":["เมืองราชบุรี","จอมบึง","สวนผึ้ง","ดำเนินสะดวก","บางแพ","โพธาราม","ปากท่อ","วัดเพลง","บ้านโป่ง","บ้านคา"],"ลพบุรี":["เมืองลพบุรี","พัฒนานิคม","โคกสำโรง","ชัยบาดาล","ท่าวุ้ง","บ้านหมี่","ท่าหลวง","สระโบสถ์","โคกเจริญ","ลำสนธิ","หนองม่วง"],"ลำปาง":["เมืองลำปาง","แม่เมาะ","เกาะคา","เสริมงาม","งาว","แจ้ห่ม","วังเหนือ","เถิน","แม่พริก","แม่ทะ","สบปราบ","ห้างฉัตร","เมืองปาน"],"ลำพูน":["เมืองลำพูน","แม่ทา","บ้านโฮ่ง","ลี้","ทุ่งหัวช้าง","ป่าซาง","บ้านธิ","เวียงหนองล่อง"],"เลย":["เมืองเลย","นาด้วง","เชียงคาน","ปากชม","ด่านซ้าย","นาแห้ว","ภูเรือ","ท่าลี่","วังสะพุง","ภูกระดึง","ภูหลวง","ผาขาว","เอราวัณ","หนองหิน"],"ศรีสะเกษ":["เมืองศรีสะเกษ","ยางชุมน้อย","กันทรารมย์","กันทรลักษ์","ขุขันธ์","ไพรบึง","ปรางค์กู่","ขุนหาญ","ราษีไศล","อุทุมพรพิสัย","บึงบูรพ์","ห้วยทับทัน","โนนคูณ","ศรีรัตนะ","น้ำเกลี้ยง","วังหิน","ภูสิงห์","เมืองจันทร์","เบญจลักษ์","พยุห์","โพธิ์ศรีสุวรรณ","ศิลาลาด"],"สกลนคร":["เมืองสกลนคร","กุสุมาลย์","กุดบาก","พรรณานิคม","พังโคน","วาริชภูมิ","นิคมน้ำอูน","วานรนิวาส","คำตากล้า","บ้านม่วง","อากาศอำนวย","สว่างแดนดิน","ส่องดาว","เต่างอย","โคกศรีสุพรรณ","เจริญศิลป์","โพนนาแก้ว","ภูพาน","เมืองสกลนคร"],"สงขลา":["เมืองสงขลา","สทิงพระ","จะนะ","นาทวี","เทพา","สะบ้าย้อย","ระโนด","กระแสสินธุ์","รัตภูมิ","สะเดา","หาดใหญ่","นาหม่อม","ควนเนียง","บางกล่ำ","สิงหนคร","คลองหอยโข่ง"],"สตูล":["เมืองสตูล","ควนโดน","ควนกาหลง","ท่าแพ","ละงู","ทุ่งหว้า","มะนัง"],"สมุทรปราการ":["เมืองสมุทรปราการ","บางบ่อ","บางพลี","พระประแดง","พระสมุทรเจดีย์","บางเสาธง"],"สมุทรสงคราม":["เมืองสมุทรสงคราม","บางคนที","อัมพวา"],"สมุทรสาคร":["เมืองสมุทรสาคร","กระทุ่มแบน","บ้านแพ้ว"],"สระแก้ว":["เมืองสระแก้ว","คลองหาด","ตาพระยา","วังน้ำเย็น","วัฒนานคร","อรัญประเทศ","เขาฉกรรจ์","โคกสูง","วังสมบูรณ์"],"สระบุรี":["เมืองสระบุรี","แก่งคอย","หนองแค","วิหารแดง","หนองแซง","บ้านหมอ","ดอนพุด","หนองโดน","พระพุทธบาท","เสาไห้","มวกเหล็ก","วังม่วง","เฉลิมพระเกียรติ"],"สิงห์บุรี":["เมืองสิงห์บุรี","บางระจัน","ค่ายบางระจัน","พรหมบุรี","ท่าช้าง","อินทร์บุรี"],"สุโขทัย":["เมืองสุโขทัย","บ้านด่านลานหอย","คีรีมาศ","กงไกรลาศ","ศรีสัชนาลัย","ศรีสำโรง","สวรรคโลก","ศรีนคร","ทุ่งเสลี่ยม"],"สุพรรณบุรี":["เมืองสุพรรณบุรี","เดิมบางนางบวช","ด่านช้าง","บางปลาม้า","ศรีประจันต์","ดอนเจดีย์","สองพี่น้อง","สามชุก","อู่ทอง","หนองหญ้าไซ"],"สุราษฎร์ธานี":["เมืองสุราษฎร์ธานี","กาญจนดิษฐ์","ดอนสัก","เกาะสมุย","เกาะพะงัน","ไชยา","ท่าชนะ","คีรีรัฐนิคม","บ้านตาขุน","พนม","ท่าฉาง","บ้านนาสาร","บ้านนาเดิม","เคียนซา","เวียงสระ","พระแสง","พุนพิน","ชัยบุรี","วิภาวดี"],"สุรินทร์":["เมืองสุรินทร์","ชุมพลบุรี","ท่าตูม","จอมพระ","ปราสาท","กาบเชิง","รัตนบุรี","สนม","ศีขรภูมิ","สังขะ","ลำดวน","สำโรงทาบ","บัวเชด","พนมดงรัก","ศรีณรงค์","เขวาสินรินทร์","โนนนารายณ์"],"หนองคาย":["เมืองหนองคาย","ท่าบ่อ","โพนพิสัย","ศรีเชียงใหม่","สังคม","สระใคร","เฝ้าไร่","รัตนวาปี","โพธิ์ตาก"],"หนองบัวลำภู":["เมืองหนองบัวลำภู","นากลาง","โนนสัง","ศรีบุญเรือง","สุวรรณคูหา","นาวัง"],"อ่างทอง":["เมืองอ่างทอง","ไชโย","ป่าโมก","โพธิ์ทอง","แสวงหา","วิเศษชัยชาญ","สามโก้"],"อำนาจเจริญ":["เมืองอำนาจเจริญ","ชานุมาน","ปทุมราชวงศา","พนา","เสนางคนิคม","หัวตะพาน","ลืออำนาจ"],"อุดรธานี":["เมืองอุดรธานี","กุดจับ","หนองวัวซอ","กุมภวาปี","โนนสะอาด","หนองหาน","ทุ่งฝน","ไชยวาน","ศรีธาตุ","วังสามหมอ","บ้านดุง","บ้านผือ","น้ำโสม","เพ็ญ","สร้างคอม","หนองแสง","นายูง","พิบูลย์รักษ์","กู่แก้ว","ประจักษ์ศิลปาคม"],"อุตรดิตถ์":["เมืองอุตรดิตถ์","ตรอน","ท่าปลา","น้ำปาด","ฟากท่า","บ้านโคก","พิชัย","ลับแล","ทองแสนขัน"],"อุทัยธานี":["เมืองอุทัยธานี","ทัพทัน","สว่างอารมณ์","หนองฉาง","หนองขาหย่าง","บ้านไร่","ลานสัก","ห้วยคต"],"อุบลราชธานี":["เมืองอุบลราชธานี","ศรีเมืองใหม่","โขงเจียม","เขื่องใน","เขมราฐ","เดชอุดม","นาจะหลวย","น้ำยืน","บุณฑริก","ตระการพืชผล","กุดข้าวปุ้น","ม่วงสามสิบ","วารินชำราบ","พิบูลมังสาหาร","ตาลสุม","โพธิ์ไทร","สำโรง","ดอนมดแดง","สิรินธร","ทุ่งศรีอุดม","นาเยีย","นาตาล","เหล่าเสือโก้ก","สว่างวีระวงศ์","น้ำขุ่น"]};
+var tsProvince = null, tsDistrict = null; // Tom Select instances
+
 var ST       = { user:null, profile:null, cnList:[], fromAdmin:false, editId:null };
 var IMG      = { b64:null, mime:null, url:null };
 var rowIdx   = 0;
@@ -1630,7 +1680,7 @@ function viewDetail(id,isAdmin){
     +'<div><div class="lbl">บริษัท</div><div style="color:#E6EDF3;">'+esc(r.company)+'</div></div>'
     +'<div><div class="lbl">ประเภท</div><div>'+esc(r.docType)+'</span></div></div>'
     +'<div class="g2" style="gap:10px;">'
-    +'<div><div class="lbl">ลูกค้า</div><div style="color:#E6EDF3;font-weight:500;">'+esc(r.customerName)+'</div></div>'
+    +'<div><div class="lbl">ลูกค้า</div><div style="color:#E6EDF3;font-weight:500;">'+esc(r.customerName)+(r.customerCode?' <span class="mono" style="color:var(--muted);font-size:.76rem;font-weight:400;">('+esc(r.customerCode)+')</span>':'')+'</div></div>'
     +'<div><div class="lbl">จังหวัด / เขต</div><div style="color:#E6EDF3;">'+esc(r.province)+(r.district?' / '+esc(r.district):'')+'</div></div>'
     +'</div>'
     +'<div><div class="lbl">รายการสินค้า</div>'+itHtml+'</div>'
@@ -1707,14 +1757,76 @@ function parseItems(s){
 /* ══════════════════════════════════════════
    OPEN FORM
    ══════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   TOM SELECT — จังหวัด / เขต-อำเภอ (พิมพ์ค้นหาได้)
+   ══════════════════════════════════════════ */
+function initProvinceDistrictSelect(){
+  if(typeof TomSelect === 'undefined'){
+    // TomSelect ยังโหลดไม่เสร็จ (script defer) → ลองใหม่ในอีกสักครู่
+    setTimeout(initProvinceDistrictSelect, 150);
+    return;
+  }
+  if(tsProvince) return; // init แล้วไม่ต้องซ้ำ
+
+  var provinceNames = Object.keys(THAI_PROVINCES).sort(function(a,b){ return a.localeCompare(b,'th'); });
+
+  tsProvince = new TomSelect('#f-prov', {
+    options: provinceNames.map(function(p){ return {value:p, text:p}; }),
+    placeholder: 'พิมพ์ค้นหาจังหวัด...',
+    maxOptions: null,
+    onChange: function(val){ updateDistrictOptions(val); }
+  });
+
+  tsDistrict = new TomSelect('#f-district', {
+    options: [],
+    placeholder: 'เลือกจังหวัดก่อน',
+    maxOptions: null
+  });
+  tsDistrict.disable();
+}
+
+// เมื่อเลือกจังหวัดแล้ว → เติม options อำเภอ/เขตของจังหวัดนั้นให้ tsDistrict
+function updateDistrictOptions(provinceName, keepValue){
+  if(!tsDistrict) return;
+  tsDistrict.clearOptions();
+  tsDistrict.clear(true);
+  var districts = THAI_PROVINCES[provinceName] || [];
+  if(districts.length){
+    tsDistrict.addOptions(districts.map(function(d){ return {value:d, text:d}; }));
+    tsDistrict.enable();
+    tsDistrict.settings.placeholder = 'พิมพ์ค้นหาเขต/อำเภอ...';
+  } else {
+    tsDistrict.disable();
+    tsDistrict.settings.placeholder = 'เลือกจังหวัดก่อน';
+  }
+  if(keepValue && districts.indexOf(keepValue) > -1){
+    tsDistrict.setValue(keepValue, true);
+  }
+  tsDistrict.control_input.placeholder = tsDistrict.settings.placeholder;
+}
+
+// ตั้งค่าจังหวัด+อำเภอพร้อมกัน (ใช้ตอนโหลดข้อมูล edit) — รอ chain ให้ครบก่อน
+function setProvinceDistrict(provinceName, districtName){
+  if(!tsProvince || !tsDistrict) return;
+  if(provinceName && THAI_PROVINCES[provinceName]){
+    tsProvince.setValue(provinceName, true); // silent เพื่อไม่ trigger onChange ซ้ำ
+    updateDistrictOptions(provinceName, districtName);
+  } else {
+    tsProvince.clear(true);
+    updateDistrictOptions('');
+  }
+}
+
+
 function openForm(editId,fromAdmin){
   if(fromAdmin===undefined)fromAdmin=false;
   ST.editId=editId;ST.fromAdmin=fromAdmin;
+  initProvinceDistrictSelect(); // init ครั้งแรกที่เปิดฟอร์ม (idempotent)
   document.getElementById('f-co').value='';
   document.querySelectorAll('input[name="dt"]').forEach(function(r){r.checked=false;});
   document.getElementById('f-cust').value='';
-  document.getElementById('f-prov').value='';
-  document.getElementById('f-district').value='';
+  document.getElementById('f-custcode').value='';
+  setProvinceDistrict('', ''); // เคลียร์จังหวัด/เขต
   document.getElementById('f-reason').value='';
   document.getElementById('f-bill').value='';
   document.getElementById('f-exchange').value='';
@@ -1743,8 +1855,13 @@ function openForm(editId,fromAdmin){
       var rd=document.querySelector('input[name="dt"][value="'+r.docType+'"]');
       if(rd){ rd.checked=true; onDtChange(r.docType); } // trigger conditional fields
       document.getElementById('f-cust').value=r.customerName||'';
-      document.getElementById('f-prov').value=r.province||'';
-      document.getElementById('f-district').value=r.district||'';
+      document.getElementById('f-custcode').value=r.customerCode||'';
+      // รอ Tom Select init เสร็จก่อนค่อย set ค่า (กันกรณี TomSelect ยังโหลดไม่ทัน)
+      var trySetPD = function(){
+        if(tsProvince && tsDistrict){ setProvinceDistrict(r.province||'', r.district||''); }
+        else setTimeout(trySetPD, 100);
+      };
+      trySetPD();
       document.getElementById('f-reason').value=r.reason||'';
       document.getElementById('f-bill').value=r.billRef||'';
       document.getElementById('f-exchange').value=r.exchangeTo||'';
@@ -1780,8 +1897,9 @@ async function saveCN(){
   var dtEl   = document.querySelector('input[name="dt"]:checked');
   var dt     = dtEl ? dtEl.value : '';
   var cust   = document.getElementById('f-cust').value.trim();
-  var prov     = document.getElementById('f-prov').value.trim();
-  var district = document.getElementById('f-district').value.trim();
+  var custCode = document.getElementById('f-custcode').value.trim();
+  var prov     = tsProvince ? (tsProvince.getValue()||'').trim() : document.getElementById('f-prov').value.trim();
+  var district = tsDistrict ? (tsDistrict.getValue()||'').trim() : document.getElementById('f-district').value.trim();
   var reason   = document.getElementById('f-reason').value.trim();
   var bill   = document.getElementById('f-bill').value.trim();
   var exchange = document.getElementById('f-exchange').value.trim();
@@ -1812,7 +1930,7 @@ async function saveCN(){
     if(isAdmin && ST.editId && status==='เสร็จสิ้น') imgUrl = await doUploadAll(ST.editId);
 
     var payload = {
-      company: co, docType: dt, customerName: cust,
+      company: co, docType: dt, customerName: cust, customerCode: custCode,
       province: prov, district: district,
       items: its, reason: reason,
       billRef: dt==='ใบแจ้งคืนสินค้า' ? bill : '',
@@ -2285,6 +2403,20 @@ function onReportModeChange(val){
   if(sel) sel.style.display=val==='person'?'block':'none';
 }
 
+/* คำนวณระยะเวลาตั้งแต่ "กำลังดำเนินการ" ถึง "เสร็จสิ้น" เป็นจำนวนวัน
+   - ถ้ายังไม่มี processingAt หรือ completedAt → แสดง "-"
+   - ปัดเศษวันขึ้นเสมอ (แม้ใช้เวลาไม่ถึง 1 วันก็นับเป็น 1 วัน เพื่อความเข้าใจง่าย) */
+function calcProcessingDuration(processingAt, completedAt){
+  if(!processingAt || !completedAt) return '-';
+  var start = new Date(processingAt);
+  var end   = new Date(completedAt);
+  var diffMs = end - start;
+  if(isNaN(diffMs) || diffMs < 0) return '-';
+  var days = Math.ceil(diffMs / (1000*60*60*24));
+  if(days <= 0) days = 1; // ถ้าเสร็จภายในวันเดียวกัน (ไม่ถึง 24 ชม.) นับเป็น 1 วัน
+  return days + ' วัน';
+}
+
 function printMonthReport(monthKey){
   var modeEl=document.querySelector('input[name="reportMode"]:checked');
   var reportMode=modeEl?modeEl.value:'all';
@@ -2310,6 +2442,7 @@ function printMonthReport(monthKey){
       :r.status==='กำลังดำเนินการ'
         ?'background:#cce5ff;color:#004085;'
         :'background:#fff3cd;color:#856404;';
+    var durText = calcProcessingDuration(r.processingAt, r.completedAt);
     return '<tr>'
       +'<td style="text-align:center;">'+(i+1)+'</td>'
       +'<td style="font-family:monospace;font-size:8pt;">'+r.id+'</td>'
@@ -2318,6 +2451,7 @@ function printMonthReport(monthKey){
       +'<td>'+r.docType+'</td>'
       +'<td>'+esc(r.customerName)+'</td>'
       +'<td>'+esc(r.province)+'</td>'
+      +'<td style="text-align:center;">'+durText+'</td>'
       +'<td><span style="display:inline-block;padding:1pt 5pt;border-radius:9pt;font-size:7.5pt;font-weight:700;'+statusStyle+'">'+r.status+'</span></td>'
       +'</tr>';
   }).join('');
@@ -2325,6 +2459,22 @@ function printMonthReport(monthKey){
   var wait=recs.filter(function(r){return r.status==='รอของ';}).length;
   var proc=recs.filter(function(r){return r.status==='กำลังดำเนินการ';}).length;
   var done=recs.filter(function(r){return r.status==='เสร็จสิ้น';}).length;
+
+  // คำนวณระยะเวลาเฉลี่ยจากรายการที่มีทั้ง processingAt และ completedAt
+  var doneDurations = recs
+    .filter(function(r){ return r.processingAt && r.completedAt; })
+    .map(function(r){
+      var diffMs = new Date(r.completedAt) - new Date(r.processingAt);
+      return diffMs >= 0 ? diffMs : null;
+    })
+    .filter(function(v){ return v !== null; });
+  var avgDurationText = '-';
+  if(doneDurations.length){
+    var avgMs = doneDurations.reduce(function(a,b){return a+b;},0) / doneDurations.length;
+    var avgDays = Math.ceil(avgMs / (1000*60*60*24));
+    if(avgDays <= 0) avgDays = 1;
+    avgDurationText = avgDays + ' วัน';
+  }
 
   var html='<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"/>'
     +'<title>รายงาน '+label+'</title><style>'
@@ -2354,12 +2504,13 @@ function printMonthReport(monthKey){
     +'<span>👤 '+esc(personName)+'</span>'
     +'<span>📋 <strong>'+recs.length+'</strong> รายการ</span>'
     +'</div>'
-    +'<table><thead><tr><th>#</th><th>เลขที่</th><th>วันที่</th><th>ผู้ทำรายการ</th><th>ประเภท</th><th>ลูกค้า</th><th>จังหวัด</th><th>สถานะ</th></tr></thead>'
+    +'<table><thead><tr><th>#</th><th>เลขที่</th><th>วันที่</th><th>ผู้ทำรายการ</th><th>ประเภท</th><th>ลูกค้า</th><th>จังหวัด</th><th>ระยะเวลาดำเนินการ</th><th>สถานะ</th></tr></thead>'
     +'<tbody>'+rows+'</tbody></table>'
     +'<div class="sum">'
     +'<div class="si"><div class="sn" style="color:#856404;">'+wait+'</div><div class="sl">รอของ</div></div>'
     +'<div class="si"><div class="sn" style="color:#004085;">'+proc+'</div><div class="sl">ดำเนินการ</div></div>'
     +'<div class="si"><div class="sn" style="color:#155724;">'+done+'</div><div class="sl">เสร็จสิ้น</div></div>'
+    +'<div class="si"><div class="sn" style="color:#5a3d00;">'+avgDurationText+'</div><div class="sl">เฉลี่ย/รายการ</div></div>'
     +'<div class="si" style="background:#f8f8f8;"><div class="sn">'+recs.length+'</div><div class="sl">รวมทั้งหมด</div></div>'
     +'</div>'
     +'<script>window.onload=function(){setTimeout(function(){window.print();},400);window.onafterprint=function(){window.close();};};<\/script>'
@@ -2373,8 +2524,8 @@ function printMonthReport(monthKey){
    EXPORT CSV
    ══════════════════════════════════════════ */
 function exportCSV(){
-  var h=['เลขที่','วันที่','ผู้ทำรายการ','ประเภท','ลูกค้า','จังหวัด','สถานะ'];
-  var rows=adminRecs.map(function(r){return[r.id,fDate(r.createdAt),r.creatorName,r.docType,r.customerName,r.province+(r.district?' / '+r.district:''),r.status].map(function(v){return'"'+v+'"';}).join(',');});
+  var h=['เลขที่','วันที่','ผู้ทำรายการ','ประเภท','ลูกค้า','รหัสลูกค้า','จังหวัด','ระยะเวลาดำเนินการ','สถานะ'];
+  var rows=adminRecs.map(function(r){return[r.id,fDate(r.createdAt),r.creatorName,r.docType,r.customerName,r.customerCode||'',r.province+(r.district?' / '+r.district:''),calcProcessingDuration(r.processingAt,r.completedAt),r.status].map(function(v){return'"'+v+'"';}).join(',');});
   var csv='\uFEFF'+[h.join(',')].concat(rows).join('\n');
   var a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
@@ -2449,6 +2600,7 @@ function printCNForm(r){
     rows+='<tr>'
       +'<td class="bc tc">'+(i===0?'1':'')+'</td>'
       +'<td class="bc">'+(i===0?esc(r.customerName||''):'')+'</td>'
+      +'<td class="bc tc">'+(i===0?esc(r.customerCode||''):'')+'</td>'
       +'<td class="bc tc">'+(i===0?(esc(r.province||'')+(r.district?' / '+esc(r.district||''):'')):'')+'</td>'
       +'<td class="bc">'+esc(it.name)+'</td>'
       +'<td class="bc tc">'+esc(it.qty)+'</td>'
@@ -2562,17 +2714,18 @@ html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background
   /* 4. Main Table */
   html+='<table class="mt">'
     +'<thead><tr>'
-    +'<th rowspan="2" class="bc" style="width:14pt;">ลำดับ</th>'
-    +'<th rowspan="2" class="bc" style="width:62pt;">ชื่อลูกค้า</th>'
-    +'<th rowspan="2" class="bc" style="width:44pt;">จังหวัด/เขต</th>'
-    +'<th rowspan="2" class="bc" style="width:50pt;">รายการสินค้า</th>'
+    +'<th rowspan="2" class="bc" style="width:13pt;">ลำดับ</th>'
+    +'<th rowspan="2" class="bc" style="width:52pt;">ชื่อลูกค้า</th>'
+    +'<th rowspan="2" class="bc" style="width:36pt;">รหัสลูกค้า</th>'
+    +'<th rowspan="2" class="bc" style="width:40pt;">จังหวัด/เขต</th>'
+    +'<th rowspan="2" class="bc" style="width:44pt;">รายการสินค้า</th>'
     +'<th colspan="2" class="bc">จำนวน</th>'
     +'<th colspan="2" class="bc">หมายเหตุ (บัญชี)</th>'
     +'</tr><tr>'
-    +'<th class="bc" style="width:28pt;">ยอดสินค้า</th>'
-    +'<th class="bc" style="width:26pt;">หน่วย</th>'
-    +'<th class="bc" style="width:38pt;">ราคา : หน่วย</th>'
-    +'<th class="bc" style="width:38pt;">จำนวนเงิน</th>'
+    +'<th class="bc" style="width:26pt;">ยอดสินค้า</th>'
+    +'<th class="bc" style="width:24pt;">หน่วย</th>'
+    +'<th class="bc" style="width:36pt;">ราคา : หน่วย</th>'
+    +'<th class="bc" style="width:36pt;">จำนวนเงิน</th>'
     +'</tr></thead>'
     +'<tbody>'+rows+'</tbody>'
     +'</table>';
