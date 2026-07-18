@@ -1573,6 +1573,13 @@ function renderAdminTbl(recs){
       : (isWarehouse
           ? '<button class="btn btn-ghost btn-sm" style="opacity:.22;cursor:not-allowed;" title="Warehouse ไม่สามารถลบรายการที่เสร็จสิ้นแล้ว" disabled>🗑</button>'
           : '');
+    // แก้ไขได้: Admin แก้ได้ทุก status | Warehouse แก้ไม่ได้ถ้ารายการ "เสร็จสิ้น" แล้ว
+    var canEditThis = canEdit && (isAdmin || r.status !== 'เสร็จสิ้น');
+    var editBtn = canEdit
+      ? (canEditThis
+          ? '<button class="btn btn-outline btn-sm" onclick="openForm(\''+r.id+'\',true)" title="แก้ไข">✏️</button>'
+          : '<button class="btn btn-ghost btn-sm" style="opacity:.22;cursor:not-allowed;" title="รายการเสร็จสิ้นแล้ว แก้ไขได้เฉพาะ Admin" disabled>✏️</button>')
+      : '';
     return '<tr style="height:52px;">'
       +'<td class="mono" style="font-size:.78rem;font-weight:600;">'+r.id+'</td>'
       +'<td style="font-size:.78rem;color:var(--muted);white-space:nowrap;">'+fDate(r.createdAt)+'</td>'
@@ -1585,7 +1592,7 @@ function renderAdminTbl(recs){
       +'<button class="btn btn-ghost btn-sm" onclick="viewDetail(\''+r.id+'\',true)" title="ดูรายละเอียด">👁</button>'
       +printBtn
       +(canEdit ? '<button class="btn btn-pri btn-sm" onclick="openStatusModal(\''+r.id+'\',\''+r.status+'\')" title="เปลี่ยนสถานะ">🔄</button>' : '')
-      +(canEdit ? '<button class="btn btn-outline btn-sm" onclick="openForm(\''+r.id+'\',true)" title="แก้ไข">✏️</button>' : '')
+      +editBtn
       +deleteBtn
       +'</div></td>'
       +'</tr>';
@@ -1724,9 +1731,16 @@ function closeMdl(e){
 /* ══════════════════════════════════════════
    ITEMS ROWS
    ══════════════════════════════════════════ */
+var MAX_ITEMS = 5; // จำกัดรายการสินค้าสูงสุดต่อ 1 รายการ CN
+
 function addRow(nm,qty,unit){
-  nm=nm||'';qty=qty||'';unit=unit||'';
   var tb=document.getElementById('itbody');
+  if(tb.rows.length >= MAX_ITEMS){
+    toast('เพิ่มรายการสินค้าได้สูงสุด '+MAX_ITEMS+' รายการต่อ 1 ใบ','warn');
+    updateAddRowBtnState();
+    return;
+  }
+  nm=nm||'';qty=qty||'';unit=unit||'';
   var idx=rowIdx++;
   var tr=document.createElement('tr');
   tr.id='ir-'+idx;
@@ -1737,9 +1751,22 @@ function addRow(nm,qty,unit){
     +'<td class="itd"><button type="button" onclick="delRow('+idx+')" title="ลบ">✕</button></td>';
   tb.appendChild(tr);
   renum();
+  updateAddRowBtnState();
 }
-function delRow(idx){var el=document.getElementById('ir-'+idx);if(el)el.remove();renum();}
+function delRow(idx){var el=document.getElementById('ir-'+idx);if(el)el.remove();renum();updateAddRowBtnState();}
 function renum(){document.querySelectorAll('#itbody tr').forEach(function(tr,i){var td=tr.querySelector('.itn');if(td)td.textContent=i+1;});}
+
+// ปิด/เปิดปุ่ม "+ เพิ่มรายการ" ตามจำนวนแถวปัจจุบัน เทียบกับ MAX_ITEMS
+function updateAddRowBtnState(){
+  var btn = document.querySelector('button[onclick="addRow()"]');
+  if(!btn) return;
+  var tb = document.getElementById('itbody');
+  var atMax = tb && tb.rows.length >= MAX_ITEMS;
+  btn.disabled = atMax;
+  btn.style.opacity = atMax ? '.4' : '1';
+  btn.style.cursor = atMax ? 'not-allowed' : 'pointer';
+  btn.textContent = atMax ? '+ เพิ่มรายการ (สูงสุด '+MAX_ITEMS+' รายการ)' : '+ เพิ่มรายการ';
+}
 function getItems(){
   return Array.from(document.querySelectorAll('#itbody tr')).map(function(tr){
     var id=tr.id.replace('ir-','');
@@ -1840,6 +1867,7 @@ function openForm(editId,fromAdmin){
   var eg=document.getElementById('existing-imgs'); if(eg) eg.style.display='none';
   document.getElementById('f-upload').style.display='none';
   document.getElementById('itbody').innerHTML='';rowIdx=0;
+  updateAddRowBtnState(); // reset ปุ่ม "+ เพิ่มรายการ" กลับสถานะปกติ
   var isAdmin=isAdminLevel();  // Admin + Warehouse
   document.getElementById('f-admin').style.display=(isAdmin&&editId)?'block':'none';
   document.getElementById('form-title-lbl').textContent=editId?'แก้ไขรายการ CN':'สร้างรายการ CN';
@@ -1851,6 +1879,16 @@ function openForm(editId,fromAdmin){
       L.hide();
       if(!d.success){alert('ไม่พบข้อมูล');return;}
       var r=d.record;
+      _editOrigStatus = r.status || 'รอของ';
+
+      // Lock: รายการที่ "เสร็จสิ้น" แล้ว เปิดแก้ไขได้เฉพาะ Admin เท่านั้น
+      var myRole = ST.user ? ST.user.role : '';
+      if(_editOrigStatus === 'เสร็จสิ้น' && myRole !== 'Admin'){
+        toast('รายการนี้ "เสร็จสิ้น" แล้ว ไม่สามารถแก้ไขได้ (เฉพาะ Admin เท่านั้น)','error');
+        showView('view-admin-dash', myRole==='Warehouse' ? 'Warehouse Dashboard' : 'Admin Dashboard');
+        return;
+      }
+
       document.getElementById('f-co').value=r.company||'';
       var rd=document.querySelector('input[name="dt"][value="'+r.docType+'"]');
       if(rd){ rd.checked=true; onDtChange(r.docType); } // trigger conditional fields
@@ -1879,8 +1917,14 @@ function openForm(editId,fromAdmin){
           }
         }
       }
+
+      // ถ้า Admin กำลังแก้รายการที่เสร็จสิ้นแล้ว → แจ้งเตือนเบา ๆ ว่าเป็นรายการที่ล็อก (แก้ได้เพราะเป็น Admin)
+      if(_editOrigStatus === 'เสร็จสิ้น' && myRole === 'Admin'){
+        toast('⚠️ รายการนี้ "เสร็จสิ้น" แล้ว — คุณกำลังแก้ไขในฐานะ Admin','warn');
+      }
     }).catch(function(e){L.hide();alert('เกิดข้อผิดพลาด: '+e.message);});
   } else {
+    _editOrigStatus = null;
     addRow();
     showView('view-form','สร้างรายการ CN');
   }
@@ -1890,6 +1934,7 @@ function openForm(editId,fromAdmin){
    SAVE CN
    ══════════════════════════════════════════ */
 var _saving = false; // double-submit guard
+var _editOrigStatus = null; // เก็บสถานะเดิมของรายการตอนเปิดแก้ไข (ใช้เช็ค lock + กันบังคับแนบรูปผิดจังหวะ
 
 async function saveCN(){
   if(_saving) return;  // ป้องกันกด 2 ครั้ง
@@ -1908,12 +1953,22 @@ async function saveCN(){
 
   hideErr('form-err');
 
+  // Lock: รายการที่ "เสร็จสิ้น" แล้ว แก้ไขได้เฉพาะ Admin เท่านั้น (กันเผื่อเปิดฟอร์มค้างไว้)
+  if(ST.editId && _editOrigStatus === 'เสร็จสิ้น' && !(ST.user && ST.user.role === 'Admin')){
+    showErr('form-err','รายการนี้ "เสร็จสิ้น" แล้ว ไม่สามารถแก้ไขได้ (เฉพาะ Admin เท่านั้น)');
+    return;
+  }
+
   if(!co||!dt||!cust||!prov||!district||!reason||!items.length){
     showErr('form-err','กรุณากรอกข้อมูลที่จำเป็นให้ครบ (จังหวัด, เขต/อำเภอ) และเพิ่มรายการสินค้าอย่างน้อย 1 รายการ');
     return;
   }
   var isAdmin = isAdminLevel();  // Admin + Warehouse
-  if(isAdmin && ST.editId && status==='เสร็จสิ้น' && !IMG.b64 && !IMG.url){
+  // ต้องแนบรูปก่อนเปลี่ยนสถานะเป็น "เสร็จสิ้น" เฉพาะตอนที่ "กำลังจะเปลี่ยน" เป็นเสร็จสิ้นจริง ๆ
+  // (ไม่ใช่ทุกครั้งที่ status ในฟอร์มเป็น "เสร็จสิ้น" — ถ้ามีรูปเดิมอยู่แล้วจาก backend ไม่ต้องบังคับแนบใหม่)
+  var isChangingToCompleted = status === 'เสร็จสิ้น' && _editOrigStatus !== 'เสร็จสิ้น';
+  var hasAnyImage = existingUrls.length > 0 || imgQueue.length > 0;
+  if(isAdmin && ST.editId && status==='เสร็จสิ้น' && !hasAnyImage){
     showErr('form-err','กรุณาอัปโหลดรูปภาพหลักฐานก่อนเปลี่ยนสถานะเป็น "เสร็จสิ้น"');
     return;
   }
@@ -1927,6 +1982,9 @@ async function saveCN(){
   L.show('กำลังบันทึก...');
   try{
     var imgUrl = undefined;
+    // เรียก doUploadAll เมื่อ status เป็น "เสร็จสิ้น" เท่านั้น — ฟังก์ชันนี้รวม
+    // existingUrls (รูปเดิม) + imgQueue (รูปใหม่ที่ยังไม่เคยอัปโหลด) ให้เองอยู่แล้ว
+    // ถ้าไม่มีรูปใหม่ใน queue เลย จะ return URL เดิมที่มีอยู่กลับมาเฉย ๆ ไม่อัปโหลดซ้ำ
     if(isAdmin && ST.editId && status==='เสร็จสิ้น') imgUrl = await doUploadAll(ST.editId);
 
     var payload = {
@@ -1939,12 +1997,13 @@ async function saveCN(){
 
     var d;
     if(ST.editId){
-      var completedAt = (isAdminLevel() && status==='เสร็จสิ้น') ? new Date().toISOString() : undefined;
+      var completedAt = (isAdminLevel() && isChangingToCompleted) ? new Date().toISOString() : undefined;
       d = await apiPost(Object.assign({action:'updateCN', id:(ST.editId||'').trim()},
         payload,
         isAdminLevel() ? {status:status} : {},
-        imgUrl!=null ? {imageUrl:imgUrl} : {},
-        completedAt ? {completedAt:completedAt} : {}
+        imgUrl != null ? {imageUrl:imgUrl} : {},
+        completedAt ? {completedAt:completedAt} : {},
+        { updaterRole: ST.user ? ST.user.role : '', updaterUID: ST.user ? ST.user.lineUID : '' }
       ));
     } else {
       d = await apiPost(Object.assign({action:'createCN', lineUID:ST.user.lineUID}, payload));
