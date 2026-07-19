@@ -285,29 +285,52 @@ body {
   outline: none;
 }
 .btn:active { transform: translateY(0) scale(.97); }
-.btn-primary {
+.btn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(88,166,255,.35);
+}
+.btn:disabled, .btn[disabled] { cursor: not-allowed; }
+/* icon ที่อยู่ในปุ่ม (emoji หรือ svg) ให้ขนาด/แนวเดียวกันเสมอ ไม่ล้นไม่เบี้ยวข้าม browser */
+.btn > svg { flex-shrink: 0; }
+.btn-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1em; line-height: 1; flex-shrink: 0;
+}
+
+/* btn-primary / btn-pri เป็นสไตล์เดียวกัน — รวม selector ไว้ด้วยกันกันโค้ดซ้ำ */
+.btn-primary, .btn-pri {
   background: var(--accent);
   border-color: var(--accent-h);
   color: #fff;
 }
-.btn-primary:hover { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(35,134,54,.3); }
-.btn-outline {
+.btn-primary:hover, .btn-pri:hover { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(35,134,54,.3); }
+
+/* btn-outline / btn-out เป็นสไตล์เดียวกัน */
+.btn-outline, .btn-out {
   background: transparent;
   border-color: var(--border2);
   color: #C9D1D9;
 }
-.btn-outline:hover { border-color: var(--muted); background: var(--surface2); }
+.btn-outline:hover, .btn-out:hover { border-color: var(--muted); background: var(--surface2); }
+
 .btn-ghost  { background: transparent; border-color: transparent; color: var(--muted); padding: 5px 10px; }
 .btn-ghost:hover { background: var(--surface2); color: #C9D1D9; }
+.btn-ghost:disabled:hover { background: transparent; }
+
 .btn-danger { background: transparent; border-color: var(--red); color: var(--red); }
-.btn-danger:hover { background: var(--red-dim); }
+.btn-danger:hover { background: var(--red-dim); border-color: var(--red); }
+
 .btn-xs  { padding: 2px 8px; font-size: .72rem; }
 .btn-sm  { padding: 6px 13px; font-size: .80rem; min-height: 34px; border-radius: 6px; }
-.btn-pri { background: var(--accent); border-color: var(--accent-h); color: #fff; }
-.btn-pri:hover { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(35,134,54,.3); }
-.btn-out { background: transparent; border-color: var(--border2); color: #C9D1D9; }
-.btn-out:hover { border-color: var(--muted); background: var(--surface2); }
 .btn-full { width: 100%; justify-content: center; }
+
+/* ปุ่มไอคอนล้วน (ไม่มีข้อความ) เช่น ✕ ปิด/ลบแถว — บังคับเป็นวงกลม/สี่เหลี่ยมเท่ากันเสมอ กดง่ายบนมือถือ */
+.btn-icon-only {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; padding: 0;
+  border-radius: 7px;
+  font-size: .95rem;
+  flex-shrink: 0;
+}
 
 /* Badges */
 .badge {
@@ -443,9 +466,7 @@ select.fc option { background: var(--surface2); }
 .itn { width: 28px; text-align: center; color: var(--muted); font-size: .76rem; padding: 0 4px !important; }
 .itq { width: 72px; }
 .itu { width: 62px; }
-.itd { width: 30px; text-align: center; }
-.itd button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: .9rem; padding: 3px; border-radius: 3px; transition: all .15s; }
-.itd button:hover { color: var(--red); background: var(--red-dim); }
+.itd { width: 38px; text-align: center; }
 
 /* Alert */
 .alert { padding: 10px 14px; border-radius: var(--r); font-size: .82rem; display: none; }
@@ -611,7 +632,7 @@ select.fc option { background: var(--surface2); }
   <div class="mdl">
     <div class="mhd">
       <span style="font-weight:700;font-size:.92rem;color:#E6EDF3;" id="mtitle">รายละเอียด</span>
-      <button class="btn btn-ghost btn-sm" onclick="closeMdl()" style="padding:4px 8px;">✕</button>
+      <button class="btn btn-ghost btn-icon-only" onclick="closeMdl()" title="ปิด" aria-label="ปิดหน้าต่าง">✕</button>
     </div>
     <div class="mbody" id="mbody"></div>
     <div class="mft" id="mft"></div>
@@ -816,7 +837,7 @@ select.fc option { background: var(--surface2); }
               <div class="fg">
                 <div class="flex-bw" style="margin-bottom:7px;">
                   <label class="lbl" style="margin:0;">รายการสินค้า <span class="req">*</span></label>
-                  <button type="button" class="btn btn-outline btn-sm" onclick="addRow()">+ เพิ่มรายการ</button>
+                  <button type="button" id="add-row-btn" class="btn btn-outline btn-sm" onclick="addRow()">➕ เพิ่มรายการสินค้า</button>
                 </div>
                 <div class="itw">
                   <table class="ith">
@@ -874,11 +895,14 @@ select.fc option { background: var(--surface2); }
                 </div>
               </div>
               <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:8px;">
-                <button class="btn btn-primary" onclick="saveCN()" style="flex:1;min-width:120px;justify-content:center;">
+                <button id="save-cn-btn" class="btn btn-primary" onclick="saveCN()" style="flex:1;min-width:120px;justify-content:center;">
                   <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
                   บันทึก
                 </button>
-                <button class="btn btn-outline" onclick="goBack()" style="flex:1;min-width:100px;justify-content:center;">ยกเลิก</button>
+                <button class="btn btn-outline" onclick="goBack()" style="flex:1;min-width:100px;justify-content:center;">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                  ยกเลิก
+                </button>
               </div>
             </div>
           </div>
@@ -1706,7 +1730,7 @@ function viewDetail(id,isAdmin){
         +'<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> เปลี่ยนสถานะ</button>'
       : '')
     +(isAdminLevel()&&(r.status==='กำลังดำเนินการ'||r.status==='เสร็จสิ้น')
-      ? '<button class="btn btn-out btn-sm" onclick="printCNForm(window[\''+key+'\'])">🖨 พิมพ์ฟอร์ม</button>'
+      ? '<button class="btn btn-out btn-sm" onclick="printCNForm(window[\''+key+'\'])" title="พิมพ์ฟอร์ม PDF">🖨 พิมพ์ฟอร์ม</button>'
       : isAdminLevel()
         ? '<button class="btn btn-ghost btn-sm" style="opacity:.35;cursor:not-allowed;" disabled title="ต้องเปลี่ยนสถานะเป็น กำลังดำเนินการ ก่อน">🖨 พิมพ์ฟอร์ม</button>'
         : '')
@@ -1748,7 +1772,7 @@ function addRow(nm,qty,unit){
     +'<td><input type="text" id="in-'+idx+'" placeholder="ชื่อสินค้า" value="'+esc(nm)+'"/></td>'
     +'<td class="itq"><input type="text" id="iq-'+idx+'" placeholder="จำนวน" value="'+esc(qty)+'" style="text-align:center;"/></td>'
     +'<td class="itu"><input type="text" id="iu-'+idx+'" placeholder="หน่วย" value="'+esc(unit)+'"/></td>'
-    +'<td class="itd"><button type="button" onclick="delRow('+idx+')" title="ลบ">✕</button></td>';
+    +'<td class="itd"><button type="button" class="btn btn-danger btn-icon-only" onclick="delRow('+idx+')" title="ลบรายการนี้" aria-label="ลบรายการสินค้า">🗑</button></td>';
   tb.appendChild(tr);
   renum();
   updateAddRowBtnState();
@@ -1758,14 +1782,14 @@ function renum(){document.querySelectorAll('#itbody tr').forEach(function(tr,i){
 
 // ปิด/เปิดปุ่ม "+ เพิ่มรายการ" ตามจำนวนแถวปัจจุบัน เทียบกับ MAX_ITEMS
 function updateAddRowBtnState(){
-  var btn = document.querySelector('button[onclick="addRow()"]');
+  var btn = document.getElementById('add-row-btn');
   if(!btn) return;
   var tb = document.getElementById('itbody');
   var atMax = tb && tb.rows.length >= MAX_ITEMS;
   btn.disabled = atMax;
   btn.style.opacity = atMax ? '.4' : '1';
   btn.style.cursor = atMax ? 'not-allowed' : 'pointer';
-  btn.textContent = atMax ? '+ เพิ่มรายการ (สูงสุด '+MAX_ITEMS+' รายการ)' : '+ เพิ่มรายการ';
+  btn.textContent = atMax ? '➕ เพิ่มรายการสินค้า (สูงสุด '+MAX_ITEMS+' รายการ)' : '➕ เพิ่มรายการสินค้า';
 }
 function getItems(){
   return Array.from(document.querySelectorAll('#itbody tr')).map(function(tr){
@@ -1976,7 +2000,7 @@ async function saveCN(){
   var its = serItems(items);
   _saving = true;
   // ปิดปุ่มบันทึก
-  var saveBtn = document.querySelector('[onclick="saveCN()"]');
+  var saveBtn = document.getElementById('save-cn-btn');
   if(saveBtn){ saveBtn.disabled=true; saveBtn.style.opacity='.6'; }
 
   L.show('กำลังบันทึก...');
@@ -2584,7 +2608,17 @@ function printMonthReport(monthKey){
    ══════════════════════════════════════════ */
 function exportCSV(){
   var h=['เลขที่','วันที่','ผู้ทำรายการ','ประเภท','ลูกค้า','รหัสลูกค้า','จังหวัด','ระยะเวลาดำเนินการ','สถานะ'];
-  var rows=adminRecs.map(function(r){return[r.id,fDate(r.createdAt),r.creatorName,r.docType,r.customerName,r.customerCode||'',r.province+(r.district?' / '+r.district:''),calcProcessingDuration(r.processingAt,r.completedAt),r.status].map(function(v){return'"'+v+'"';}).join(',');});
+  // csvCell: escape " ตามมาตรฐาน CSV (RFC 4180) + กัน formula injection (=,+,-,@ นำหน้า → Excel อาจรันเป็นสูตร)
+  function csvCell(v){
+    var s = String(v == null ? '' : v);
+    if(/^[=+\-@]/.test(s)) s = "'" + s; // นำหน้าด้วย ' เพื่อบังคับให้ Excel อ่านเป็น text เสมอ
+    return '"' + s.replace(/"/g,'""') + '"';
+  }
+  var rows=adminRecs.map(function(r){
+    return [r.id, fDate(r.createdAt), r.creatorName, r.docType, r.customerName, r.customerCode||'',
+            r.province+(r.district?' / '+r.district:''), calcProcessingDuration(r.processingAt,r.completedAt), r.status]
+      .map(csvCell).join(',');
+  });
   var csv='\uFEFF'+[h.join(',')].concat(rows).join('\n');
   var a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
