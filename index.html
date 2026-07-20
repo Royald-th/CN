@@ -1619,7 +1619,7 @@ function renderAdminTbl(recs){
       +'<td><div style="display:flex;gap:5px;flex-wrap:nowrap;align-items:center;">'
       +'<button class="btn btn-ghost btn-sm" onclick="viewDetail(\''+r.id+'\',true)" title="ดูรายละเอียด">👁</button>'
       +printBtn
-      +(canEdit ? '<button class="btn btn-pri btn-sm" onclick="openStatusModal(\''+r.id+'\',\''+r.status+'\')" title="เปลี่ยนสถานะ">🔄</button>' : '')
+      +(canEdit ? '<button class="btn btn-outline btn-sm" onclick="openStatusModal(\''+r.id+'\',\''+r.status+'\')" title="เปลี่ยนสถานะ">🔄</button>' : '')
       +editBtn
       +deleteBtn
       +'</div></td>'
