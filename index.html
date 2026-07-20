@@ -19,17 +19,19 @@
    DESIGN SYSTEM — Industrial Precision
    ══════════════════════════════════════════ */
 :root {
-  --ink:       #0D1117;
-  --ink2:      #21262D;
-  --ink3:      #30363D;
-  --muted:     #8B949E;
-  --border:    #21262D;
-  --border2:   #30363D;
-  --surface:   #161B22;
-  --surface2:  #1C2128;
-  --surface3:  #252B33;
-  --bg:        #0D1117;
+  /* พื้นผิว — ปรับให้เข้มขึ้นตามแนวทาง Linear (void/carbon/obsidian) */
+  --ink:       #08090A;
+  --ink2:      #23252A;
+  --ink3:      #383B3F;
+  --muted:     #8A8F98;
+  --border:    #23252A;
+  --border2:   #383B3F;
+  --surface:   #0F1011;
+  --surface2:  #161718;
+  --surface3:  #23252A;
+  --bg:        #08090A;
 
+  /* สีสถานะ — คงเดิมทั้งหมด (functional color, ไม่ใช่ decorative) */
   --red:       #F85149;
   --red-dim:   rgba(248,81,73,.15);
   --amber:     #E3B341;
@@ -40,11 +42,13 @@
   --blue-dim:  rgba(88,166,255,.12);
   --purple:    #BC8CFF;
 
-  --accent:    #238636;
-  --accent-h:  #2EA043;
+  /* Accent — สี Amazon (เขียวป่าดิบ) ใช้เฉพาะปุ่ม Primary Action เท่านั้น
+     แยกชัดเจนจาก --green (สถานะ "เสร็จสิ้น") เพื่อไม่ให้สับสนความหมาย */
+  --accent:    #3B7A57;
+  --accent-h:  #4E9873;
 
   --r:    6px;
-  --r2:   10px;
+  --r2:   12px;
   --font: 'Noto Sans Thai', sans-serif;
   --mono: 'IBM Plex Mono', monospace;
   --ease: cubic-bezier(.16,1,.3,1);
@@ -100,14 +104,14 @@ body {
 }
 .brand-mark {
   width: 36px; height: 36px;
-  background: linear-gradient(135deg, #238636, #2EA043);
+  background: linear-gradient(135deg, var(--accent), var(--accent-h));
   border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--mono);
   font-size: .75rem; font-weight: 600;
   color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(35,134,54,.4);
+  box-shadow: 0 2px 8px rgba(59,122,87,.4);
 }
 .brand-text { font-size: .8rem; font-weight: 600; color: #E6EDF3; }
 .brand-sub  { font-size: .68rem; color: var(--muted); margin-top: 1px; }
@@ -302,7 +306,7 @@ body {
   border-color: var(--accent-h);
   color: #fff;
 }
-.btn-primary:hover, .btn-pri:hover { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(35,134,54,.3); }
+.btn-primary:hover, .btn-pri:hover { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,122,87,.35); }
 
 /* btn-outline / btn-out เป็นสไตล์เดียวกัน */
 .btn-outline, .btn-out {
@@ -578,12 +582,12 @@ select.fc option { background: var(--surface2); }
 .auth-logo { text-align: center; margin-bottom: 26px; }
 .auth-mark {
   width: 56px; height: 56px;
-  background: linear-gradient(135deg, #238636, #2EA043);
+  background: linear-gradient(135deg, var(--accent), var(--accent-h));
   border-radius: 12px;
   display: inline-flex; align-items: center; justify-content: center;
   font-family: var(--mono); font-size: 1.1rem; font-weight: 700; color: #fff;
   margin-bottom: 12px;
-  box-shadow: 0 8px 24px rgba(35,134,54,.3);
+  box-shadow: 0 8px 24px rgba(59,122,87,.35);
 }
 .auth-logo h1 { font-size: 1.25rem; font-weight: 700; color: #E6EDF3; }
 .auth-logo p  { font-size: .78rem; color: var(--muted); margin-top: 3px; }
@@ -2245,7 +2249,7 @@ function openStatusModal(id, currentStatus){
       +'display:flex;align-items:center;gap:13px;'
       +'padding:13px 15px;'
       +'border:2px solid '+(active ? cfg.border : 'var(--border)')+';'
-      +'border-radius:10px;margin-bottom:9px;'
+      +'border-radius:12px;margin-bottom:9px;'
       +'background:'+(active ? cfg.dim : 'var(--surface)')+';'
       +'transition:all .18s;position:relative;opacity:'+opacity+';'
       +'cursor:'+(disabled&&!active?'not-allowed':'pointer')+';'
