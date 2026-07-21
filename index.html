@@ -316,7 +316,7 @@ body {
 }
 .btn-outline:hover, .btn-out:hover { border-color: var(--muted); background: var(--surface2); }
 
-.btn-ghost  { background: transparent; border-color: var(--border2); color: var(--muted); padding: 5px 10px; }
+.btn-ghost  { background: transparent; border-color: transparent; color: var(--muted); padding: 5px 10px; }
 .btn-ghost:hover { background: var(--surface2); color: #C9D1D9; }
 .btn-ghost:disabled:hover { background: transparent; }
 
@@ -1619,7 +1619,7 @@ function renderAdminTbl(recs){
       +'<td><div style="display:flex;gap:5px;flex-wrap:nowrap;align-items:center;">'
       +'<button class="btn btn-ghost btn-sm" onclick="viewDetail(\''+r.id+'\',true)" title="ดูรายละเอียด">👁</button>'
       +printBtn
-      +(canEdit ? '<button class="btn btn-outline btn-sm" onclick="openStatusModal(\''+r.id+'\',\''+r.status+'\')" title="เปลี่ยนสถานะ">🔄</button>' : '')
+      +(canEdit ? '<button class="btn btn-pri btn-sm" onclick="openStatusModal(\''+r.id+'\',\''+r.status+'\')" title="เปลี่ยนสถานะ">🔄</button>' : '')
       +editBtn
       +deleteBtn
       +'</div></td>'
@@ -2568,7 +2568,8 @@ function printMonthReport(monthKey){
     +'@import url(\'https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap\');'
     +'@page{size:A4 landscape;margin:10mm 12mm;}'
     +'*{box-sizing:border-box;margin:0;padding:0;}'
-    +'body{font-family:\'Sarabun\',sans-serif;font-size:9pt;color:#000;}'
+    +'body{font-family:\'Sarabun\',sans-serif;font-size:9pt;color:#000;background:#525659;}'
+    +'.doc-page{max-width:297mm;margin:0 auto;background:#fff;padding:10mm 12mm;}'
     +'.hd{text-align:center;margin-bottom:7pt;padding-bottom:5pt;border-bottom:1.5pt solid #000;}'
     +'.hd h2{font-size:13pt;font-weight:700;}'
     +'.hd p{font-size:8.5pt;color:#444;margin-top:2pt;}'
@@ -2582,7 +2583,21 @@ function printMonthReport(monthKey){
     +'.si+.si{border-left:.75pt solid #ccc;}'
     +'.sn{font-size:13pt;font-weight:700;line-height:1;}'
     +'.sl{font-size:7pt;color:#666;margin-top:2pt;text-transform:uppercase;}'
+    /* ── Preview toolbar: ลอยด้านบน ให้ดูก่อนตัดสินใจพิมพ์ ── */
+    +'.preview-toolbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:center;gap:10px;'
+    +'background:#2d2f31;padding:10px 16px;box-shadow:0 2px 8px rgba(0,0,0,.3);font-family:Arial,sans-serif;}'
+    +'.preview-toolbar .ptxt{color:#c8cacd;font-size:12px;margin-right:auto;}'
+    +'.preview-toolbar button{border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:Arial,sans-serif;}'
+    +'.pb-print{background:#3B7A57;color:#fff;} .pb-print:hover{background:#4E9873;}'
+    +'.pb-close{background:#4a4d50;color:#e6e6e6;} .pb-close:hover{background:#5a5d60;}'
+    +'@media print{.preview-toolbar{display:none;} body{background:#fff;} .doc-page{max-width:none;padding:0;}}'
     +'</style></head><body>'
+    +'<div class="preview-toolbar no-print">'
+    +'<span class="ptxt">👁 ตัวอย่างก่อนพิมพ์ — ตรวจสอบข้อมูลให้ครบถ้วนก่อนกดพิมพ์</span>'
+    +'<button class="pb-print" onclick="window.print()">🖨 พิมพ์เอกสาร</button>'
+    +'<button class="pb-close" onclick="window.close()">✕ ปิดหน้าต่าง</button>'
+    +'</div>'
+    +'<div class="doc-page">'
     +'<div class="hd"><h2>รายงาน Credit Note — '+label
     +(reportMode==='person'?' ('+esc(personName)+')':'')+'</h2>'
     +'<p>บริษัท รอแยล-ดี (ไทยแลนด์)</p></div>'
@@ -2600,10 +2615,10 @@ function printMonthReport(monthKey){
     +'<div class="si"><div class="sn" style="color:#5a3d00;">'+avgDurationText+'</div><div class="sl">เฉลี่ย/รายการ</div></div>'
     +'<div class="si" style="background:#f8f8f8;"><div class="sn">'+recs.length+'</div><div class="sl">รวมทั้งหมด</div></div>'
     +'</div>'
-    +'<script>window.onload=function(){setTimeout(function(){window.print();},400);window.onafterprint=function(){window.close();};};<\/script>'
+    +'</div>' // .doc-page
     +'</body></html>';
 
-  var w=window.open('','_blank','width=960,height=660');
+  var w=window.open('','_blank','width=1100,height=740');
   if(!w){toast('กรุณาอนุญาต popup','error');return;}
   w.document.write(html);w.document.close();
 }
@@ -2775,11 +2790,28 @@ html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background
 .remark-row{display:flex;align-items:flex-end;gap:3pt;margin-bottom:7pt;}
 .remark-lbl{font-weight:700;white-space:nowrap;}
 .remark-line{flex:1;border-bottom:.5pt solid #777;min-height:9pt;}
+
+/* ── Preview toolbar: ลอยด้านบน ให้ดูก่อนตัดสินใจพิมพ์ (ซ่อนตอนพิมพ์จริง) ── */
+body{background:#525659;}
+.doc-page{width:190mm;margin:0 auto;background:#fff;padding:6mm 10mm;}
+.preview-toolbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:#2d2f31;padding:10px 16px;box-shadow:0 2px 8px rgba(0,0,0,.3);font-family:Arial,sans-serif;width:100%;}
+.preview-toolbar .ptxt{color:#c8cacd;font-size:12px;margin-right:auto;}
+.preview-toolbar button{border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:Arial,sans-serif;}
+.pb-print{background:#3B7A57;color:#fff;} .pb-print:hover{background:#4E9873;}
+.pb-close{background:#4a4d50;color:#e6e6e6;} .pb-close:hover{background:#5a5d60;}
+@media print{.preview-toolbar{display:none;} body{background:#fff;} .doc-page{width:auto;margin:0;padding:0;}}
 `;
 
   var html='<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"/>'
     +'<title>CN '+esc(r.id||'')+'</title>'
-    +'<style>'+css+'</style></head><body>';
+    +'<style>'+css+'</style></head><body>'
+    +'<div class="preview-toolbar no-print">'
+    +'<span class="ptxt">👁 ตัวอย่างก่อนพิมพ์ — ตรวจสอบข้อมูลให้ครบถ้วนก่อนกดพิมพ์</span>'
+    +'<button class="pb-print" onclick="window.print()">🖨 พิมพ์เอกสาร</button>'
+    +'<button class="pb-close" onclick="window.close()">✕ ปิดหน้าต่าง</button>'
+    +'</div>'
+    +'<div class="doc-page">';
 
   /* 1. Company Header — โลโก้ซ้าย + ชื่อบริษัทกลาง */
   html+='<div class="hd-wrap">'
@@ -2895,10 +2927,10 @@ html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background
     +'<div class="remark-row"><span class="remark-lbl" style="visibility:hidden;">หมายเหตุ :</span><div class="remark-line"></div></div>'
     +'</div>';
 
-  html+='<script>window.onload=function(){setTimeout(function(){window.print();},400);window.onafterprint=function(){window.close();};};<\/script>';
+  html+='</div>'; // .doc-page
   html+='</body></html>';
 
-  var w=window.open('','_blank','width=840,height=820,toolbar=0,scrollbars=1');
+  var w=window.open('','_blank','width=920,height=900,toolbar=0,scrollbars=1');
   if(!w){alert('กรุณาอนุญาต popup เพื่อปริ้นท์');return;}
   w.document.write(html);
   w.document.close();
