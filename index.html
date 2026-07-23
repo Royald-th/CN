@@ -831,7 +831,13 @@ select.fc option { background: var(--surface2); }
               </div>
               <div class="g2">
                 <div class="fg" style="margin:0;"><label class="lbl">ชื่อลูกค้า <span class="req">*</span></label><input type="text" id="f-cust" class="fc" placeholder="ชื่อลูกค้า"/></div>
-                <div class="fg" style="margin:0;"><label class="lbl">รหัสลูกค้า</label><input type="text" id="f-custcode" class="fc" placeholder="เช่น C00123 (ไม่บังคับ)"/></div>
+                <div class="fg" style="margin:0;">
+                  <label class="lbl">รหัสลูกค้า</label>
+                  <input type="text" id="f-custcode" class="fc" placeholder="เช่น C00123 (ไม่บังคับ)"
+                    onblur="lookupCustomerByCode()"
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();lookupCustomerByCode();}"/>
+                  <div id="custcode-hint" style="font-size:.72rem;margin-top:4px;min-height:14px;color:var(--muted);"></div>
+                </div>
               </div>
               <div class="g2">
                 <div class="fg" style="margin:0;"><label class="lbl">จังหวัด <span class="req">*</span></label><select id="f-prov" class="fc"><option value="">-- เลือกจังหวัด --</option></select></div>
@@ -1872,6 +1878,119 @@ function setProvinceDistrict(provinceName, districtName){
   }
 }
 
+/* ══════════════════════════════════════════
+   รหัสลูกค้า → auto-fill ชื่อ/จังหวัด/เขต-อำเภอ
+   ══════════════════════════════════════════ */
+
+// แปลงข้อความที่อยู่อิสระ (เช่น "อ.บางใหญ่ จ.นนทบุรี" หรือ "เขตบางพลัด กรุงเทพฯ")
+// ให้จับคู่กับข้อมูล THAI_PROVINCES (77 จังหวัด/931 อำเภอ) ที่มีอยู่แล้ว
+// คืนค่า {province, district} — ค่าใดจับคู่ไม่ได้จะเป็น '' (ให้ user เลือกเองต่อ)
+function parseAddressToProvinceDistrict(address){
+  var result = { province:'', district:'' };
+  if(!address) return result;
+  var text = String(address).trim();
+
+  // normalize คำเรียกกรุงเทพฯ หลายแบบให้เป็นชื่อจังหวัดมาตรฐาน
+  var isBangkok = /กรุงเทพ|กทม\.?/.test(text);
+  var provinceNames = Object.keys(THAI_PROVINCES);
+
+  if(isBangkok){
+    result.province = 'กรุงเทพมหานคร';
+  } else {
+    // หาโดย "จ.XXX" ก่อน (ชัดเจนที่สุด)
+    var mJ = text.match(/จ\.\s*([ก-๙]+)/);
+    if(mJ){
+      var candidate = mJ[1];
+      var exact = provinceNames.find(function(p){ return p === candidate || p.indexOf(candidate) === 0; });
+      if(exact) result.province = exact;
+    }
+    // ถ้ายังไม่เจอ ลองค้นชื่อจังหวัดที่ปรากฏอยู่ในข้อความเลย (ไม่มี จ. นำหน้า)
+    if(!result.province){
+      var found = provinceNames.find(function(p){ return text.indexOf(p) > -1; });
+      if(found) result.province = found;
+    }
+  }
+
+  if(!result.province) return result; // จับจังหวัดไม่ได้ → ไม่ต้องเสี่ยงจับอำเภอผิดจังหวัด
+
+  var districts = THAI_PROVINCES[result.province] || [];
+
+  if(isBangkok){
+    // เขตในกรุงเทพฯ เก็บแบบมีคำว่า "เขต" นำหน้าอยู่แล้วใน THAI_PROVINCES
+    var mK = text.match(/เขต\s*([ก-๙]+)/);
+    if(mK){
+      var wantKhet = 'เขต' + mK[1];
+      var matchKhet = districts.find(function(d){ return d === wantKhet || d.indexOf(wantKhet) === 0; });
+      if(matchKhet) result.district = matchKhet;
+    }
+  } else {
+    // อำเภอ: "อ.XXX" — THAI_PROVINCES เก็บชื่ออำเภอแบบไม่มี "อ." นำหน้า
+    var mA = text.match(/อ\.\s*([ก-๙]+)/);
+    if(mA){
+      var wantAmp = mA[1];
+      var matchAmp = districts.find(function(d){ return d === wantAmp || d.indexOf(wantAmp) === 0; });
+      if(matchAmp) result.district = matchAmp;
+    }
+    // ถ้ายังไม่เจอ ลองค้นชื่ออำเภอที่ปรากฏในข้อความเลย
+    if(!result.district){
+      var foundD = districts.find(function(d){ return text.indexOf(d) > -1; });
+      if(foundD) result.district = foundD;
+    }
+  }
+
+  return result;
+}
+
+var _custLookupBusy = false; // กันยิงซ้ำซ้อนขณะรอผลลัพธ์ก่อนหน้า
+
+// ค้นหาข้อมูลลูกค้าจากรหัสที่พิมพ์ แล้ว auto-fill ชื่อ/จังหวัด/เขต-อำเภอ
+// เรียกตอน blur (ออกจากช่อง) หรือกด Enter ที่ช่องรหัสลูกค้า — ไม่ยิงทุกตัวอักษรที่พิมพ์
+async function lookupCustomerByCode(){
+  var codeEl = document.getElementById('f-custcode');
+  var code = codeEl ? codeEl.value.trim() : '';
+  if(!code) return;
+
+  var company = document.getElementById('f-co').value;
+  if(!company){
+    toast('กรุณาเลือกบริษัทก่อนกรอกรหัสลูกค้า','warn');
+    return;
+  }
+  if(_custLookupBusy) return;
+  _custLookupBusy = true;
+
+  var hint = document.getElementById('custcode-hint');
+  if(hint){ hint.textContent = '🔍 กำลังค้นหา...'; hint.style.color = 'var(--muted)'; }
+
+  try{
+    var d = await apiGet({action:'getCustomerByCode', code:code, company:company});
+    if(!d.success){
+      if(hint){ hint.textContent = 'ℹ️ '+(d.message||'ไม่พบข้อมูล — กรอกเองได้'); hint.style.color = 'var(--amber)'; }
+      return;
+    }
+    // เติมชื่อลูกค้า (เฉพาะกรณีช่องว่างอยู่ หรือ user ยืนยันให้ทับ — ที่นี่เติมทับเสมอเพราะเพิ่งกรอกรหัสใหม่)
+    var custEl = document.getElementById('f-cust');
+    if(custEl) custEl.value = d.name || '';
+
+    var parsed = parseAddressToProvinceDistrict(d.address || '');
+    if(parsed.province){
+      setProvinceDistrict(parsed.province, parsed.district);
+      if(hint){
+        hint.textContent = parsed.district
+          ? '✅ พบข้อมูล: '+d.name+' — เติมจังหวัด/เขตให้อัตโนมัติแล้ว'
+          : '✅ พบข้อมูล: '+d.name+' — เติมจังหวัดแล้ว (กรุณาเลือกเขต/อำเภอเอง)';
+        hint.style.color = 'var(--green)';
+      }
+    } else if(hint){
+      hint.textContent = '✅ พบชื่อลูกค้า: '+d.name+' (ไม่สามารถแยกจังหวัด/เขตจากที่อยู่ได้ กรุณาเลือกเอง)';
+      hint.style.color = 'var(--amber)';
+    }
+  } catch(e){
+    if(hint){ hint.textContent = '⚠️ ค้นหาไม่สำเร็จ: '+e.message; hint.style.color = 'var(--red)'; }
+  } finally {
+    _custLookupBusy = false;
+  }
+}
+
 
 function openForm(editId,fromAdmin){
   if(fromAdmin===undefined)fromAdmin=false;
@@ -1881,6 +2000,7 @@ function openForm(editId,fromAdmin){
   document.querySelectorAll('input[name="dt"]').forEach(function(r){r.checked=false;});
   document.getElementById('f-cust').value='';
   document.getElementById('f-custcode').value='';
+  var custHintEl = document.getElementById('custcode-hint'); if(custHintEl) custHintEl.textContent='';
   setProvinceDistrict('', ''); // เคลียร์จังหวัด/เขต
   document.getElementById('f-reason').value='';
   document.getElementById('f-bill').value='';
@@ -2664,6 +2784,13 @@ function printCNForm(r){
   var repName = r.creatorName || ((ST.user&&(ST.user.firstName+' '+ST.user.lastName))||'');
   var repDate = dStr;
 
+  // ── ชื่อผู้จัดการฝ่ายขาย ตามบริษัทที่เลือก (Task 1) ──
+  // รอแยล-ดี / แฟนซีเวิล์ด → คุณประสิทธิ์  |  ควอลิแทต → คุณสมชาย
+  var companyForSig = r.company || '';
+  var salesManagerName = (companyForSig.indexOf('ควอลิแทต') > -1)
+    ? '(คุณสมชาย พลับเจ็ดริ้ว)'
+    : '(คุณประสิทธิ์ เตโชนิมิต)';
+
   // ── COMPANY LOGO MAP ──────────────────────────────────────────
   // เก็บโลโก้แต่ละบริษัทเป็น base64 PNG ขนาดเล็ก
   // ถ้ายังไม่มีรูปจริงให้ใช้ SVG placeholder แทนก่อน
@@ -2887,8 +3014,18 @@ body{background:#525659;}
   }
 
   html+='<div class="sig-wrap">';
+  // "ผู้รับสินค้า" — แสดงชื่อ + วันที่อัตโนมัติ เมื่อมีคนเปลี่ยนสถานะเป็น "เสร็จสิ้น" แล้ว (completedBy)
+  var whReceiverName = esc(r.completedBy || '');
+  var whReceiverDate = '';
+  if (whReceiverName && r.completedAt) {
+    var cAt = new Date(r.completedAt);
+    if (!isNaN(cAt)) {
+      var cD = cAt.getDate(), cM = cAt.getMonth()+1, cY = cAt.getFullYear()+543;
+      whReceiverDate = (cD<10?'0'+cD:cD)+'/'+(cM<10?'0'+cM:cM)+'/'+cY;
+    }
+  }
   html+='<div class="sig-pair">'
-    +'<div class="sig-l">'+snCell('ผู้รับสินค้า (ฝ่ายคลังสินค้า)','','','')+'</div>'
+    +'<div class="sig-l">'+snCell('ผู้รับสินค้า (ฝ่ายคลังสินค้า)','',whReceiverName,whReceiverDate)+'</div>'
     +'<div class="sig-gap"></div>'
     +'<div class="sig-r">'+snCell('ผู้แทน','',repName,repDate)+'</div>'
     +'</div>';
@@ -2898,7 +3035,7 @@ body{background:#525659;}
     +'<div class="sig-r">'+snCell('ฝ่ายบัญชี','(คุณอภิชญา นิตย์ภิรมย์)','','')+'</div>'
     +'</div>';
   html+='<div class="sig-pair">'
-    +'<div class="sig-l">'+snCell('ผจก.ฝ่ายขาย','(คุณประสิทธิ์ เตโชนิมิต)','','')+'</div>'
+    +'<div class="sig-l">'+snCell('ผจก.ฝ่ายขาย', salesManagerName, '', '')+'</div>'
     +'<div class="sig-gap"></div>'
     +'<div class="sig-r">'+snCell('ผช.ผจก.ฝ่ายบัญชี','(คุณปทุมพร ธีรประภาส)','','')+'</div>'
     +'</div>';
