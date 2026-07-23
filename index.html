@@ -3014,12 +3014,11 @@ body{background:#525659;}
   }
 
   html+='<div class="sig-wrap">';
-  // "ผู้รับสินค้า" — แสดงชื่อ + วันที่อัตโนมัติ เมื่อมีคนเปลี่ยนสถานะเป็น "กำลังดำเนินการ" แล้ว (processedBy)
-  // (เดิมผูกกับ "เสร็จสิ้น" — เปลี่ยนให้เริ่มลงชื่อได้ตั้งแต่ขั้นตอนรับเข้าคลังแล้ว)
-  var whReceiverName = esc(r.processedBy || '');
+  // "ผู้รับสินค้า" — แสดงชื่อ + วันที่อัตโนมัติ เมื่อมีคนเปลี่ยนสถานะเป็น "เสร็จสิ้น" แล้ว (completedBy)
+  var whReceiverName = esc(r.completedBy || '');
   var whReceiverDate = '';
-  if (whReceiverName && r.processingAt) {
-    var cAt = new Date(r.processingAt);
+  if (whReceiverName && r.completedAt) {
+    var cAt = new Date(r.completedAt);
     if (!isNaN(cAt)) {
       var cD = cAt.getDate(), cM = cAt.getMonth()+1, cY = cAt.getFullYear()+543;
       whReceiverDate = (cD<10?'0'+cD:cD)+'/'+(cM<10?'0'+cM:cM)+'/'+cY;
