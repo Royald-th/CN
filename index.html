@@ -10,9 +10,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
 <noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/></noscript>
 <!-- LIFF SDK โหลด async เพื่อไม่ block render -->
+<link rel="preconnect" href="https://static.line-scdn.net"/>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" defer></script>
-<!-- Tom Select: dropdown ค้นหาจังหวัด/อำเภอ -->
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet"/>
+<!-- Tom Select: dropdown ค้นหาจังหวัด/อำเภอ — โหลดแบบไม่ block render
+     (ไม่จำเป็นต้องใช้จนกว่าจะเปิดฟอร์มสร้าง CN เลย ไม่ต้องรอตอนโหลดหน้าแรก) -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet" media="print" onload="this.media='all'"/>
+<noscript><link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet"/></noscript>
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js" defer></script>
 <style>
 /* ══════════════════════════════════════════
