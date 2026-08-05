@@ -239,18 +239,18 @@ body {
   overflow: hidden;
 }
 .card-header {
-  padding: 18px 24px;
+  padding: 20px 24px;
   border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 10px;
-  background: var(--surface2);
+  background: var(--surface);
 }
 .card-title {
-  font-size: .78rem; font-weight: 700;
-  letter-spacing: .06em; text-transform: uppercase;
-  color: var(--muted);
+  font-size: 1rem; font-weight: 600;
+  letter-spacing: 0; text-transform: none;
+  color: var(--ink);
 }
-.card-body { padding: 24px; }
+.card-body { padding: 28px; }
 
 /* Stats Grid */
 .stats-grid {
@@ -268,26 +268,16 @@ body {
   overflow: hidden;
   transition: border-color .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease);
 }
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  border-radius: var(--r2) var(--r2) 0 0;
-}
-.stat-card.s-total::before { background: linear-gradient(90deg, var(--blue), transparent); }
-.stat-card.s-wait::before  { background: linear-gradient(90deg, var(--amber), transparent); }
-.stat-card.s-proc::before  { background: linear-gradient(90deg, var(--purple), transparent); }
-.stat-card.s-done::before  { background: linear-gradient(90deg, var(--green), transparent); }
+.stat-card::before { display: none; }
 .stat-card:hover {
-  border-color: var(--accent);
-  transform: translateY(-2px);
-  box-shadow: none;
+  border-color: var(--border2);
+  transform: none;
+  box-shadow: 0 1px 3px rgba(4,30,14,.05);
 }
-.stat-num   { font-size: 1.9rem; font-weight: 700; color: var(--ink); font-family: var(--mono); line-height: 1.1; }
-.stat-label { font-size: .71rem; color: var(--muted); margin-top: 5px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
-.stat-icon  { position: absolute; top: 16px; right: 16px; font-size: 1.9rem; transition: opacity .2s, transform .2s; }
-.stat-card:hover .stat-icon { opacity: .28; transform: scale(1.08); }
+.stat-num   { font-size: 2rem; font-weight: 700; color: var(--ink); font-family: var(--font); line-height: 1.1; letter-spacing: -.01em; }
+.stat-label { font-size: .78rem; color: var(--muted); margin-top: 6px; text-transform: none; letter-spacing: 0; font-weight: 500; }
+.stat-icon  { position: absolute; top: 18px; right: 18px; opacity: 1; font-size: 1rem; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--surface2); transition: background .15s; }
+.stat-card:hover .stat-icon { opacity: 1; transform: none; background: var(--surface3); }
 
 /* Buttons */
 .btn {
@@ -354,12 +344,14 @@ body {
 /* Badges */
 .badge {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 10px 3px 8px;
-  border-radius: 20px;
+  padding: 3px 9px;
+  border-radius: 6px;
   font-size: .73rem; font-weight: 600;
   border: 1px solid transparent;
   white-space: nowrap;
 }
+.row-actions { display: inline-flex; align-items: center; gap: 2px; padding: 3px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; }
+.row-actions .btn { border-radius: 6px; }
 .bw { background: var(--amber-dim); color: var(--amber); border-color: rgba(180,83,9,.3); }
 .bp { background: var(--blue-dim);  color: var(--blue);  border-color: rgba(37,99,235,.3); }
 .bd { background: var(--green-dim); color: var(--green); border-color: rgba(22,163,74,.3); }
@@ -368,7 +360,7 @@ body {
 .tw { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: .82rem; }
 th {
-  padding: 13px 18px;
+  padding: 15px 20px;
   text-align: left;
   font-size: .68rem; font-weight: 700;
   letter-spacing: .07em; text-transform: uppercase;
@@ -379,14 +371,13 @@ th {
   position: sticky; top: 0; z-index: 5;
 }
 td {
-  padding: 14px 18px;
+  padding: 20px 20px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
   color: var(--ink2);
 }
 tr:last-child td { border-bottom: none; }
 tbody tr { transition: background .15s var(--ease); }
-tbody tr:nth-child(even) { background: rgba(4,30,14,.02); }
 tbody tr:hover { background: var(--surface3); cursor: pointer; }
 tbody tr:hover td { background: transparent; }
 .te { text-align: center; padding: 40px; color: var(--muted); font-size: .85rem; }
@@ -1518,7 +1509,7 @@ function renderUserTbl(recs){
       +'<td style="font-size:.8rem;">'+r.docType+'</td>'
       +'<td style="font-weight:600;color:var(--ink);font-size:.88rem;">'+esc(r.customerName)+'</td>'
       +'<td>'+badge(r.status)+'</td>'
-      +'<td><div style="display:flex;gap:5px;">'
+      +'<td><div class="row-actions">'
       +'<button class="btn btn-ghost btn-sm" onclick="viewDetail(\''+r.id+'\',false)" title="ดูรายละเอียด">👁 ดู</button>'
       +'</div></td>'
       +'</tr>';
@@ -1637,10 +1628,10 @@ function renderAdminTbl(recs){
       +'<td style="font-weight:600;color:var(--ink);font-size:.85rem;">'+esc(r.customerName)+'</td>'
       +'<td style="font-size:.78rem;color:var(--muted);">'+esc(r.province)+(r.district?' / '+esc(r.district):'')+'</td>'
       +'<td>'+badge(r.status)+'</td>'
-      +'<td><div style="display:flex;gap:5px;flex-wrap:nowrap;align-items:center;">'
+      +'<td><div class="row-actions">'
       +'<button class="btn btn-ghost btn-sm" onclick="viewDetail(\''+r.id+'\',true)" title="ดูรายละเอียด">👁</button>'
       +printBtn
-      +(canEdit ? '<button class="btn btn-outline btn-sm" onclick="openStatusModal(\''+r.id+'\',\''+r.status+'\')" title="เปลี่ยนสถานะ">🔄</button>' : '')
+      +(canEdit ? '<button class="btn btn-pri btn-sm" onclick="openStatusModal(\''+r.id+'\',\''+r.status+'\')" title="เปลี่ยนสถานะ">🔄</button>' : '')
       +editBtn
       +deleteBtn
       +'</div></td>'
@@ -3253,7 +3244,7 @@ function renderUsersTbl(users){
       +'<td>'+roleCell+'</td>'
       +'<td style="font-size:.76rem;color:var(--muted);">'+fDate(u.createdAt)+'</td>'
       +'<td style="text-align:center;font-weight:600;">'+(cnCount[u.lineUID]||0)+'</td>'
-      +'<td><div style="display:flex;gap:5px;">'+editBtn+delBtn+'</div></td>'
+      +'<td><div class="row-actions">'+editBtn+delBtn+'</div></td>'
       +'</tr>';
   }).join('');
 }
