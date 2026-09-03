@@ -969,7 +969,7 @@ select.fc option { background: var(--surface2); }
               <div class="g2">
                 <div class="fg" style="margin:0;"><label class="lbl">ชื่อลูกค้า <span class="req">*</span></label><input type="text" id="f-cust" class="fc" placeholder="ชื่อลูกค้า"/></div>
                 <div class="fg" style="margin:0;">
-                  <label class="lbl">รหัสลูกค้า</label>
+                  <label class="lbl">รหัสลูกค้า <span class="req">*</span> </label>
                   <input type="text" id="f-custcode" class="fc" placeholder="เช่น C00123 (ไม่บังคับ)"
                     onblur="lookupCustomerByCode()"
                     onkeydown="if(event.key==='Enter'){event.preventDefault();lookupCustomerByCode();}"/>
