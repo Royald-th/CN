@@ -2423,7 +2423,7 @@ async function saveCN(){
     return;
   }
 
-  if(!co||!dt||!cust||!prov||!district||!reason||!items.length){
+  if(!co||!dt||!cust||!custCode||!prov||!district||!reason||!items.length){
     showErr('form-err','กรุณากรอกข้อมูลที่จำเป็นให้ครบ (จังหวัด, เขต/อำเภอ) และเพิ่มรายการสินค้าอย่างน้อย 1 รายการ');
     return;
   }
