@@ -970,9 +970,9 @@ select.fc option { background: var(--surface2); }
                 <div class="fg" style="margin:0;"><label class="lbl">ชื่อลูกค้า <span class="req">*</span></label><input type="text" id="f-cust" class="fc" placeholder="ชื่อลูกค้า"/></div>
                 <div class="fg" style="margin:0;">
                   <label class="lbl">รหัสลูกค้า <span class="req">*</span> </label>
-                  <input type="text" id="f-custcode" class="fc" placeholder="เช่น C00123 (ไม่บังคับ)"
+                  <input type="text" id="f-custcode" class="fc" placeholder="เช่น C00123"
                     onblur="lookupCustomerByCode()"
-                    onkeydown="if(event.key==='Enter'){event.preventDefault();lookupCustomerByCode();}"/>
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();lookupCustomerByCode();}" required/>
                   <div id="custcode-hint" style="font-size:.72rem;margin-top:4px;min-height:14px;color:var(--muted);"></div>
                 </div>
               </div>
