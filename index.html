@@ -578,6 +578,17 @@ select.fc option { background: var(--surface2); }
 .ts-wrapper .plugin-clear_button .clear { color: var(--muted) !important; }
 .ts-wrapper.disabled .ts-control { opacity: .5; background: var(--surface) !important; }
 
+.ith .ts-wrapper{width:100%;}
+.ith .ts-wrapper.single .ts-control{padding:5px 8px !important;min-height:34px !important;font-size:.82rem !important;}
+
+.ik-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 0;border-bottom:1px dashed var(--border);}
+.ik-no{width:104px;border-radius:999px !important;text-align:center;}
+.ik-lbl{font-size:.8rem;font-weight:600;color:var(--ink2);}
+.ik-prod{flex:1;min-width:220px;}
+.ik-date{width:150px;}
+.ik-dp{font-size:.78rem;color:var(--muted);min-width:92px;}
+.ik-q,.ik-u{width:88px;}
+
 /* Radio */
 .rg { display: flex; gap: 10px; flex-wrap: wrap; }
 .ro {
@@ -952,7 +963,7 @@ select.fc option { background: var(--surface2); }
               <div id="form-err" class="alert ae" style="margin-bottom:12px;"></div>
               <div class="fg">
                 <label class="lbl">บริษัท <span class="req">*</span></label>
-                <select id="f-co" class="fc" onchange="updateDocIdPreview()">
+                <select id="f-co" class="fc" onchange="updateDocIdPreview();onCompanyChange()">
                   <option value="">-- เลือกบริษัท --</option>
                   <option value="รอแยล-ดี (ไทยแลนด์)">บริษัท รอแยล-ดี (ไทยแลนด์) จำกัด</option>
                   <option value="แฟนซีเวิล์ด">บริษัท แฟนซีเวิล์ด จำกัด</option>
@@ -967,14 +978,12 @@ select.fc option { background: var(--surface2); }
                 </div>
               </div>
               <div class="g2">
-                <div class="fg" style="margin:0;"><label class="lbl">ชื่อลูกค้า <span class="req">*</span></label><input type="text" id="f-cust" class="fc" placeholder="ชื่อลูกค้า"/></div>
                 <div class="fg" style="margin:0;">
                   <label class="lbl">รหัสลูกค้า <span class="req">*</span></label>
-                  <input type="text" id="f-custcode" class="fc" placeholder="เช่น C00123"
-                    onblur="lookupCustomerByCode()"
-                    onkeydown="if(event.key==='Enter'){event.preventDefault();lookupCustomerByCode();}"/>
+                  <select id="f-custcode" class="fc"><option value="">-- เลือกบริษัทก่อน --</option></select>
                   <div id="custcode-hint" style="font-size:.72rem;margin-top:4px;min-height:14px;color:var(--muted);"></div>
                 </div>
+                <div class="fg" style="margin:0;"><label class="lbl">ชื่อลูกค้า</label><input type="text" id="f-cust" class="fc" placeholder="เติมอัตโนมัติจากรหัสลูกค้า" readonly/></div>
               </div>
               <div class="g2">
                 <div class="fg" style="margin:0;"><label class="lbl">จังหวัด <span class="req">*</span></label><select id="f-prov" class="fc"><option value="">-- เลือกจังหวัด --</option></select></div>
@@ -1010,42 +1019,17 @@ select.fc option { background: var(--surface2); }
               <div id="f-admin" style="display:none;">
                 <div class="divider"></div>
                 <div class="fg"><label class="lbl">สถานะ</label>
-                  <select id="f-status" class="fc" onchange="onStChange(this.value)">
+                  <select id="f-status" class="fc">
                     <option value="รอของ">รอของ</option>
                     <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
-                    <option value="เสร็จสิ้น">เสร็จสิ้น</option>
                   </select>
-                </div>
-                <div id="f-upload" style="display:none;" class="fg">
-                  <label class="lbl">หลักฐานการดำเนินการ <span class="req">*</span> <span style="color:var(--muted);font-weight:400;text-transform:none;">(อัปโหลดได้หลายรูป)</span></label>
-                  <div class="uz" id="uz" ondragover="uzOver(event)" ondragleave="uzLeave(event)" ondrop="upDrop(event,'evidence')">
-                    <input type="file" id="f-img" accept="image/*" multiple onchange="upSelect(event,'evidence')"/>
-                    <div style="font-size:1.3rem;margin-bottom:5px;">📎</div>
-                    <div style="font-size:.82rem;font-weight:600;color:var(--ink2);">คลิกหรือลากไฟล์มาวางที่นี่</div>
-                    <div style="font-size:.72rem;color:var(--muted);margin-top:2px;">JPG, PNG, WEBP — เลือกหลายรูปพร้อมกันได้ (≤ 5 MB ต่อรูป)</div>
-                  </div>
-                  <!-- Multi-image preview grid -->
-                  <div id="img-preview-grid" style="display:none;margin-top:10px;display:none;">
-                    <div id="img-preview-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-                    <div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;">
-                      <span id="img-count-lbl" style="font-size:.72rem;color:var(--muted);"></span>
-                      <button type="button" class="btn btn-ghost btn-xs" onclick="UP.evidence.clear()" style="color:var(--red);">✕ ลบทั้งหมด</button>
-                    </div>
-                  </div>
-                  <div class="uloading" id="uloading"><div class="spin" style="width:15px;height:15px;border-width:2px;margin:0;flex-shrink:0;"></div>กำลังอัปโหลด <span id="upload-progress"></span>...</div>
-                  <div class="udone" id="udone">✅ อัปโหลดสำเร็จทั้งหมด <span id="udone-count"></span> รูป</div>
-                  <!-- existing urls (edit mode) -->
-                  <div id="existing-imgs" style="display:none;margin-top:8px;">
-                    <div class="lbl" style="margin-bottom:5px;">รูปที่อัปโหลดแล้ว</div>
-                    <div id="existing-imgs-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-                  </div>
                 </div>
               </div>
 
               <!-- ── รูปภาพประกอบรายการ (คอลัมน์ U attachImageUrl) ──
                    อยู่ "นอก" #f-admin โดยตั้งใจ — ทุก role แนบได้ตอนสร้าง
                    และตอนเจ้าของแก้รายการที่ยัง "รอของ"
-                   คนละชุดกับ #f-upload ที่เป็นหลักฐานการดำเนินการของฝ่ายคลัง -->
+                   คนละชุดกับรูปในฟอร์มนำสินค้าเข้า (คอลัมน์ P) ของฝ่ายคลัง -->
               <div class="divider"></div>
               <div class="fg" id="f-attach">
                 <label class="lbl">📷 รูปภาพประกอบรายการ
@@ -1204,6 +1188,55 @@ select.fc option { background: var(--surface2); }
                 <thead><tr><th>Backup ID</th><th>วันที่</th><th>ประเภท</th><th>จำนวน record</th><th>หมายเหตุ</th><th>ไฟล์</th><th>Drive</th></tr></thead>
                 <tbody id="bk-tbl"><tr><td colspan="7" class="te">กำลังโหลด...</td></tr></tbody>
               </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── VIEW: นำสินค้าเข้าคลัง (Admin + Warehouse) — บันทึกแล้วรายการเสร็จสิ้น + เซฟ PDF ── -->
+        <div id="view-intake" style="display:none;">
+          <div class="card" style="max-width:900px;">
+            <div class="card-header">
+              <span class="card-title">นำสินค้าเข้าคลัง</span>
+              <span id="intake-id-badge" class="mono" style="color:var(--blue);"></span>
+            </div>
+            <div class="card-body">
+              <div id="intake-err" class="alert ae" style="margin-bottom:12px;"></div>
+              <div id="intake-summary" style="font-size:.8rem;color:var(--ink2);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;margin-bottom:14px;line-height:1.7;"></div>
+              <p style="font-size:.76rem;color:var(--muted);margin-bottom:6px;">
+                กรอกอย่างน้อย 1 บรรทัด (สูงสุด 8) — เลขที่คลัง / สินค้า / วันที่ / จำนวน / หน่วย ต้องครบทุกช่องในบรรทัดที่ใช้ บรรทัดที่เว้นว่างทั้งบรรทัดจะถูกข้าม
+              </p>
+              <div id="intake-rows"></div>
+              <div class="fg" style="margin-top:14px;">
+                <label class="lbl">หมายเหตุ <span style="color:var(--muted);font-weight:400;text-transform:none;">(ไม่บังคับ)</span></label>
+                <input type="text" id="intake-remark" class="fc" maxlength="300" placeholder="หมายเหตุ"/>
+              </div>
+              <div class="divider"></div>
+              <div class="fg">
+                <label class="lbl">📎 รูปภาพเพิ่มเติม <span style="color:var(--muted);font-weight:400;text-transform:none;">(ไม่บังคับ — PDF นำสินค้าเข้าเป็นหลักฐานอยู่แล้ว)</span></label>
+                <div class="uz" id="ik-uz" ondragover="uzOver(event)" ondragleave="uzLeave(event)" ondrop="upDrop(event,'intake')">
+                  <input type="file" id="ik-img" accept="image/*" multiple onchange="upSelect(event,'intake')"/>
+                  <div style="font-size:1.3rem;margin-bottom:5px;">📎</div>
+                  <div style="font-size:.82rem;font-weight:600;color:var(--ink2);">คลิกหรือลากรูปมาวางที่นี่</div>
+                </div>
+                <div id="ik-preview-grid" style="display:none;margin-top:10px;">
+                  <div id="ik-preview-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+                  <div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;">
+                    <span id="ik-count-lbl" style="font-size:.72rem;color:var(--muted);"></span>
+                    <button type="button" class="btn btn-ghost btn-xs" onclick="UP.intake.clear()" style="color:var(--red);">✕ ลบทั้งหมด</button>
+                  </div>
+                </div>
+                <div class="uloading" id="ik-uloading"><div class="spin" style="width:15px;height:15px;border-width:2px;margin:0;flex-shrink:0;"></div>กำลังอัปโหลดรูป <span id="ik-progress"></span>...</div>
+                <div id="ik-existing" style="display:none;margin-top:8px;">
+                  <div class="lbl" style="margin-bottom:5px;">รูปที่แนบไว้แล้ว</div>
+                  <div id="ik-existing-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:8px;">
+                <button id="intake-save-btn" class="btn btn-primary" onclick="submitIntake()" style="flex:1;min-width:160px;justify-content:center;">
+                  ✅ บันทึก — เสร็จสิ้น + เซฟ PDF
+                </button>
+                <button class="btn btn-outline" onclick="goBack()" style="flex:1;min-width:100px;justify-content:center;">ยกเลิก</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1447,6 +1480,11 @@ function fDateFull(s){
   var d = new Date(s);
   return d.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric',calendar:'buddhist'})
     +' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+}
+/* 'YYYY-MM-DD' (ค.ศ.) → 'วว/ดด/ปปปป' (พ.ศ.) — ไม่ผ่าน Date เพื่อกัน timezone เลื่อนวัน */
+function fDateBE(iso){
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  return m ? m[3]+'/'+m[2]+'/'+(parseInt(m[1],10)+543) : '';
 }
 function badge(s){
   var cls={'รอของ':'bw','กำลังดำเนินการ':'bp','เสร็จสิ้น':'bd'};
@@ -1984,6 +2022,26 @@ function _imgGalleryHtml(urlStr, label){
     +'</div>';
 }
 
+function _intakeDetailHtml(r){
+  if(!r.intakeData && !r.intakePdfUrl) return '';
+  var d = {}; try{ d = JSON.parse(r.intakeData || '{}'); }catch(e){}
+  var th = 'background:var(--surface2);padding:4px 7px;border:1px solid var(--border);font-weight:700;color:var(--muted);font-size:.68rem;';
+  var td = 'padding:4px 7px;border:1px solid var(--border);';
+  var rows = (d.lines || []).map(function(L){
+    return '<tr><td style="'+td+'text-align:center;">'+esc(L.no)+'</td>'
+      +'<td style="'+td+'color:var(--ink);">'+esc(L.product)+' <span style="color:var(--muted);">('+fDateBE(L.date)+')</span></td>'
+      +'<td style="'+td+'text-align:center;">'+esc(String(L.qty))+'</td>'
+      +'<td style="'+td+'">'+esc(L.unit)+'</td></tr>';
+  }).join('');
+  return '<div><div class="lbl" style="margin-top:10px;">📦 นำสินค้าเข้าคลัง'
+    +(d.version>1 ? ' <span style="color:var(--muted);font-weight:400;font-size:.7rem;">(แก้ไขครั้งที่ '+(d.version-1)+')</span>' : '')+'</div>'
+    +(rows ? '<table style="width:100%;border-collapse:collapse;font-size:.78rem;margin-top:4px;"><thead><tr>'
+        +'<th style="'+th+'">เลขที่คลัง</th><th style="'+th+'">สินค้า</th><th style="'+th+'">จำนวน</th><th style="'+th+'">หน่วย</th></tr></thead><tbody>'+rows+'</tbody></table>' : '')
+    +(d.remark ? '<div style="font-size:.78rem;color:var(--ink2);margin-top:6px;">หมายเหตุ: '+esc(d.remark)+'</div>' : '')
+    +(r.intakePdfUrl ? '<a class="btn btn-outline btn-sm" style="margin-top:8px;" href="'+esc(r.intakePdfUrl)+'" target="_blank" rel="noopener">📄 เปิด PDF นำสินค้าเข้า</a>' : '')
+    +'</div>';
+}
+
 function viewDetail(id,isAdmin){
   var cid=(id||'').trim();
   var list=isAdmin?adminRecs:ST.cnList;
@@ -2033,6 +2091,7 @@ function viewDetail(id,isAdmin){
     +(r.processingAt?'<div><div class="lbl">เริ่มดำเนินการ</div><div style="color:var(--blue);font-size:.82rem;">'+fDateFull(r.processingAt)+'</div></div>':'<div></div>')
     +'</div>'
     +(r.completedAt?'<div><div class="lbl">วันที่เสร็จสิ้น</div><div style="color:var(--green);font-size:.82rem;">'+fDateFull(r.completedAt)+'</div></div>':'')
+    +_intakeDetailHtml(r)
     +proof
     +'</div>',
     (isAdminLevel()
@@ -2079,15 +2138,20 @@ function addRow(nm,qty,unit){
   var tr=document.createElement('tr');
   tr.id='ir-'+idx;
   tr.innerHTML='<td class="itn">'+(tb.rows.length+1)+'</td>'
-    +'<td><input type="text" id="in-'+idx+'" placeholder="ชื่อสินค้า" value="'+esc(nm)+'"/></td>'
+    +'<td><select id="in-'+idx+'"></select></td>'
     +'<td class="itq"><input type="text" id="iq-'+idx+'" placeholder="จำนวน" value="'+esc(qty)+'" style="text-align:center;"/></td>'
     +'<td class="itu"><input type="text" id="iu-'+idx+'" placeholder="หน่วย" value="'+esc(unit)+'"/></td>'
     +'<td class="itd"><button type="button" class="btn btn-danger btn-icon-only" onclick="delRow('+idx+')" title="ลบรายการนี้" aria-label="ลบรายการสินค้า">🗑</button></td>';
   tb.appendChild(tr);
+  initProductSelect('in-'+idx, nm);
   renum();
   updateAddRowBtnState();
 }
-function delRow(idx){var el=document.getElementById('ir-'+idx);if(el)el.remove();renum();updateAddRowBtnState();}
+function delRow(idx){
+  var el=document.getElementById('ir-'+idx);
+  var sel=document.getElementById('in-'+idx); if(sel && sel.tomselect) sel.tomselect.destroy();
+  if(el)el.remove();renum();updateAddRowBtnState();
+}
 function renum(){document.querySelectorAll('#itbody tr').forEach(function(tr,i){var td=tr.querySelector('.itn');if(td)td.textContent=i+1;});}
 
 // ปิด/เปิดปุ่ม "+ เพิ่มรายการ" ตามจำนวนแถวปัจจุบัน เทียบกับ MAX_ITEMS
@@ -2101,6 +2165,43 @@ function updateAddRowBtnState(){
   btn.style.cursor = atMax ? 'not-allowed' : 'pointer';
   btn.textContent = atMax ? '➕ เพิ่มรายการสินค้า (สูงสุด '+MAX_ITEMS+' รายการ)' : '➕ เพิ่มรายการสินค้า';
 }
+/* ══════════════════════════════════════════
+   สินค้า — dropdown พิมพ์ค้นหาได้ จากชีท Products (Apps Script cache 6 ชม.)
+   โหลดครั้งเดียวต่อเซสชัน ใช้ซ้ำทั้งฟอร์มสร้าง CN และฟอร์มนำสินค้าเข้า
+   ══════════════════════════════════════════ */
+var PRODUCTS = null, _productsP = null;
+function loadProducts(){
+  if(PRODUCTS) return Promise.resolve(PRODUCTS);
+  if(!_productsP){
+    _productsP = apiGet({action:'getProducts'}).then(function(d){
+      if(!d.success) throw new Error(d.message || 'โหลดรายการสินค้าไม่สำเร็จ');
+      PRODUCTS = d.products || [];
+      return PRODUCTS;
+    }).catch(function(e){ _productsP = null; toast(e.message,'error'); return []; });
+  }
+  return _productsP;
+}
+/* แปลง <select id=selId> ให้เป็น Tom Select ของสินค้า — current = ค่าที่เลือกไว้แล้ว (โหมดแก้ไข)
+   ค่าเดิมที่ไม่อยู่ในชีทยังคงอยู่เป็นตัวเลือกพิเศษ เพื่อไม่ให้ข้อมูลเดิมหายตอนเปิดแก้ */
+function initProductSelect(selId, current, onChange){
+  loadProducts().then(function(list){
+    var el = document.getElementById(selId);
+    if(!el || el.tomselect) return;
+    var opts = list.map(function(p){ return {value:p, text:p}; });
+    if(current && list.indexOf(current) < 0) opts.unshift({value:current, text:current+' (ไม่อยู่ในชีท)'});
+    if(typeof TomSelect === 'undefined'){
+      el.innerHTML = '<option value="">-- เลือกสินค้า --</option>' + opts.map(function(o){
+        return '<option value="'+esc(o.value)+'"'+(o.value===current?' selected':'')+'>'+esc(o.text)+'</option>'; }).join('');
+      return;
+    }
+    new TomSelect(el, {
+      options: opts, items: current ? [current] : [], maxOptions: 200,
+      placeholder: 'พิมพ์ค้นหาสินค้า...', dropdownParent: 'body',
+      onChange: onChange || null
+    });
+  });
+}
+
 function getItems(){
   return Array.from(document.querySelectorAll('#itbody tr')).map(function(tr){
     var id=tr.id.replace('ir-','');
@@ -2146,53 +2247,122 @@ function initProvinceDistrictSelect(){
   tsDistrict.disable();
 }
 
-var _custLookupBusy = false; // กันยิงซ้ำซ้อนขณะรอผลลัพธ์ก่อนหน้า
+/* ══════════════════════════════════════════
+   ลูกค้า — dropdown รหัสลูกค้า (ค้นหาด้วยรหัสหรือชื่อ) แล้วเติมชื่อ/จังหวัด/เขตอัตโนมัติ
+   โหลดทั้งแท็บของบริษัทลงเครื่องครั้งเดียว แล้วค้นในเครื่อง (ไม่ผ่านเซิร์ฟเวอร์ทีละคำ
+   เพราะแบบเดิมจำกัด 15 รายการ จึงหาไม่เจอ)
+   ══════════════════════════════════════════ */
+var CUSTOMERS = {};      // group → [[code,name,address],...]
+var tsCust = null, _custGroup = '', _legacyCust = null;
 
-// ค้นหาข้อมูลลูกค้าจากรหัสที่พิมพ์ แล้ว auto-fill ชื่อ/จังหวัด/เขต-อำเภอ
-// เรียกตอน blur (ออกจากช่อง) หรือกด Enter ที่ช่องรหัสลูกค้า — ค้นหาแบบตรงรหัสเป๊ะ (exact match)
-async function lookupCustomerByCode(){
-  var codeEl = document.getElementById('f-custcode');
-  var code = codeEl ? codeEl.value.trim() : '';
-  if(!code) return;
+function custGroupOf(company){ return !company ? '' : (company.indexOf('ควอลิแทต') > -1 ? 'QT' : 'RDFW'); }
 
-  var company = document.getElementById('f-co').value;
-  if(!company){
-    toast('กรุณาเลือกบริษัทก่อนกรอกรหัสลูกค้า','warn');
-    return;
+function initCustomerSelect(){
+  if(typeof TomSelect === 'undefined'){ setTimeout(initCustomerSelect, 150); return; }
+  if(tsCust) return;
+  tsCust = new TomSelect('#f-custcode', {
+    options: [], maxOptions: 200, searchField: ['value','text'],
+    placeholder: 'เลือกบริษัทก่อน', dropdownParent: 'body',
+    onChange: function(v){ onCustomerPicked(v); }
+  });
+  tsCust.disable();
+}
+
+function _custHint(msg, color){
+  var h = document.getElementById('custcode-hint');
+  if(h){ h.textContent = msg || ''; h.style.color = color || 'var(--muted)'; }
+}
+
+function resetCustomerSelect(){
+  _custGroup = ''; _legacyCust = null;
+  document.getElementById('f-cust').value = '';
+  _custHint('');
+  if(tsCust){
+    tsCust.clear(true); tsCust.clearOptions(); tsCust.disable();
+    tsCust.control_input.placeholder = 'เลือกบริษัทก่อน';
   }
-  if(_custLookupBusy) return;
-  _custLookupBusy = true;
+}
 
-  var hint = document.getElementById('custcode-hint');
-  if(hint){ hint.textContent = '🔍 กำลังค้นหา...'; hint.style.color = 'var(--muted)'; }
+function loadCustomersFor(company){
+  var g = custGroupOf(company);
+  if(CUSTOMERS[g]) return Promise.resolve(CUSTOMERS[g]);
+  return apiGet({action:'getCustomerList', company:company}).then(function(d){
+    if(!d.success) throw new Error(d.message || 'โหลดรายชื่อลูกค้าไม่สำเร็จ');
+    CUSTOMERS[g] = d.customers || [];
+    return CUSTOMERS[g];
+  });
+}
 
-  try{
-    var d = await apiGet({action:'getCustomerByCode', code:code, company:company});
-    if(!d.success){
-      if(hint){ hint.textContent = 'ℹ️ '+(d.message||'ไม่พบข้อมูล — กรอกเองได้'); hint.style.color = 'var(--amber)'; }
-      return;
-    }
-    var custEl = document.getElementById('f-cust');
-    if(custEl) custEl.value = d.name || '';
+function fillCustomerOptions(list){
+  tsCust.clearOptions();
+  tsCust.addOptions(list.map(function(c){ return {value:c[0], text:c[0]+' — '+c[1]}; }));
+  tsCust.enable();
+  tsCust.control_input.placeholder = 'พิมพ์รหัส/ชื่อลูกค้าเพื่อค้นหา...';
+}
 
-    var parsed = parseAddressToProvinceDistrict(d.address || '');
-    if(parsed.province){
-      setProvinceDistrict(parsed.province, parsed.district);
-      if(hint){
-        hint.textContent = parsed.district
-          ? '✅ พบข้อมูล: '+d.name+' — เติมจังหวัด/เขตให้อัตโนมัติแล้ว'
-          : '✅ พบข้อมูล: '+d.name+' — เติมจังหวัดแล้ว (กรุณาเลือกเขต/อำเภอเอง)';
-        hint.style.color = 'var(--green)';
+/* เปลี่ยนบริษัท: RD↔FW ใช้แท็บเดียวกัน ไม่ล้าง | ข้ามไป QT (หรือกลับ) ล้างลูกค้าที่เลือก */
+function onCompanyChange(){
+  initCustomerSelect();
+  var co = document.getElementById('f-co').value, g = custGroupOf(co);
+  if(!tsCust){ setTimeout(onCompanyChange, 200); return; }
+  if(!co){ resetCustomerSelect(); return; }
+  if(g === _custGroup) return;
+  var had = tsCust.getValue();
+  resetCustomerSelect();
+  setProvinceDistrict('', '');
+  if(had) toast('เปลี่ยนบริษัท — กรุณาเลือกลูกค้าใหม่','warn');
+  _custGroup = g;
+  _custHint('🔍 กำลังโหลดรายชื่อลูกค้า...');
+  loadCustomersFor(co).then(function(list){
+    if(_custGroup !== g) return;           // เปลี่ยนบริษัทซ้ำระหว่างรอ
+    fillCustomerOptions(list);
+    _custHint('มีลูกค้า '+list.length+' ราย — พิมพ์เพื่อค้นหา');
+  }).catch(function(e){
+    _custGroup = '';
+    _custHint('⚠️ '+e.message, 'var(--red)');
+  });
+}
+
+function onCustomerPicked(code){
+  var nameEl = document.getElementById('f-cust');
+  if(!code){ nameEl.value = ''; return; }
+  if(code === '__legacy__') return;
+  var row = (CUSTOMERS[_custGroup] || []).find(function(c){ return c[0] === code; });
+  if(!row){ nameEl.value = ''; return; }
+  nameEl.value = row[1] || '';
+  var parsed = parseAddressToProvinceDistrict(row[2] || '');
+  if(parsed.province){
+    setProvinceDistrict(parsed.province, parsed.district);
+    _custHint(parsed.district ? '✅ เติมชื่อ จังหวัด และเขต/อำเภอให้แล้ว'
+                              : '✅ เติมชื่อและจังหวัดแล้ว — กรุณาเลือกเขต/อำเภอเอง',
+              parsed.district ? 'var(--green)' : 'var(--amber)');
+  } else {
+    setProvinceDistrict('', '');
+    _custHint('✅ เติมชื่อแล้ว — แยกจังหวัด/เขตจากที่อยู่ไม่ได้ กรุณาเลือกเอง', 'var(--amber)');
+  }
+}
+
+/* โหมดแก้ไข: ใส่ค่าเดิมของรายการลง dropdown (ไม่ทับจังหวัด/เขตที่บันทึกไว้)
+   ลูกค้าเดิมที่ไม่อยู่ในชีทยังคงอยู่เป็นตัวเลือกพิเศษ */
+function applyCustomerFromRecord(r){
+  initCustomerSelect();
+  _custGroup = custGroupOf(r.company);
+  return loadCustomersFor(r.company).then(function(list){
+    var wait = setInterval(function(){
+      if(!tsCust) return; clearInterval(wait);
+      fillCustomerOptions(list);
+      var found = r.customerCode && list.some(function(c){ return c[0] === r.customerCode; });
+      if(found){
+        tsCust.setValue(r.customerCode, true);
+      } else {
+        _legacyCust = { code: r.customerCode || '', name: r.customerName || '' };
+        tsCust.addOption({ value:'__legacy__',
+          text: (r.customerCode ? r.customerCode+' — ' : '') + (r.customerName||'') + ' (ไม่อยู่ในชีท)' });
+        tsCust.setValue('__legacy__', true);
       }
-    } else if(hint){
-      hint.textContent = '✅ พบชื่อลูกค้า: '+d.name+' (ไม่สามารถแยกจังหวัด/เขตจากที่อยู่ได้ กรุณาเลือกเอง)';
-      hint.style.color = 'var(--amber)';
-    }
-  } catch(e){
-    if(hint){ hint.textContent = '⚠️ ค้นหาไม่สำเร็จ: '+e.message; hint.style.color = 'var(--red)'; }
-  } finally {
-    _custLookupBusy = false;
-  }
+      document.getElementById('f-cust').value = r.customerName || '';
+    }, 50);
+  }).catch(function(e){ _custHint('⚠️ '+e.message, 'var(--red)'); });
 }
 
 // เมื่อเลือกจังหวัดแล้ว → เติม options อำเภอ/เขตของจังหวัดนั้นให้ tsDistrict
@@ -2298,9 +2468,8 @@ function openForm(editId,fromAdmin){
   initProvinceDistrictSelect(); // init ครั้งแรกที่เปิดฟอร์ม (idempotent)
   document.getElementById('f-co').value='';
   document.querySelectorAll('input[name="dt"]').forEach(function(r){r.checked=false;});
-  document.getElementById('f-cust').value='';
-  document.getElementById('f-custcode').value='';
-  var custHintEl = document.getElementById('custcode-hint'); if(custHintEl) custHintEl.textContent='';
+  initCustomerSelect();
+  resetCustomerSelect();
   setProvinceDistrict('', ''); // เคลียร์จังหวัด/เขต
   document.getElementById('f-reason').value='';
   document.getElementById('f-bill').value='';
@@ -2312,9 +2481,9 @@ function openForm(editId,fromAdmin){
   updateDocIdPreview();
   hideErr('form-err');
   UP.attach.clear();   UP.attach.setExisting([]);
-  UP.evidence.clear(); UP.evidence.setExisting([]);
-  var eg=document.getElementById('existing-imgs'); if(eg) eg.style.display='none';
-  document.getElementById('f-upload').style.display='none';
+  // ตัวเลือก "เสร็จสิ้น" ในฟอร์มแก้ไขมีเฉพาะตอนเปิดใบที่เสร็จสิ้นแล้ว — ตั้งสถานะนี้ได้ทางเดียวคือฟอร์มนำสินค้าเข้า
+  var stSel=document.getElementById('f-status');
+  for(var oi=stSel.options.length-1; oi>=0; oi--){ if(stSel.options[oi].value==='เสร็จสิ้น') stSel.remove(oi); }
   document.getElementById('itbody').innerHTML='';rowIdx=0;
   updateAddRowBtnState(); // reset ปุ่ม "+ เพิ่มรายการ" กลับสถานะปกติ
   var isAdmin=isAdminLevel();  // Admin + Warehouse
@@ -2351,8 +2520,7 @@ function openForm(editId,fromAdmin){
       document.getElementById('f-co').value=r.company||'';
       var rd=document.querySelector('input[name="dt"][value="'+r.docType+'"]');
       if(rd){ rd.checked=true; onDtChange(r.docType); } // trigger conditional fields
-      document.getElementById('f-cust').value=r.customerName||'';
-      document.getElementById('f-custcode').value=r.customerCode||'';
+      applyCustomerFromRecord(r);
       var trySetPD = function(){
         if(tsProvince && tsDistrict){ setProvinceDistrict(r.province||'', r.district||''); }
         else setTimeout(trySetPD, 100);
@@ -2372,14 +2540,8 @@ function openForm(editId,fromAdmin){
 
       if(isAdmin){
         var st=r.status||'รอของ';
+        if(st==='เสร็จสิ้น'){ document.getElementById('f-status').add(new Option('เสร็จสิ้น','เสร็จสิ้น')); }
         document.getElementById('f-status').value=st;
-        if(st==='เสร็จสิ้น'){
-          document.getElementById('f-upload').style.display='block';
-          if(r.imageUrl){
-            var urls=r.imageUrl.split(',').filter(Boolean);
-            UP.evidence.setExisting(urls);
-          }
-        }
       }
 
       // ถ้า Admin กำลังแก้รายการที่เสร็จสิ้นแล้ว → แจ้งเตือนเบา ๆ ว่าเป็นรายการที่ล็อก (แก้ได้เพราะเป็น Admin)
@@ -2407,6 +2569,7 @@ async function saveCN(){
   var dt     = dtEl ? dtEl.value : '';
   var cust   = document.getElementById('f-cust').value.trim();
   var custCode = document.getElementById('f-custcode').value.trim();
+  if(custCode === '__legacy__') custCode = _legacyCust ? _legacyCust.code : '';
   var prov     = tsProvince ? (tsProvince.getValue()||'').trim() : document.getElementById('f-prov').value.trim();
   var district = tsDistrict ? (tsDistrict.getValue()||'').trim() : document.getElementById('f-district').value.trim();
   var reason   = document.getElementById('f-reason').value.trim();
@@ -2428,15 +2591,6 @@ async function saveCN(){
     return;
   }
   var isAdmin = isAdminLevel();  // Admin + Warehouse
-  // ต้องแนบรูปก่อนเปลี่ยนสถานะเป็น "เสร็จสิ้น" เฉพาะตอนที่ "กำลังจะเปลี่ยน" เป็นเสร็จสิ้นจริง ๆ
-  // (ไม่ใช่ทุกครั้งที่ status ในฟอร์มเป็น "เสร็จสิ้น" — ถ้ามีรูปเดิมอยู่แล้วจาก backend ไม่ต้องบังคับแนบใหม่)
-  var isChangingToCompleted = status === 'เสร็จสิ้น' && _editOrigStatus !== 'เสร็จสิ้น';
-  var hasAnyImage = UP.evidence.hasAny();
-  if(isAdmin && ST.editId && status==='เสร็จสิ้น' && !hasAnyImage){
-    showErr('form-err','กรุณาอัปโหลดรูปภาพหลักฐานก่อนเปลี่ยนสถานะเป็น "เสร็จสิ้น"');
-    return;
-  }
-
   var its = serItems(items);
   _saving = true;
   // ปิดปุ่มบันทึก
@@ -2445,12 +2599,6 @@ async function saveCN(){
 
   L.show('กำลังบันทึก...');
   try{
-    var imgUrl = undefined;
-    // เรียก doUploadAll เมื่อ status เป็น "เสร็จสิ้น" เท่านั้น — ฟังก์ชันนี้รวม
-    // existingUrls (รูปเดิม) + imgQueue (รูปใหม่ที่ยังไม่เคยอัปโหลด) ให้เองอยู่แล้ว
-    // ถ้าไม่มีรูปใหม่ใน queue เลย จะ return URL เดิมที่มีอยู่กลับมาเฉย ๆ ไม่อัปโหลดซ้ำ
-    if(isAdmin && ST.editId && status==='เสร็จสิ้น') imgUrl = await UP.evidence.uploadAll(ST.editId);
-
     var payload = {
       company: co, docType: dt, customerName: cust, customerCode: custCode,
       province: prov, district: district,
@@ -2464,14 +2612,11 @@ async function saveCN(){
     if(ST.editId){
       // โหมดแก้ไข: มีเลขที่เอกสารอยู่แล้ว อัปโหลดรูปประกอบได้เลย
       var attachUrl = UP.attach.hasAny() ? await UP.attach.uploadAll(ST.editId) : null;
-      var completedAt = (isAdminLevel() && isChangingToCompleted) ? new Date().toISOString() : undefined;
       // ไม่ต้องส่ง updaterRole/updaterUID แล้ว — backend อ่าน role จริงจาก actorUID
       // ที่ apiPost แนบให้อัตโนมัติ (ส่งมาก็ถูกเมิน)
       d = await apiPost(Object.assign({action:'updateCN', id:(ST.editId||'').trim()},
         payload,
         isAdminLevel() ? {status:status} : {},
-        imgUrl != null ? {imageUrl:imgUrl} : {},
-        completedAt ? {completedAt:completedAt} : {},
         // ส่ง attachImageUrl เสมอในโหมดแก้ไข เพื่อให้ "ลบรูปทิ้งทั้งหมด" มีผลจริง
         { attachImageUrl: attachUrl || '' }
       ));
@@ -2527,12 +2672,6 @@ async function saveCN(){
 /* ══════════════════════════════════════════
    IMAGE UPLOAD
    ══════════════════════════════════════════ */
-// เดิมมี branch เรียก showUDone(IMG.url) ซึ่งเป็นฟังก์ชันที่ไม่มีอยู่จริงแล้ว (เหลือจากยุค single-upload)
-// IMG.url ไม่เคยถูกเซ็ตในโค้ดปัจจุบัน จึงไม่เคยระเบิด แต่ตัดทิ้งเพื่อไม่ให้เป็นระเบิดเวลา
-function onStChange(v){
-  document.getElementById('f-upload').style.display = v==='เสร็จสิ้น' ? 'block' : 'none';
-  if(v!=='เสร็จสิ้น') UP.evidence.clear();
-}
 /* ══════════════════════════════════════════════════════════════
    MULTI-IMAGE UPLOADER (ใช้ร่วมกันทุกจุด)
    ──────────────────────────────────────────────────────────────
@@ -2617,20 +2756,26 @@ function makeUploader(cfg){
     var loading = $('loading'); if(loading) loading.style.display='flex';
     var prog = $('progress');
     try{
-      for(var i=0; i<toUpload.length; i++){
-        var item = toUpload[i];
-        if(prog) prog.textContent = (i+1)+'/'+toUpload.length;
-        // ชื่อไฟล์ [เลขที่เอกสาร]-[ชนิด][ลำดับ].jpg เพื่อค้นใน Drive ง่าย
-        // ลำดับนับต่อจากรูปเดิม กันชื่อชนกันตอนแนบเพิ่มภายหลัง
-        var seq = up.existing.length + i + 1;
-        var fileName = cnId + '-' + (cfg.filePrefix||'img') + seq + '.jpg';
-        // ไม่ส่ง creatorName แล้ว — backend หาชื่อโฟลเดอร์เองจากเจ้าของรายการ
-        var d = await apiPost({ action:'uploadImage', base64:item.b64, mimeType:item.mime,
-                                fileName:fileName, cnId:cnId });
-        if(!d.success) throw new Error('อัปโหลด '+item.name+' ไม่สำเร็จ: '+(d.message||''));
-        item.url = d.imageUrl;
-        up.render();
-      }
+      // อัปโหลดพร้อมกันสูงสุด 3 รูป (เดิมทีละรูปต่อกัน ช้าตามจำนวนรูป)
+      // ลำดับ/ชื่อไฟล์ผูกกับ index ของรูป จึงไม่ชนกันแม้เสร็จไม่เรียง
+      var nextIdx = 0, doneCnt = 0, failMsg = null;
+      var worker = async function(){
+        while(nextIdx < toUpload.length && !failMsg){
+          var i = nextIdx++, item = toUpload[i];
+          var seq = up.existing.length + i + 1;
+          var fileName = cnId + '-' + (cfg.filePrefix||'img') + seq + '.jpg';
+          // ไม่ส่ง creatorName — backend หาชื่อโฟลเดอร์เองจากเจ้าของรายการ
+          var d = await apiPost({ action:'uploadImage', base64:item.b64, mimeType:item.mime,
+                                  fileName:fileName, cnId:cnId });
+          if(!d.success){ failMsg = 'อัปโหลด '+item.name+' ไม่สำเร็จ: '+(d.message||''); return; }
+          item.url = d.imageUrl; doneCnt++;
+          if(prog) prog.textContent = doneCnt+'/'+toUpload.length;
+          up.render();
+        }
+      };
+      if(prog) prog.textContent = '0/'+toUpload.length;
+      await Promise.all([worker(), worker(), worker()]);
+      if(failMsg) throw new Error(failMsg);
     } finally {
       if(loading) loading.style.display='none';
     }
@@ -2646,23 +2791,18 @@ function makeUploader(cfg){
   return up;
 }
 
-/* 3 instance — คนละคอลัมน์ คนละสิทธิ์ */
+/* 2 instance — คนละคอลัมน์ คนละวัตถุประสงค์ */
 var UP = {
   // รูปประกอบรายการ (คอลัมน์ U attachImageUrl) — ทุกคนแนบได้ตอนสร้าง/แก้ "รอของ"
   attach: makeUploader({ name:'attach', filePrefix:'attach', ids:{
     input:'at-img', grid:'at-preview-grid', list:'at-preview-list',
     count:'at-count-lbl', loading:'at-uloading', progress:'at-progress',
     existWrap:'at-existing', existList:'at-existing-list' }}),
-  // หลักฐานการดำเนินการ (คอลัมน์ P imageUrl) — Admin/Warehouse ตอนปิดงาน
-  evidence: makeUploader({ name:'evidence', filePrefix:'img', ids:{
-    input:'f-img', grid:'img-preview-grid', list:'img-preview-list',
-    count:'img-count-lbl', loading:'uloading', progress:'upload-progress',
-    done:'udone', doneCount:'udone-count',
-    existWrap:'existing-imgs', existList:'existing-imgs-list' }}),
-  // หลักฐาน — ชุดที่อยู่ใน modal เปลี่ยนสถานะ
-  statusModal: makeUploader({ name:'statusModal', filePrefix:'img', ids:{
-    input:'sm-img', grid:'sm-preview-grid', list:'sm-preview-list',
-    count:'sm-count-lbl', loading:'sm-uloading', progress:'sm-progress' }}),
+  // รูปเพิ่มเติมตอนปิดงาน (คอลัมน์ P imageUrl) — Admin/Warehouse ในฟอร์มนำสินค้าเข้า (ไม่บังคับ)
+  intake: makeUploader({ name:'intake', filePrefix:'img', ids:{
+    input:'ik-img', grid:'ik-preview-grid', list:'ik-preview-list',
+    count:'ik-count-lbl', loading:'ik-uloading', progress:'ik-progress',
+    existWrap:'ik-existing', existList:'ik-existing-list' }}),
 };
 
 /* ── drag & drop / file picker (ผูกกับ instance ผ่านชื่อ) ── */
@@ -2769,28 +2909,10 @@ function openStatusModal(id, currentStatus){
       +'<span style="font-size:.82rem;color:var(--red);font-weight:600;">รายการนี้ถูก Lock แล้ว — ไม่สามารถเปลี่ยนสถานะได้อีก</span>'
       +'</div>' : '';
 
-  // upload section (แสดงเมื่อเลือก "เสร็จสิ้น")
-  var uploadHtml = '<div id="status-modal-upload" style="display:'+(currentStatus==='เสร็จสิ้น'?'block':'none')+';margin-top:4px;">'
-    +'<div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">'
-    +'📎 หลักฐานการดำเนินการ <span style="color:var(--red);">*</span>'
-    +'<span style="font-weight:400;color:var(--muted);text-transform:none;margin-left:4px;">(อัปโหลดได้หลายรูป)</span></div>'
-    +'<div class="uz" id="sm-uz" ondragover="uzOver(event)" ondragleave="uzLeave(event)" ondrop="upDrop(event,\'statusModal\')" style="padding:12px 14px;">'
-    +'<input type="file" id="sm-img" accept="image/*" multiple onchange="upSelect(event,\'statusModal\')"/>'
-    +'<div style="font-size:.88rem;margin-bottom:2px;">📸</div>'
-    +'<div style="font-size:.78rem;font-weight:600;color:var(--txt);">คลิกหรือลากรูปภาพมาที่นี่</div>'
-    +'<div style="font-size:.68rem;color:var(--muted);margin-top:2px;">เลือกหลายรูปพร้อมกันได้ · max 20MB/รูป</div>'
-    +'</div>'
-    +'<div id="sm-preview-grid" style="display:none;margin-top:8px;">'
-    +'<div id="sm-preview-list" style="display:flex;flex-wrap:wrap;gap:7px;"></div>'
-    +'<div style="margin-top:5px;font-size:.72rem;color:var(--muted);" id="sm-count-lbl"></div>'
-    +'</div>'
-    +'<div class="uloading" id="sm-uloading" style="display:none;margin-top:8px;">'
-    +'<div class="spin" style="width:14px;height:14px;border-width:2px;margin:0;flex-shrink:0;"></div>'
-    +'กำลังอัปโหลด <span id="sm-progress"></span>...</div>'
-    +'</div>';
-
-  // ถ้า lock: ปิด upload section ด้วย
-  if(isLocked) uploadHtml = '';
+  // คำอธิบายตอนเลือก "เสร็จสิ้น" — ต้องกรอกฟอร์มนำสินค้าเข้าก่อน (ไม่มีช่องแนบรูปใน modal นี้แล้ว)
+  var uploadHtml = isLocked ? '' :
+    '<div id="status-modal-hint" style="display:'+(currentStatus==='เสร็จสิ้น'?'block':'none')+';margin-top:4px;padding:10px 12px;background:var(--green-dim);border:1px solid var(--green-b);border-radius:8px;font-size:.78rem;color:var(--green);line-height:1.6;">'
+    +'✅ เลือก "เสร็จสิ้น" แล้วกดบันทึก ระบบจะเปิดฟอร์ม <b>นำสินค้าเข้า</b> — กรอกแล้วกดบันทึก รายการจะเสร็จสิ้นพร้อมเซฟ PDF หลักฐานอัตโนมัติ</div>';
 
   openMdl(
     'เปลี่ยนสถานะรายการ',
@@ -2832,10 +2954,8 @@ function openStatusModal(id, currentStatus){
           var dotEl  = lbl.querySelector('span:last-child');
           if(dotEl)  dotEl.textContent = ck ? '●' : '○', dotEl.style.color = ck ? cfg[s].color : 'var(--border)';
         });
-        // show/hide upload
-        var upSec = document.getElementById('status-modal-upload');
-        if(upSec){ upSec.style.display = val==='เสร็จสิ้น'?'block':'none'; }
-        UP.statusModal.clear();
+        var hint = document.getElementById('status-modal-hint');
+        if(hint) hint.style.display = val==='เสร็จสิ้น' ? 'block' : 'none';
       });
     });
     var btn = document.getElementById('confirm-status-btn');
@@ -2848,33 +2968,150 @@ async function confirmStatusChange(cnId){
   var sel = document.querySelector('input[name="new-status"]:checked');
   if(!sel){ toast('กรุณาเลือกสถานะ','error'); return; }
   var newStatus = sel.value;
+  var rec = adminRecs.find(function(r){ return String(r.id).trim()===cnId; });
+  var prevStatus = rec ? rec.status : '';
 
-  // ถ้าเป็น "เสร็จสิ้น" ต้องมีรูป
-  if(newStatus==='เสร็จสิ้น' && !UP.statusModal.hasAny()){
-    toast('กรุณาอัปโหลดรูปภาพหลักฐานก่อน','error'); return;
+  // "เสร็จสิ้น" ตั้งได้ทางเดียวคือฟอร์มนำสินค้าเข้า (docs/adr/0001)
+  // กด "กำลังดำเนินการ" ซ้ำกับใบที่ค้างอยู่ = เปิดฟอร์มกรอกต่อ ไม่ต้องยิง API
+  if(newStatus==='เสร็จสิ้น' || (newStatus==='กำลังดำเนินการ' && prevStatus==='กำลังดำเนินการ')){
+    closeMdl();
+    openIntakeForm(cnId);
+    return;
   }
 
   L.show('กำลังบันทึกสถานะ...');
   try{
-    // อัปโหลดหลักฐาน — backend หาโฟลเดอร์ Evidence เองจากเจ้าของรายการ
-    var imageUrl = UP.statusModal.hasAny() ? await UP.statusModal.uploadAll(cnId) : undefined;
-    var payload = {action:'updateCN', id:cnId, status:newStatus};
-    if(imageUrl) payload.imageUrl = imageUrl;
-    if(newStatus==='เสร็จสิ้น') payload.completedAt = new Date().toISOString();
-
-    var d2 = await apiPost(payload);
+    var d2 = await apiPost({action:'updateCN', id:cnId, status:newStatus});
     L.hide();
     if(d2.success){
       closeMdl();
-      UP.statusModal.clear();
       toast('เปลี่ยนสถานะเป็น "'+newStatus+'" สำเร็จ','success');
-      // refresh เฉพาะ admin view (ไม่ต้อง reload ทั้งหมด)
       invalidateCache('view-admin-dash');
       await loadAdmin(true); // loadAdmin เรียก doFilter() ให้แล้ว ไม่ต้อง paginate ซ้ำ (จะล้างตัวกรอง)
+      // เข้า "กำลังดำเนินการ" แล้วสถานะถูกบันทึกทันที (ลงชื่อผู้รับสินค้า) จากนั้นเปิดฟอร์มนำสินค้าเข้าต่อ
+      if(newStatus==='กำลังดำเนินการ') openIntakeForm(cnId);
     } else {
       toast('เกิดข้อผิดพลาด: '+(d2.message||''),'error');
     }
   }catch(e){ L.hide(); toast('เกิดข้อผิดพลาด: '+e.message,'error'); }
+}
+
+/* ══════════════════════════════════════════
+   ฟอร์มนำสินค้าเข้าคลัง — บันทึกแล้ว = "เสร็จสิ้น" + เซฟ PDF หลักฐานลง Drive
+   ══════════════════════════════════════════ */
+var IK_ROWS = 8;       // เท่ากับจำนวนบรรทัดในใบพิมพ์
+var _intakeRec = null, _ikSaving = false;
+
+function _intakeDashTitle(){
+  return ST.user && ST.user.role==='Warehouse' ? 'Warehouse Dashboard' : 'Admin Dashboard';
+}
+
+function ikDatePreview(i){
+  var v = document.getElementById('ik-d-'+i).value;
+  document.getElementById('ik-dp-'+i).textContent = v ? '('+fDateBE(v)+')' : '';
+}
+
+function renderIntakeRows(prevLines){
+  var box = document.getElementById('intake-rows');
+  box.querySelectorAll('select').forEach(function(sel){ if(sel.tomselect) sel.tomselect.destroy(); });
+  var h = '';
+  for(var i=0; i<IK_ROWS; i++){
+    var L = prevLines[i] || {};
+    h += '<div class="ik-row">'
+      +'<input type="text" id="ik-no-'+i+'" class="fc ik-no" maxlength="30" placeholder="เลขที่คลัง" title="เลขที่คลัง" value="'+esc(L.no||'')+'"/>'
+      +'<span class="ik-lbl">สินค้า</span>'
+      +'<div class="ik-prod"><select id="ik-p-'+i+'"></select></div>'
+      +'<input type="date" id="ik-d-'+i+'" class="fc ik-date" value="'+esc(L.date||'')+'" oninput="ikDatePreview('+i+')"/>'
+      +'<span class="ik-dp" id="ik-dp-'+i+'">'+(L.date ? '('+fDateBE(L.date)+')' : '')+'</span>'
+      +'<span class="ik-lbl">จำนวน</span>'
+      +'<input type="number" min="0" step="any" id="ik-q-'+i+'" class="fc ik-q" value="'+esc(L.qty!==undefined ? String(L.qty) : '')+'"/>'
+      +'<span class="ik-lbl">หน่วย</span>'
+      +'<input type="text" id="ik-u-'+i+'" class="fc ik-u" maxlength="30" value="'+esc(L.unit||'')+'"/>'
+      +'</div>';
+  }
+  box.innerHTML = h;
+  for(var j=0; j<IK_ROWS; j++){ initProductSelect('ik-p-'+j, (prevLines[j]||{}).product || ''); }
+}
+
+function openIntakeForm(cnId){
+  var rec = adminRecs.find(function(r){ return String(r.id).trim()===cnId; });
+  if(!rec){ toast('ไม่พบรายการ','error'); return; }
+  var isAdmin = ST.user && ST.user.role==='Admin';
+  if(rec.status!=='กำลังดำเนินการ' && !(rec.status==='เสร็จสิ้น' && isAdmin)){
+    toast('บันทึกนำสินค้าเข้าได้เฉพาะรายการที่ "กำลังดำเนินการ"','error');
+    return;
+  }
+  _intakeRec = rec; ST.intakeId = cnId;
+  var prev = {}; try{ prev = JSON.parse(rec.intakeData || '{}'); }catch(e){}
+  hideErr('intake-err');
+  document.getElementById('intake-id-badge').textContent = cnId;
+  document.getElementById('intake-summary').innerHTML =
+    '<b>'+esc(rec.docType)+'</b> — '+esc(rec.customerName)+(rec.customerCode?' ('+esc(rec.customerCode)+')':'')
+    +'<br/>สินค้าที่ลูกค้าแจ้ง: '+esc(parseItems(rec.items||'').map(function(it){ return it.name+' x'+it.qty+' '+it.unit; }).join(', ') || '-')
+    +(rec.status==='เสร็จสิ้น' ? '<br/><span style="color:var(--amber);">⚠️ รายการนี้เสร็จสิ้นแล้ว — บันทึกใหม่จะสร้าง PDF ฉบับใหม่ (ไฟล์เดิมยังคงอยู่ใน Drive)</span>' : '');
+  renderIntakeRows(prev.lines || []);
+  document.getElementById('intake-remark').value = prev.remark || '';
+  UP.intake.clear();
+  UP.intake.setExisting(rec.imageUrl ? rec.imageUrl.split(',').filter(Boolean) : []);
+  showView('view-intake', 'นำสินค้าเข้า '+cnId);
+}
+
+async function submitIntake(){
+  if(_ikSaving) return;
+  hideErr('intake-err');
+  var lines = [];
+  for(var i=0; i<IK_ROWS; i++){
+    var no = document.getElementById('ik-no-'+i).value.trim();
+    var sel = document.getElementById('ik-p-'+i);
+    var product = (sel && sel.value || '').trim();
+    var date = document.getElementById('ik-d-'+i).value;
+    var qty = document.getElementById('ik-q-'+i).value.trim();
+    var unit = document.getElementById('ik-u-'+i).value.trim();
+    if(!no && !product && !date && !qty && !unit) continue;   // บรรทัดว่างทั้งบรรทัด ข้าม
+    var tag = 'บรรทัดที่ '+(i+1)+': ';
+    if(!no){ showErr('intake-err', tag+'กรุณากรอกเลขที่คลัง'); return; }
+    if(!product){ showErr('intake-err', tag+'กรุณาเลือกสินค้า'); return; }
+    if(!date){ showErr('intake-err', tag+'กรุณาเลือกวันที่'); return; }
+    var qn = Number(qty);
+    if(!qty || !isFinite(qn) || qn <= 0){ showErr('intake-err', tag+'จำนวนต้องเป็นตัวเลขมากกว่า 0'); return; }
+    if(!unit){ showErr('intake-err', tag+'กรุณากรอกหน่วย'); return; }
+    lines.push({ no:no, product:product, date:date, qty:qn, unit:unit });
+  }
+  if(!lines.length){ showErr('intake-err', 'ต้องกรอกอย่างน้อย 1 บรรทัด'); return; }
+
+  _ikSaving = true;
+  var btn = document.getElementById('intake-save-btn'); if(btn){ btn.disabled = true; btn.style.opacity = '.6'; }
+  L.show('กำลังบันทึกและสร้าง PDF...');
+  try{
+    var imageUrl = UP.intake.hasAny() ? await UP.intake.uploadAll(ST.intakeId) : null;
+    var intake = { lines:lines, remark:document.getElementById('intake-remark').value.trim() };
+    // ใบพิมพ์เติมข้อมูลนำสินค้าเข้าแล้ว (แหล่ง layout เดียวกับปุ่มพิมพ์) — ส่งให้ backend แปลงเป็น PDF
+    var html = buildCNFormHtml(Object.assign({}, _intakeRec, { intakeData: JSON.stringify(intake) }), { pdf:true });
+    var d = await apiPost({ action:'completeCN', id:ST.intakeId, intake:intake, html:html,
+                            imageUrl: imageUrl || undefined });
+    L.hide();
+    if(!d.success){ showErr('intake-err', d.message || 'บันทึกไม่สำเร็จ'); return; }
+    toast('บันทึกนำสินค้าเข้าแล้ว — รายการเสร็จสิ้น','success');
+    var doneId = ST.intakeId;
+    invalidateCache('view-admin-dash');
+    await loadAdmin(true);
+    showView('view-admin-dash', _intakeDashTitle());
+    openConfirmMdl({
+      icon:'✅', title:'เสร็จสิ้นแล้ว — '+doneId,
+      body:'เซฟ PDF นำสินค้าเข้าลง Drive เรียบร้อย ต้องการพิมพ์ใบ CN ที่เติมข้อมูลแล้วเลยไหม',
+      okLabel:'🖨 พิมพ์ใบ CN', okClass:'btn-pri',
+      onOk:function(){
+        var fresh = adminRecs.find(function(r){ return String(r.id).trim()===doneId; });
+        printCNForm(fresh);
+      }
+    });
+  } catch(e){
+    L.hide();
+    showErr('intake-err', e.message);
+  } finally {
+    _ikSaving = false;
+    if(btn){ btn.disabled = false; btn.style.opacity = ''; }
+  }
 }
 
 function openMonthReport(){
@@ -3085,8 +3322,9 @@ function exportCSV(){
    PRINT CN FORM (ฟอร์มต้นฉบับ)
    — เพิ่ม: ชื่อ user + วันที่ในช่องผู้แทน
    ══════════════════════════════════════════ */
-function printCNForm(r){
-  if(!r){ alert('ไม่พบข้อมูล'); return; }
+function buildCNFormHtml(r, opts){
+  opts = opts || {};
+  if(!r) return '';
 
   var its = parseItems(r.items||'');
   while(its.length < 11) its.push({name:'',qty:'',unit:''});
@@ -3222,18 +3460,18 @@ html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background
 .wh-wrap{margin-top:12pt;margin-left:auto;margin-right:auto;width:450pt;font-size:8pt;}
 .wh-row{display:flex;align-items:center;gap:5pt;margin-bottom:5pt;}
 .wh-indent{display:inline-block;width:72pt;flex-shrink:0;font-weight:700;font-size:8pt;white-space:nowrap;}
-.wh-o{width:22pt;height:22pt;border:.75pt solid #000;border-radius:50%;flex-shrink:0;}
+.wh-o{width:22pt;height:22pt;border:.75pt solid #000;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:6.5pt;font-weight:700;overflow:hidden;}
 .wh-name{font-size:8pt;white-space:nowrap;min-width:18pt;}
-.wh-line{width:150pt;border-bottom:.5pt solid #777;min-height:9pt;}
+.wh-line{width:150pt;border-bottom:.5pt solid #777;min-height:9pt;font-size:7.5pt;line-height:1.15;}
 .wh-qty{white-space:nowrap;font-size:8pt;padding:0 4pt;}
-.wh-line2{width:50pt;border-bottom:.5pt solid #777;min-height:9pt;}
+.wh-line2{width:50pt;border-bottom:.5pt solid #777;min-height:9pt;font-size:8pt;text-align:center;}
 .wh-unit{white-space:nowrap;font-size:8pt;padding:0 4pt;}
-.wh-line3{width:50pt;border-bottom:.5pt solid #777;min-height:9pt;}
+.wh-line3{width:50pt;border-bottom:.5pt solid #777;min-height:9pt;font-size:8pt;text-align:center;}
 
 .remark-wrap{margin-top:20pt;font-size:8pt;}
 .remark-row{display:flex;align-items:flex-end;gap:3pt;margin-bottom:7pt;}
 .remark-lbl{font-weight:700;white-space:nowrap;}
-.remark-line{flex:1;border-bottom:.5pt solid #777;min-height:9pt;}
+.remark-line{flex:1;border-bottom:.5pt solid #777;min-height:9pt;font-size:8pt;}
 
 /* ── Preview toolbar: ลอยด้านบน ให้ดูก่อนตัดสินใจพิมพ์ (ซ่อนตอนพิมพ์จริง) ── */
 body{background:#525659;}
@@ -3249,12 +3487,13 @@ body{background:#525659;}
 
   var html='<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"/>'
     +'<title>CN '+esc(r.id||'')+'</title>'
-    +'<style>'+css+'</style></head><body>'
-    +'<div class="preview-toolbar no-print">'
-    +'<span class="ptxt">👁 ตัวอย่างก่อนพิมพ์ — ตรวจสอบข้อมูลให้ครบถ้วนก่อนกดพิมพ์</span>'
-    +'<button class="pb-print" onclick="window.print()">🖨 พิมพ์เอกสาร</button>'
-    +'<button class="pb-close" onclick="window.close()">✕ ปิดหน้าต่าง</button>'
-    +'</div>'
+    +'<style>'+css+(opts.pdf?'body{background:#fff !important;}.doc-page{width:auto;margin:0;padding:0;}':'')+'</style></head><body>'
+    +(opts.pdf ? '' :
+      '<div class="preview-toolbar no-print">'
+      +'<span class="ptxt">👁 ตัวอย่างก่อนพิมพ์ — ตรวจสอบข้อมูลให้ครบถ้วนก่อนกดพิมพ์</span>'
+      +'<button class="pb-print" onclick="window.print()">🖨 พิมพ์เอกสาร</button>'
+      +'<button class="pb-close" onclick="window.close()">✕ ปิดหน้าต่าง</button>'
+      +'</div>')
     +'<div class="doc-page">';
 
   /* 1. Company Header — โลโก้ซ้าย + ชื่อบริษัทกลาง */
@@ -3362,32 +3601,43 @@ body{background:#525659;}
   /* 7. นำสินค้าเข้าคลัง */
   html+='<div class="wh-wrap">';
   var whLabels=['นำสินค้าเข้าคลัง','','','','','','',''];
+  // ข้อมูลนำสินค้าเข้าที่บันทึกแล้ว (ใบ "เสร็จสิ้น") — ยังไม่มี = เว้นว่างให้เขียนมือเหมือนเดิม
+  var intake = null;
+  try{ intake = r.intakeData ? (typeof r.intakeData==='string' ? JSON.parse(r.intakeData) : r.intakeData) : null; }catch(e){ intake = null; }
+  var ilines = (intake && intake.lines) || [];
+  var intakeRemark = intake ? (intake.remark||'') : '';
   for(var w=0;w<8;w++){
+    var IL = ilines[w];
     html+='<div class="wh-row">'
       +'<span class="wh-indent">'+whLabels[w]+'</span>'
-      +'<span class="wh-o"></span>'
+      +'<span class="wh-o">'+(IL?esc(IL.no):'')+'</span>'
       +'<span class="wh-name">สินค้า</span>'
-      +'<div class="wh-line"></div>'
+      +'<div class="wh-line">'+(IL?esc(IL.product)+' ('+fDateBE(IL.date)+')':'')+'</div>'
       +'<span class="wh-qty">จำนวน</span>'
-      +'<div class="wh-line2"></div>'
+      +'<div class="wh-line2">'+(IL?esc(String(IL.qty)):'')+'</div>'
       +'<span class="wh-unit">หน่วย</span>'
-      +'<div class="wh-line3"></div>'
+      +'<div class="wh-line3">'+(IL?esc(IL.unit):'')+'</div>'
       +'</div>';
   }
   html+='</div>';
 
   /* 8. หมายเหตุ 2 แถว */
   html+='<div class="remark-wrap">'
-    +'<div class="remark-row"><span class="remark-lbl">หมายเหตุ :</span><div class="remark-line"></div></div>'
+    +'<div class="remark-row"><span class="remark-lbl">หมายเหตุ :</span><div class="remark-line">'+esc(intakeRemark)+'</div></div>'
     +'<div class="remark-row"><span class="remark-lbl" style="visibility:hidden;">หมายเหตุ :</span><div class="remark-line"></div></div>'
     +'</div>';
 
   html+='</div>'; // .doc-page
   html+='</body></html>';
 
+  return html;
+}
+
+function printCNForm(r){
+  if(!r){ alert('ไม่พบข้อมูล'); return; }
   var w=window.open('','_blank','width=920,height=900,toolbar=0,scrollbars=1');
   if(!w){alert('กรุณาอนุญาต popup เพื่อปริ้นท์');return;}
-  w.document.write(html);
+  w.document.write(buildCNFormHtml(r));
   w.document.close();
 }
 
@@ -4193,8 +4443,11 @@ document.addEventListener('DOMContentLoaded',function(){
   window.printMonthReport = printMonthReport;
   window.openMonthReport = openMonthReport;
   window.onDtChange = onDtChange;
-  window.onStChange = onStChange;
   window.addRow = addRow;
+  window.onCompanyChange = onCompanyChange;
+  window.openIntakeForm = openIntakeForm;
+  window.submitIntake = submitIntake;
+  window.ikDatePreview = ikDatePreview;
   window.delRow = delRow;
   window.UP = UP;
   window.upDrop = upDrop;
