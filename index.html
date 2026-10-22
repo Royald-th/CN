@@ -581,13 +581,18 @@ select.fc option { background: var(--surface2); }
 .ith .ts-wrapper{width:100%;}
 .ith .ts-wrapper.single .ts-control{padding:5px 8px !important;min-height:34px !important;font-size:.82rem !important;}
 
-.ik-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 0;border-bottom:1px dashed var(--border);}
-.ik-no{width:104px;border-radius:999px !important;text-align:center;}
-.ik-lbl{font-size:.8rem;font-weight:600;color:var(--ink2);}
-.ik-prod{flex:1;min-width:220px;}
-.ik-date{width:150px;}
-.ik-dp{font-size:.78rem;color:var(--muted);min-width:92px;}
-.ik-q,.ik-u{width:88px;}
+.ik-head,.ik-row{display:grid;grid-template-columns:110px minmax(220px,1fr) 170px 100px 100px;gap:8px;align-items:start;}
+.ik-head{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:0 0 6px;border-bottom:1px solid var(--border2);}
+.ik-row{padding:8px 0;border-bottom:1px dashed var(--border);}
+.ik-cell{min-width:0;}
+.ik-no{border-radius:999px !important;text-align:center;}
+.ik-dp{display:block;font-size:.7rem;color:var(--muted);margin-top:3px;min-height:1em;}
+@media (max-width:768px){
+  .ik-head{display:none;}
+  .ik-row{grid-template-columns:1fr 1fr;}
+  .ik-cell.ik-c-prod{grid-column:1 / -1;order:-1;}
+  .ik-cell::before{content:attr(data-l);display:block;font-size:.66rem;color:var(--muted);margin-bottom:2px;}
+}
 
 /* Radio */
 .rg { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -1194,16 +1199,17 @@ select.fc option { background: var(--surface2); }
 
         <!-- ── VIEW: นำสินค้าเข้าคลัง (Admin + Warehouse) — บันทึกแล้วรายการเสร็จสิ้น + เซฟ PDF ── -->
         <div id="view-intake" style="display:none;">
-          <div class="card" style="max-width:900px;">
+          <div class="card" style="max-width:1100px;">
             <div class="card-header">
               <span class="card-title">นำสินค้าเข้าคลัง</span>
               <span id="intake-id-badge" class="mono" style="color:var(--blue);"></span>
             </div>
             <div class="card-body">
               <div id="intake-err" class="alert ae" style="margin-bottom:12px;"></div>
-              <div id="intake-summary" style="font-size:.8rem;color:var(--ink2);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;margin-bottom:14px;line-height:1.7;"></div>
+              <div id="intake-warn"></div>
+              <div id="intake-detail" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;"></div>
               <p style="font-size:.76rem;color:var(--muted);margin-bottom:6px;">
-                กรอกอย่างน้อย 1 บรรทัด (สูงสุด 8) — เลขที่คลัง / สินค้า / วันที่ / จำนวน / หน่วย ต้องครบทุกช่องในบรรทัดที่ใช้ บรรทัดที่เว้นว่างทั้งบรรทัดจะถูกข้าม
+                กรอกอย่างน้อย 1 บรรทัด (สูงสุด 8) — เลขที่คลัง / สินค้า / จำนวน / หน่วย ต้องครบในบรรทัดที่ใช้ (วันหมดอายุไม่บังคับ) บรรทัดที่เว้นว่างทั้งบรรทัดจะถูกข้าม
               </p>
               <div id="intake-rows"></div>
               <div class="fg" style="margin-top:14px;">
@@ -1485,6 +1491,12 @@ function fDateFull(s){
 function fDateBE(iso){
   var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
   return m ? m[3]+'/'+m[2]+'/'+(parseInt(m[1],10)+543) : '';
+}
+/* ประมาณขนาดตัวอักษร (pt) ให้ข้อความอยู่บรรทัดเดียวในความกว้างที่กำหนด (ไทยกว้างเฉลี่ย ≈ 0.5em/ตัว)
+   ยาวเกิน minPt ก็ยังอยู่บรรทัดเดียว — CSS ตัดส่วนเกินด้วย … */
+function fitPt(text, widthPt, maxPt, minPt){
+  var n = String(text == null ? '' : text).length || 1;
+  return Math.max(minPt, Math.min(maxPt, Math.round(widthPt / (n * 0.5) * 10) / 10));
 }
 function badge(s){
   var cls={'รอของ':'bw','กำลังดำเนินการ':'bp','เสร็จสิ้น':'bd'};
@@ -2029,24 +2041,24 @@ function _intakeDetailHtml(r){
   var td = 'padding:4px 7px;border:1px solid var(--border);';
   var rows = (d.lines || []).map(function(L){
     return '<tr><td style="'+td+'text-align:center;">'+esc(L.no)+'</td>'
-      +'<td style="'+td+'color:var(--ink);">'+esc(L.product)+' <span style="color:var(--muted);">('+fDateBE(L.date)+')</span></td>'
+      +'<td style="'+td+'color:var(--ink);">'+esc(L.product)+'</td>'
+      +'<td style="'+td+'text-align:center;">'+(L.date ? fDateBE(L.date) : '-')+'</td>'
       +'<td style="'+td+'text-align:center;">'+esc(String(L.qty))+'</td>'
       +'<td style="'+td+'">'+esc(L.unit)+'</td></tr>';
   }).join('');
   return '<div><div class="lbl" style="margin-top:10px;">📦 นำสินค้าเข้าคลัง'
     +(d.version>1 ? ' <span style="color:var(--muted);font-weight:400;font-size:.7rem;">(แก้ไขครั้งที่ '+(d.version-1)+')</span>' : '')+'</div>'
     +(rows ? '<table style="width:100%;border-collapse:collapse;font-size:.78rem;margin-top:4px;"><thead><tr>'
-        +'<th style="'+th+'">เลขที่คลัง</th><th style="'+th+'">สินค้า</th><th style="'+th+'">จำนวน</th><th style="'+th+'">หน่วย</th></tr></thead><tbody>'+rows+'</tbody></table>' : '')
+        +'<th style="'+th+'">เลขที่คลัง</th><th style="'+th+'">สินค้า</th><th style="'+th+'">วันหมดอายุ</th><th style="'+th+'">จำนวน</th><th style="'+th+'">หน่วย</th></tr></thead><tbody>'+rows+'</tbody></table>' : '')
     +(d.remark ? '<div style="font-size:.78rem;color:var(--ink2);margin-top:6px;">หมายเหตุ: '+esc(d.remark)+'</div>' : '')
     +(r.intakePdfUrl ? '<a class="btn btn-outline btn-sm" style="margin-top:8px;" href="'+esc(r.intakePdfUrl)+'" target="_blank" rel="noopener">📄 เปิด PDF นำสินค้าเข้า</a>' : '')
     +'</div>';
 }
 
-function viewDetail(id,isAdmin){
-  var cid=(id||'').trim();
-  var list=isAdmin?adminRecs:ST.cnList;
-  var r=list.find(function(x){return String(x.id).trim()===cid;});
-  if(!r){alert('ไม่พบข้อมูล');return;}
+/* เนื้อหา body ของ modal ดูรายละเอียด CN — ใช้ซ้ำในฟอร์มนำสินค้าเข้า
+   opts.forIntake = ไม่แสดงตารางนำสินค้าเข้าและรูปหลักฐานเดิม (กำลังกรอกอยู่ในฟอร์มนั้นเอง) */
+function cnDetailBodyHtml(r, opts){
+  opts = opts || {};
   var items=parseItems(r.items||'');
   var itHtml=items.length
     ?'<table style="width:100%;border-collapse:collapse;font-size:.78rem;margin-top:4px;">'
@@ -2067,11 +2079,8 @@ function viewDetail(id,isAdmin){
   // รูปประกอบรายการ (คนสร้างแนบ) กับ หลักฐานการดำเนินการ (คลังแนบ) เป็นคนละชุด
   // แสดงแยกกันเพื่อให้รู้ว่าใครแนบตอนไหน
   var proof = _imgGalleryHtml(r.attachImageUrl, '📷 รูปภาพประกอบรายการ')
-            + _imgGalleryHtml(r.imageUrl,       '✅ หลักฐานการดำเนินการ');
-    var key='_cn_'+r.id.replace(/\W/g,'_');window[key]=r;
-
-  openMdl('รายละเอียด CN',
-    '<div style="display:grid;gap:11px;">'
+            + (opts.forIntake ? '' : _imgGalleryHtml(r.imageUrl, '✅ หลักฐานการดำเนินการ'));
+  return '<div style="display:grid;gap:11px;">'
     +'<div class="g2" style="gap:10px;">'
     +'<div><div class="lbl">เลขที่</div><div class="mono" style="font-size:.84rem;color:var(--blue);">'+r.id+'</div></div>'
     +'<div><div class="lbl">วันที่</div><div style="color:var(--ink);">'+fDate(r.createdAt)+'</div></div>'
@@ -2091,9 +2100,19 @@ function viewDetail(id,isAdmin){
     +(r.processingAt?'<div><div class="lbl">เริ่มดำเนินการ</div><div style="color:var(--blue);font-size:.82rem;">'+fDateFull(r.processingAt)+'</div></div>':'<div></div>')
     +'</div>'
     +(r.completedAt?'<div><div class="lbl">วันที่เสร็จสิ้น</div><div style="color:var(--green);font-size:.82rem;">'+fDateFull(r.completedAt)+'</div></div>':'')
-    +_intakeDetailHtml(r)
+    +(opts.forIntake ? '' : _intakeDetailHtml(r))
     +proof
-    +'</div>',
+    +'</div>';
+}
+
+function viewDetail(id,isAdmin){
+  var cid=(id||'').trim();
+  var list=isAdmin?adminRecs:ST.cnList;
+  var r=list.find(function(x){return String(x.id).trim()===cid;});
+  if(!r){alert('ไม่พบข้อมูล');return;}
+  var key='_cn_'+r.id.replace(/\W/g,'_');window[key]=r;
+
+  openMdl('รายละเอียด CN', cnDetailBodyHtml(r),
     (isAdminLevel()
       ? '<button class="btn btn-pri btn-sm" style="min-width:130px;justify-content:center;" onclick="closeMdl();setTimeout(function(){openStatusModal(\''+r.id+'\',\''+r.status+'\')},80)">'
         +'<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> เปลี่ยนสถานะ</button>'
@@ -3014,19 +3033,17 @@ function ikDatePreview(i){
 function renderIntakeRows(prevLines){
   var box = document.getElementById('intake-rows');
   box.querySelectorAll('select').forEach(function(sel){ if(sel.tomselect) sel.tomselect.destroy(); });
-  var h = '';
+  // หัวคอลัมน์ครั้งเดียว + ทุกช่องอยู่แถวเดียว (จอแคบซ้อน 2 บรรทัดด้วย CSS) — วันที่ = วันหมดอายุของสินค้า (ไม่บังคับ)
+  var h = '<div class="ik-head"><div>เลขที่คลัง</div><div>สินค้า</div><div>วันหมดอายุ</div><div>จำนวน</div><div>หน่วย</div></div>';
   for(var i=0; i<IK_ROWS; i++){
     var L = prevLines[i] || {};
     h += '<div class="ik-row">'
-      +'<input type="text" id="ik-no-'+i+'" class="fc ik-no" maxlength="30" placeholder="เลขที่คลัง" title="เลขที่คลัง" value="'+esc(L.no||'')+'"/>'
-      +'<span class="ik-lbl">สินค้า</span>'
-      +'<div class="ik-prod"><select id="ik-p-'+i+'"></select></div>'
-      +'<input type="date" id="ik-d-'+i+'" class="fc ik-date" value="'+esc(L.date||'')+'" oninput="ikDatePreview('+i+')"/>'
-      +'<span class="ik-dp" id="ik-dp-'+i+'">'+(L.date ? '('+fDateBE(L.date)+')' : '')+'</span>'
-      +'<span class="ik-lbl">จำนวน</span>'
-      +'<input type="number" min="0" step="any" id="ik-q-'+i+'" class="fc ik-q" value="'+esc(L.qty!==undefined ? String(L.qty) : '')+'"/>'
-      +'<span class="ik-lbl">หน่วย</span>'
-      +'<input type="text" id="ik-u-'+i+'" class="fc ik-u" maxlength="30" value="'+esc(L.unit||'')+'"/>'
+      +'<div class="ik-cell" data-l="เลขที่คลัง"><input type="text" id="ik-no-'+i+'" class="fc ik-no" maxlength="30" placeholder="เลขที่คลัง" value="'+esc(L.no||'')+'"/></div>'
+      +'<div class="ik-cell ik-c-prod" data-l="สินค้า"><select id="ik-p-'+i+'"></select></div>'
+      +'<div class="ik-cell" data-l="วันหมดอายุ"><input type="date" id="ik-d-'+i+'" class="fc" value="'+esc(L.date||'')+'" oninput="ikDatePreview('+i+')"/>'
+        +'<span class="ik-dp" id="ik-dp-'+i+'">'+(L.date ? '('+fDateBE(L.date)+')' : '')+'</span></div>'
+      +'<div class="ik-cell" data-l="จำนวน"><input type="number" min="0" step="any" id="ik-q-'+i+'" class="fc" value="'+esc(L.qty!==undefined ? String(L.qty) : '')+'"/></div>'
+      +'<div class="ik-cell" data-l="หน่วย"><input type="text" id="ik-u-'+i+'" class="fc" maxlength="30" value="'+esc(L.unit||'')+'"/></div>'
       +'</div>';
   }
   box.innerHTML = h;
@@ -3045,10 +3062,9 @@ function openIntakeForm(cnId){
   var prev = {}; try{ prev = JSON.parse(rec.intakeData || '{}'); }catch(e){}
   hideErr('intake-err');
   document.getElementById('intake-id-badge').textContent = cnId;
-  document.getElementById('intake-summary').innerHTML =
-    '<b>'+esc(rec.docType)+'</b> — '+esc(rec.customerName)+(rec.customerCode?' ('+esc(rec.customerCode)+')':'')
-    +'<br/>สินค้าที่ลูกค้าแจ้ง: '+esc(parseItems(rec.items||'').map(function(it){ return it.name+' x'+it.qty+' '+it.unit; }).join(', ') || '-')
-    +(rec.status==='เสร็จสิ้น' ? '<br/><span style="color:var(--amber);">⚠️ รายการนี้เสร็จสิ้นแล้ว — บันทึกใหม่จะสร้าง PDF ฉบับใหม่ (ไฟล์เดิมยังคงอยู่ใน Drive)</span>' : '');
+  document.getElementById('intake-warn').innerHTML = rec.status==='เสร็จสิ้น'
+    ? '<div style="color:var(--amber);font-size:.8rem;margin-bottom:10px;">⚠️ รายการนี้เสร็จสิ้นแล้ว — บันทึกใหม่จะสร้าง PDF ฉบับใหม่ (ไฟล์เดิมยังคงอยู่ใน Drive)</div>' : '';
+  document.getElementById('intake-detail').innerHTML = cnDetailBodyHtml(rec, { forIntake:true });
   renderIntakeRows(prev.lines || []);
   document.getElementById('intake-remark').value = prev.remark || '';
   UP.intake.clear();
@@ -3071,7 +3087,6 @@ async function submitIntake(){
     var tag = 'บรรทัดที่ '+(i+1)+': ';
     if(!no){ showErr('intake-err', tag+'กรุณากรอกเลขที่คลัง'); return; }
     if(!product){ showErr('intake-err', tag+'กรุณาเลือกสินค้า'); return; }
-    if(!date){ showErr('intake-err', tag+'กรุณาเลือกวันที่'); return; }
     var qn = Number(qty);
     if(!qty || !isFinite(qn) || qn <= 0){ showErr('intake-err', tag+'จำนวนต้องเป็นตัวเลขมากกว่า 0'); return; }
     if(!unit){ showErr('intake-err', tag+'กรุณากรอกหน่วย'); return; }
@@ -3457,21 +3472,21 @@ html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background
 .sn-center{text-align:center;font-size:7pt;color:#222;margin-top:2pt;line-height:1.55;}
 .sn-dt{text-align:center;font-size:7.5pt;margin-top:2pt;margin-bottom:1pt;}
 
-.wh-wrap{margin-top:12pt;margin-left:auto;margin-right:auto;width:450pt;font-size:8pt;}
-.wh-row{display:flex;align-items:center;gap:5pt;margin-bottom:5pt;}
-.wh-indent{display:inline-block;width:72pt;flex-shrink:0;font-weight:700;font-size:8pt;white-space:nowrap;}
-.wh-o{width:22pt;height:22pt;border:.75pt solid #000;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:6.5pt;font-weight:700;overflow:hidden;}
-.wh-name{font-size:8pt;white-space:nowrap;min-width:18pt;}
-.wh-line{width:150pt;border-bottom:.5pt solid #777;min-height:9pt;font-size:7.5pt;line-height:1.15;}
-.wh-qty{white-space:nowrap;font-size:8pt;padding:0 4pt;}
-.wh-line2{width:50pt;border-bottom:.5pt solid #777;min-height:9pt;font-size:8pt;text-align:center;}
-.wh-unit{white-space:nowrap;font-size:8pt;padding:0 4pt;}
-.wh-line3{width:50pt;border-bottom:.5pt solid #777;min-height:9pt;font-size:8pt;text-align:center;}
+.wh-wrap{margin-top:12pt;width:100%;font-size:9pt;}
+.wh-row{display:flex;flex-wrap:nowrap;align-items:center;gap:5pt;margin-bottom:5pt;}
+.wh-indent{display:inline-block;width:62pt;flex-shrink:0;font-weight:700;font-size:8pt;white-space:nowrap;}
+.wh-o{width:26pt;height:26pt;border:.75pt solid #000;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9pt;font-weight:700;overflow:hidden;white-space:nowrap;}
+.wh-name{font-size:9pt;white-space:nowrap;flex-shrink:0;}
+.wh-line{flex:1 1 auto;min-width:0;border-bottom:.5pt solid #777;min-height:13pt;font-size:10pt;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wh-qty{white-space:nowrap;font-size:9pt;padding:0 2pt;flex-shrink:0;}
+.wh-line2{width:46pt;flex:none;border-bottom:.5pt solid #777;min-height:13pt;font-size:10pt;line-height:1.3;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wh-unit{white-space:nowrap;font-size:9pt;padding:0 2pt;flex-shrink:0;}
+.wh-line3{width:46pt;flex:none;border-bottom:.5pt solid #777;min-height:13pt;font-size:10pt;line-height:1.3;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 .remark-wrap{margin-top:20pt;font-size:8pt;}
 .remark-row{display:flex;align-items:flex-end;gap:3pt;margin-bottom:7pt;}
 .remark-lbl{font-weight:700;white-space:nowrap;}
-.remark-line{flex:1;border-bottom:.5pt solid #777;min-height:9pt;font-size:8pt;}
+.remark-line{flex:1;min-width:0;border-bottom:.5pt solid #777;min-height:13pt;font-size:10pt;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 /* ── Preview toolbar: ลอยด้านบน ให้ดูก่อนตัดสินใจพิมพ์ (ซ่อนตอนพิมพ์จริง) ── */
 body{background:#525659;}
@@ -3608,22 +3623,24 @@ body{background:#525659;}
   var intakeRemark = intake ? (intake.remark||'') : '';
   for(var w=0;w<8;w++){
     var IL = ilines[w];
+    // ชื่อสินค้า (+ วว/ดด/ปปปป พ.ศ. ถ้ากรอกวันไว้) — ย่อตัวอักษรอัตโนมัติให้อยู่บรรทัดเดียวไม่ตัดขึ้นบรรทัดใหม่
+    var prodTxt = IL ? IL.product + (IL.date ? ' ('+fDateBE(IL.date)+')' : '') : '';
     html+='<div class="wh-row">'
       +'<span class="wh-indent">'+whLabels[w]+'</span>'
-      +'<span class="wh-o">'+(IL?esc(IL.no):'')+'</span>'
+      +'<span class="wh-o"'+(IL?' style="font-size:'+fitPt(IL.no,24,9,5.5)+'pt"':'')+'>'+(IL?esc(IL.no):'')+'</span>'
       +'<span class="wh-name">สินค้า</span>'
-      +'<div class="wh-line">'+(IL?esc(IL.product)+' ('+fDateBE(IL.date)+')':'')+'</div>'
+      +'<div class="wh-line"'+(IL?' style="font-size:'+fitPt(prodTxt,200,10,7)+'pt"':'')+'>'+esc(prodTxt)+'</div>'
       +'<span class="wh-qty">จำนวน</span>'
-      +'<div class="wh-line2">'+(IL?esc(String(IL.qty)):'')+'</div>'
+      +'<div class="wh-line2"'+(IL?' style="font-size:'+fitPt(String(IL.qty),44,10,7)+'pt"':'')+'>'+(IL?esc(String(IL.qty)):'')+'</div>'
       +'<span class="wh-unit">หน่วย</span>'
-      +'<div class="wh-line3">'+(IL?esc(IL.unit):'')+'</div>'
+      +'<div class="wh-line3"'+(IL?' style="font-size:'+fitPt(IL.unit,44,10,7)+'pt"':'')+'>'+(IL?esc(IL.unit):'')+'</div>'
       +'</div>';
   }
   html+='</div>';
 
   /* 8. หมายเหตุ 2 แถว */
   html+='<div class="remark-wrap">'
-    +'<div class="remark-row"><span class="remark-lbl">หมายเหตุ :</span><div class="remark-line">'+esc(intakeRemark)+'</div></div>'
+    +'<div class="remark-row"><span class="remark-lbl">หมายเหตุ :</span><div class="remark-line" style="font-size:'+fitPt(intakeRemark,400,10,7)+'pt">'+esc(intakeRemark)+'</div></div>'
     +'<div class="remark-row"><span class="remark-lbl" style="visibility:hidden;">หมายเหตุ :</span><div class="remark-line"></div></div>'
     +'</div>';
 
