@@ -1291,6 +1291,39 @@ select.fc option { background: var(--surface2); }
           </div>
         </div>
 
+        <!-- ── VIEW: รายงานสินค้าเข้า (ทุก role ยกเว้น User) ── -->
+        <div id="view-intake-report" style="display:none;">
+          <div class="card">
+            <div class="card-header"><span class="card-title">รายงานสินค้าเข้า</span></div>
+            <div class="card-body">
+              <p style="font-size:.82rem;color:var(--ink2);margin-bottom:14px;line-height:1.7;">
+                สรุปสินค้าที่คลังรับเข้าแต่ละคลัง จาก CN ที่ "เสร็จสิ้น" แล้ว นับตามวันที่เสร็จสิ้น
+                ถ้าเลือก "เลขที่ CN" ระบบจะดึงเฉพาะใบนั้นและไม่ใช้ช่วงวันที่ ยอดรวมแยกตามหน่วย ไม่บวกข้ามหน่วย
+              </p>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:14px;">
+                <div><div class="lbl">ตั้งแต่วันที่</div><input type="date" id="rp-from" class="fc"/></div>
+                <div><div class="lbl">ถึงวันที่</div><input type="date" id="rp-to" class="fc"/></div>
+                <div><div class="lbl">ความถี่ (จัดกลุ่มยอด)</div>
+                  <select id="rp-freq" class="fc">
+                    <option value="all">รวมทั้งช่วง</option>
+                    <option value="day">รายวัน</option>
+                    <option value="week">รายสัปดาห์</option>
+                    <option value="month">รายเดือน</option>
+                  </select></div>
+                <div><div class="lbl">ลูกค้า</div><select id="rp-cust" multiple></select></div>
+                <div><div class="lbl">ผู้แทน (ผู้สร้าง CN)</div><select id="rp-rep" multiple></select></div>
+                <div><div class="lbl">เลขที่ CN</div><select id="rp-ids" multiple></select></div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="irRun()">แสดงรายงาน</button>
+                <button class="btn btn-outline" onclick="irXlsx()">⬇ Excel (.xlsx)</button>
+                <button class="btn btn-outline" onclick="irPrint()">🖨 PDF / พิมพ์</button>
+              </div>
+              <div id="rp-out" style="margin-top:18px;"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- ── VIEW: QR CODE (Admin + Warehouse) ── -->
         <div id="view-qrcode" style="display:none;">
           <div class="card" style="max-width:720px;">
@@ -1371,10 +1404,10 @@ window.ST = ST; window.IMG = IMG;
    ══════════════════════════════════════════ */
 // แยก "ยังไม่เคยโหลดเลย" ออกจาก "โหลดแล้วว่างจริง" — กันปัญหา empty-state แวบ
 var _dataLoaded = { 'view-admin-dash':false, 'view-user-dash':false, 'view-users':false,
-                     'view-archive':false, 'view-backup':false };
+                     'view-archive':false, 'view-backup':false, 'view-intake-report':false };
 // request generation counter ต่อ view — กัน race condition เมื่อสลับเมนูเร็ว ๆ
 var _fetchGen = { 'view-admin-dash':0, 'view-user-dash':0, 'view-users':0,
-                   'view-archive':0, 'view-backup':0 };
+                   'view-archive':0, 'view-backup':0, 'view-intake-report':0 };
 var _lastView = null; // view ปัจจุบัน กันการยิง fetch ซ้ำเมื่อคลิกเมนูเดิม
 
 /* ══════════════════════════════════════════
@@ -1774,6 +1807,9 @@ function buildNav(role){
   var iBk   = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>';
   var iQr   = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14h1M14 20h3M20 17v4"/></svg>';
 
+  var iBox  = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>';
+  var IR_NAV = "showView('view-intake-report','รายงานสินค้าเข้า');(async()=>{await loadViewCached('view-intake-report',loadIntakeReport);})();";
+
   function navItem(view, label, icon, clickFn){
     return '<div class="nav-item"'+(view?' data-view="'+view+'"':'')+' onclick="'+clickFn+'">'+icon+label+'</div>';
   }
@@ -1792,6 +1828,7 @@ function buildNav(role){
     html += navItem('view-users','ผู้ใช้งาน',iUser,"showView('view-users','จัดการผู้ใช้งาน');(async()=>{await loadViewCached('view-users',loadUsers);})();");
     html += navSection('รายงาน');
     html += navItem('','รายงานรายเดือน',iCal,"openMonthReport();");
+    html += navItem('view-intake-report','รายงานสินค้าเข้า',iBox,IR_NAV);
     html += navItem('','Export CSV',iDl,"exportCSV();");
     html += navSection('ข้อมูล');
     html += navItem('view-archive','Archive',iArc,"showView('view-archive','รายการ CN ที่ Archive');(async()=>{await loadViewCached('view-archive',loadArchive);})();");
@@ -1807,6 +1844,7 @@ function buildNav(role){
     html += navItem('view-users','ผู้ใช้งาน',iUser,"showView('view-users','จัดการผู้ใช้งาน');(async()=>{await loadViewCached('view-users',loadUsers);})();");
     html += navSection('รายงาน');
     html += navItem('','รายงานรายเดือน',iCal,"openMonthReport();");
+    html += navItem('view-intake-report','รายงานสินค้าเข้า',iBox,IR_NAV);
     html += navItem('','Export CSV',iDl,"exportCSV();");
     html += navSection('ข้อมูล');
     html += navItem('view-archive','Archive',iArc,"showView('view-archive','รายการ CN ที่ Archive');(async()=>{await loadViewCached('view-archive',loadArchive);})();");
@@ -1818,6 +1856,7 @@ function buildNav(role){
     html += navItem('view-admin-dash','ภาพรวม CN',iGrid,"showView('view-admin-dash','รายงาน (บัญชี)');(async()=>{await loadViewCached('view-admin-dash',loadAdmin);})();");
     html += navSection('รายงาน');
     html += navItem('','รายงานรายเดือน',iCal,"openMonthReport();");
+    html += navItem('view-intake-report','รายงานสินค้าเข้า',iBox,IR_NAV);
     html += navItem('','Export CSV',iDl,"exportCSV();");
 
   } else {
@@ -3365,6 +3404,269 @@ function onReportModeChange(val){
   if(sel) sel.style.display=val==='person'?'block':'none';
 }
 
+/* ══════════════════════════════════════════
+   รายงานสินค้าเข้า — คำนวณฝั่งหน้าเว็บจาก adminRecs (getCNList คืน intakeData ให้ทุก role ที่เห็นทุกใบอยู่แล้ว)
+   นับเฉพาะ CN สถานะ "เสร็จสิ้น" ตามวัน completedAt | ยอดรวมแยกตามหน่วย ไม่บวกข้ามหน่วย
+   ══════════════════════════════════════════ */
+/* IR-PURE-START */
+var IR_TH_MONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+function irParseLines(r){
+  var d={}; try{ d=r.intakeData ? (typeof r.intakeData==='string' ? JSON.parse(r.intakeData) : r.intakeData) : {}; }catch(e){ d={}; }
+  return (d && Array.isArray(d.lines)) ? d.lines : [];
+}
+function irYmdOfDate(d){
+  var m=d.getMonth()+1, day=d.getDate();
+  return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(day<10?'0':'')+day;
+}
+function irLocalYmd(iso){
+  if(!iso) return '';
+  var d=new Date(iso); return isNaN(d.getTime()) ? '' : irYmdOfDate(d);
+}
+function irYmdBE(ymd){ if(!ymd) return ''; var p=ymd.split('-'); return p[2]+'/'+p[1]+'/'+(Number(p[0])+543); }
+function irCustKey(r){ return r.customerCode || ('name:'+(r.customerName||'')); }
+function irRound(v){ return Math.round(v*10000)/10000; }
+function irCmp(a,b){ return String(a).localeCompare(String(b),'th',{numeric:true}); }
+function irPeriod(ymd,freq){
+  if(!ymd || freq==='all' || !freq) return '';
+  if(freq==='day') return ymd;
+  if(freq==='month') return ymd.slice(0,7);
+  var p=ymd.split('-'), d=new Date(+p[0],+p[1]-1,+p[2]);   // week → วันจันทร์ของสัปดาห์นั้น
+  d.setDate(d.getDate()-((d.getDay()+6)%7));
+  return irYmdOfDate(d);
+}
+function irPeriodLabel(key,freq){
+  if(!key) return freq==='all' ? 'ทั้งช่วง' : 'ไม่ระบุวันที่';
+  if(freq==='day') return irYmdBE(key);
+  if(freq==='month'){ var p=key.split('-'); return IR_TH_MONTHS[+p[1]-1]+' '+(+p[0]+543); }
+  var q=key.split('-'), e=new Date(+q[0],+q[1]-1,+q[2]+6);
+  return 'สัปดาห์ '+irYmdBE(key)+' – '+irYmdBE(irYmdOfDate(e));
+}
+/* lines: [{wh,product,unit,qty}] → ตารางแถว=(สินค้า,หน่วย) คอลัมน์=คลัง + แถวรวมต่อหน่วย */
+function irSummarize(lines){
+  var whSet={}, rowMap={}, rows=[], totMap={}, totals=[];
+  lines.forEach(function(l){
+    whSet[l.wh]=1;
+    var rk=l.product+'\u0001'+l.unit, row=rowMap[rk];
+    if(!row){ row=rowMap[rk]={product:l.product,unit:l.unit,cells:{},total:0}; rows.push(row); }
+    row.cells[l.wh]=irRound((row.cells[l.wh]||0)+l.qty); row.total=irRound(row.total+l.qty);
+    var t=totMap[l.unit];
+    if(!t){ t=totMap[l.unit]={unit:l.unit,cells:{},total:0}; totals.push(t); }
+    t.cells[l.wh]=irRound((t.cells[l.wh]||0)+l.qty); t.total=irRound(t.total+l.qty);
+  });
+  rows.sort(function(a,b){ return irCmp(a.product,b.product) || irCmp(a.unit,b.unit); });
+  totals.sort(function(a,b){ return irCmp(a.unit,b.unit); });
+  return { whs:Object.keys(whSet).sort(irCmp), rows:rows, totals:totals };
+}
+/* f: {from,to:'YYYY-MM-DD', freq:'all|day|week|month', customers:[irCustKey], reps:[lineUID], ids:[CN id]} */
+function buildIntakeReport(recs,f){
+  f=f||{};
+  var freq=f.freq||'all', ids=f.ids||[], custs=f.customers||[], reps=f.reps||[];
+  var detail=[], cnSet={};
+  (recs||[]).forEach(function(r){
+    if(r.status!=='เสร็จสิ้น') return;
+    var day=irLocalYmd(r.completedAt);
+    if(ids.length){ if(ids.indexOf(r.id)<0) return; }          // ระบุเลข CN → ข้ามช่วงวันที่
+    else{
+      if(!day) return;
+      if(f.from && day<f.from) return;
+      if(f.to && day>f.to) return;
+    }
+    if(custs.length && custs.indexOf(irCustKey(r))<0) return;
+    if(reps.length && reps.indexOf(r.lineUID)<0) return;
+    irParseLines(r).forEach(function(L){
+      if(!L) return;
+      var qty=Number(L.qty);
+      if(!isFinite(qty) || !L.product) return;
+      cnSet[r.id]=1;
+      detail.push({ id:r.id, day:day, period:irPeriod(day,freq), code:r.customerCode||'', customer:r.customerName||'',
+        rep:r.creatorName||'', wh:String(L.no==null?'':L.no).trim()||'-', product:String(L.product),
+        expiry:L.date||'', qty:qty, unit:String(L.unit||'').trim()||'-' });
+    });
+  });
+  detail.sort(function(a,b){ return irCmp(a.day,b.day) || irCmp(a.id,b.id); });
+  var pmap={}, periods=[];
+  if(freq!=='all'){
+    detail.forEach(function(d){ (pmap[d.period]=pmap[d.period]||[]).push(d); });
+    periods=Object.keys(pmap).sort().map(function(k){ return {key:k, label:irPeriodLabel(k,freq), summary:irSummarize(pmap[k])}; });
+  }
+  return { freq:freq, detail:detail, summary:irSummarize(detail), periods:periods, cnCount:Object.keys(cnSet).length };
+}
+/* IR-PURE-END */
+
+var IR_CSS='.rpt{width:100%;border-collapse:collapse;margin:6px 0 14px;font-size:.8rem}'
+  +'.rpt th{background:#1c1c1c;color:#fff;padding:5px 7px;text-align:left;font-weight:700;border:1px solid #333;white-space:nowrap}'
+  +'.rpt td{padding:4px 7px;border:1px solid var(--border,#ddd);color:var(--ink,#000)}'
+  +'.rpt .n{text-align:right;font-variant-numeric:tabular-nums}'
+  +'.rpt tr.tot td{font-weight:700;background:var(--surface2,#f1f1f1)}'
+  +'.rp-h{font-size:.95rem;font-weight:700;margin:18px 0 4px;color:var(--ink,#000)}'
+  +'.rp-sub{font-size:.8rem;font-weight:700;margin:12px 0 2px;color:var(--ink2,#333)}'
+  +'.rp-empty,.rp-stat{color:var(--muted,#666);font-size:.82rem;padding:6px 0}'
+  +'.rp-scroll{overflow-x:auto}';
+var _rpTs=null, _rpLast=null, _rpF=null;
+
+function irFmt(v){ return Number(v).toLocaleString('en-US',{maximumFractionDigits:4}); }
+function irMatrixHtml(s){
+  if(!s.rows.length) return '<div class="rp-empty">ไม่มีข้อมูล</div>';
+  var h='<div class="rp-scroll"><table class="rpt"><thead><tr><th>สินค้า</th><th>หน่วย</th>'
+    +s.whs.map(function(w){return '<th class="n">'+esc(w)+'</th>';}).join('')+'<th class="n">รวม</th></tr></thead><tbody>';
+  s.rows.forEach(function(r){
+    h+='<tr><td>'+esc(r.product)+'</td><td>'+esc(r.unit)+'</td>'
+      +s.whs.map(function(w){return '<td class="n">'+(r.cells[w]==null?'':irFmt(r.cells[w]))+'</td>';}).join('')
+      +'<td class="n"><b>'+irFmt(r.total)+'</b></td></tr>';
+  });
+  s.totals.forEach(function(t){
+    h+='<tr class="tot"><td>รวมทั้งหมด</td><td>'+esc(t.unit)+'</td>'
+      +s.whs.map(function(w){return '<td class="n">'+(t.cells[w]==null?'':irFmt(t.cells[w]))+'</td>';}).join('')
+      +'<td class="n">'+irFmt(t.total)+'</td></tr>';
+  });
+  return h+'</tbody></table></div>';
+}
+function irDetailHtml(rep){
+  if(!rep.detail.length) return '<div class="rp-empty">ไม่มีข้อมูล</div>';
+  var h='<div class="rp-scroll"><table class="rpt"><thead><tr><th>#</th>'+(rep.freq!=='all'?'<th>ช่วง</th>':'')
+    +'<th>เลขที่ CN</th><th>วันที่รับเข้า</th><th>ลูกค้า</th><th>ผู้แทน</th><th>เลขที่คลัง</th><th>สินค้า</th><th>วันหมดอายุ</th><th class="n">จำนวน</th><th>หน่วย</th></tr></thead><tbody>';
+  rep.detail.forEach(function(d,i){
+    h+='<tr><td>'+(i+1)+'</td>'+(rep.freq!=='all'?'<td>'+esc(irPeriodLabel(d.period,rep.freq))+'</td>':'')
+      +'<td>'+esc(d.id)+'</td><td>'+irYmdBE(d.day)+'</td><td>'+esc((d.code?d.code+' ':'')+d.customer)+'</td><td>'+esc(d.rep)+'</td>'
+      +'<td>'+esc(d.wh)+'</td><td>'+esc(d.product)+'</td><td>'+irYmdBE(d.expiry)+'</td>'
+      +'<td class="n">'+irFmt(d.qty)+'</td><td>'+esc(d.unit)+'</td></tr>';
+  });
+  return h+'</tbody></table></div>';
+}
+function irReportHtml(rep){
+  var h='<div class="rp-h">สรุปยอดรับเข้าแยกตามคลัง'+(rep.freq!=='all'?' (รวมทั้งช่วง)':'')+'</div>'+irMatrixHtml(rep.summary);
+  if(rep.periods.length){
+    h+='<div class="rp-h">แยกตามช่วงเวลา</div>';
+    rep.periods.forEach(function(p){ h+='<div class="rp-sub">'+esc(p.label)+'</div>'+irMatrixHtml(p.summary); });
+  }
+  return h+'<div class="rp-h">รายละเอียดทีละรายการ</div>'+irDetailHtml(rep);
+}
+function irRangeText(f){
+  if(f.ids&&f.ids.length) return 'เฉพาะเลขที่ CN ที่เลือก ('+f.ids.length+' ใบ)';
+  return 'วันที่ '+(f.from?irYmdBE(f.from):'เริ่มต้น')+' – '+(f.to?irYmdBE(f.to):'ปัจจุบัน');
+}
+function irVals(ts){ var v=ts?ts.getValue():[]; return Array.isArray(v)?v:(v?[v]:[]); }
+function irFilters(){
+  var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
+  return { from:g('rp-from'), to:g('rp-to'), freq:g('rp-freq')||'all',
+    customers:irVals(_rpTs&&_rpTs.cust), reps:irVals(_rpTs&&_rpTs.rep), ids:irVals(_rpTs&&_rpTs.ids) };
+}
+function irRun(quiet){
+  var f=irFilters();
+  if(f.from && f.to && f.from>f.to){ if(!quiet) toast('วันที่เริ่มต้องไม่เกินวันที่สิ้นสุด','error'); return; }
+  _rpLast=buildIntakeReport(adminRecs,f); _rpF=f;
+  var out=document.getElementById('rp-out'); if(!out) return;
+  out.innerHTML='<div class="rp-stat">'+esc(irRangeText(f))+' · '+_rpLast.cnCount+' ใบ CN · '+_rpLast.detail.length+' บรรทัด</div>'+irReportHtml(_rpLast);
+}
+function irInit(){
+  if(_rpTs) return;
+  if(typeof TomSelect==='undefined') return;
+  if(!document.getElementById('rp-style')){
+    var st=document.createElement('style'); st.id='rp-style'; st.textContent=IR_CSS; document.head.appendChild(st);
+  }
+  var today=irYmdOfDate(new Date());
+  document.getElementById('rp-from').value=today.slice(0,8)+'01';
+  document.getElementById('rp-to').value=today;
+  var mk=function(id,ph){ return new TomSelect('#'+id,{plugins:['remove_button'],maxItems:null,maxOptions:null,placeholder:ph,dropdownParent:'body'}); };
+  _rpTs={ cust:mk('rp-cust','ทั้งหมด'), rep:mk('rp-rep','ทั้งหมด'), ids:mk('rp-ids','พิมพ์ค้นหาเลขที่ CN') };
+}
+function irFillOptions(){
+  if(!_rpTs) return;
+  var cust={}, rep={}, ids=[];
+  adminRecs.forEach(function(r){
+    if(r.status!=='เสร็จสิ้น' || !irParseLines(r).length) return;
+    cust[irCustKey(r)]=(r.customerCode?r.customerCode+' — ':'')+(r.customerName||'');
+    if(r.lineUID) rep[r.lineUID]=r.creatorName||r.lineUID;
+    ids.push({value:r.id,text:r.id+' — '+(r.customerName||'')});
+  });
+  var put=function(ts,opts){
+    var cur=ts.getValue(); ts.clear(true); ts.clearOptions(); ts.addOptions(opts); ts.setValue(cur,true);
+  };
+  var toOpts=function(m){ return Object.keys(m).sort(function(a,b){return irCmp(m[a],m[b]);}).map(function(k){return {value:k,text:m[k]};}); };
+  put(_rpTs.cust,toOpts(cust)); put(_rpTs.rep,toOpts(rep)); put(_rpTs.ids,ids);
+}
+async function loadIntakeReport(silent,gen,viewId){
+  irInit();
+  if(!_rpTs) throw new Error('ตัวเลือกค้นหายังโหลดไม่เสร็จ ลองใหม่อีกครั้ง');
+  var d=await apiGet({action:'getCNList'});
+  if(gen!==undefined && gen!==_fetchGen[viewId]) return;
+  if(!d.success) throw new Error(d.message||'โหลดข้อมูลไม่สำเร็จ');
+  adminRecs=d.records;
+  irFillOptions();
+  if(_rpLast) irRun(true);   // รีเฟรชผลที่แสดงอยู่ด้วยข้อมูลล่าสุด
+}
+
+function irMatrixAoa(s){
+  var aoa=[['สินค้า','หน่วย'].concat(s.whs,['รวม'])];
+  s.rows.forEach(function(r){ aoa.push([r.product,r.unit].concat(s.whs.map(function(w){return r.cells[w]==null?'':r.cells[w];}),[r.total])); });
+  s.totals.forEach(function(t){ aoa.push(['รวมทั้งหมด',t.unit].concat(s.whs.map(function(w){return t.cells[w]==null?'':t.cells[w];}),[t.total])); });
+  return aoa;
+}
+function irLoadXlsx(){
+  if(window.XLSX) return Promise.resolve();
+  return new Promise(function(res,rej){
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=res; s.onerror=rej; document.head.appendChild(s);
+  });
+}
+async function irXlsx(){
+  if(!_rpLast){ irRun(); }
+  if(!_rpLast || !_rpLast.detail.length){ toast('ไม่มีข้อมูลให้ส่งออก','error'); return; }
+  try{ await irLoadXlsx(); }catch(e){ toast('โหลดตัวสร้างไฟล์ Excel ไม่สำเร็จ','error'); return; }
+  var rep=_rpLast, f=_rpF||{}, byP=rep.freq!=='all';
+  var wb=XLSX.utils.book_new();
+  var head=[['รายงานสินค้าเข้า'],[irRangeText(f)],[]];
+  var s1=XLSX.utils.aoa_to_sheet(head.concat(irMatrixAoa(rep.summary)));
+  s1['!cols']=[{wch:28},{wch:10}].concat(rep.summary.whs.map(function(){return {wch:12};}),[{wch:12}]);
+  XLSX.utils.book_append_sheet(wb,s1,'สรุปตามคลัง');
+  if(byP){
+    var aoa=[];
+    rep.periods.forEach(function(p){ aoa.push([p.label]); irMatrixAoa(p.summary).forEach(function(r){aoa.push(r);}); aoa.push([]); });
+    var s2=XLSX.utils.aoa_to_sheet(aoa); s2['!cols']=[{wch:28},{wch:10}];
+    XLSX.utils.book_append_sheet(wb,s2,'แยกตามช่วง');
+  }
+  var dh=['เลขที่ CN','วันที่รับเข้า','รหัสลูกค้า','ลูกค้า','ผู้แทน','เลขที่คลัง','สินค้า','วันหมดอายุ','จำนวน','หน่วย'];
+  if(byP) dh.unshift('ช่วง');
+  var rows=rep.detail.map(function(d){
+    var r=[d.id,irYmdBE(d.day),d.code,d.customer,d.rep,d.wh,d.product,irYmdBE(d.expiry),d.qty,d.unit];
+    if(byP) r.unshift(irPeriodLabel(d.period,rep.freq));
+    return r;
+  });
+  var s3=XLSX.utils.aoa_to_sheet([dh].concat(rows));
+  s3['!cols']=dh.map(function(h){return {wch:Math.max(12,h.length+2)};});
+  XLSX.utils.book_append_sheet(wb,s3,'รายละเอียด');
+  XLSX.writeFile(wb,'IntakeReport_'+irYmdOfDate(new Date())+'.xlsx');
+}
+function irPrint(){
+  if(!_rpLast){ irRun(); }
+  if(!_rpLast || !_rpLast.detail.length){ toast('ไม่มีข้อมูลให้พิมพ์','error'); return; }
+  var f=_rpF||{};
+  var html='<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"/><title>รายงานสินค้าเข้า</title><style>'
+    +'@import url(\'https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap\');'
+    +'@page{size:A4 landscape;margin:10mm 12mm;}*{box-sizing:border-box;margin:0;padding:0;}'
+    +'body{font-family:\'Sarabun\',sans-serif;font-size:9pt;color:#000;background:#525659;}'
+    +'.doc-page{max-width:297mm;margin:0 auto;background:#fff;padding:10mm 12mm;}'
+    +'.hd{text-align:center;margin-bottom:7pt;padding-bottom:5pt;border-bottom:1.5pt solid #000;}'
+    +'.hd h2{font-size:13pt;font-weight:700;}.hd p{font-size:8.5pt;color:#444;margin-top:2pt;}'
+    +IR_CSS.replace(/\.rpt\{[^}]*\}/,'.rpt{width:100%;border-collapse:collapse;margin:4pt 0 10pt;font-size:8pt}').replace(/\.rpt td\{[^}]*\}/,'.rpt td{padding:2pt 5pt;border:.5pt solid #bbb}')
+    +'.rpt tr{page-break-inside:avoid}.rpt thead{display:table-header-group}.rp-h{font-size:10.5pt;margin:12pt 0 3pt}.rp-sub{font-size:9pt}'
+    +'.preview-toolbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:center;gap:10px;background:#2d2f31;padding:10px 16px;font-family:Arial,sans-serif;}'
+    +'.preview-toolbar .ptxt{color:#c8cacd;font-size:12px;margin-right:auto;}'
+    +'.preview-toolbar button{border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;}'
+    +'.pb-print{background:#3B7A57;color:#fff;}.pb-close{background:#4a4d50;color:#e6e6e6;}'
+    +'@media print{.preview-toolbar{display:none;}body{background:#fff;}.doc-page{max-width:none;padding:0;}}'
+    +'</style></head><body>'
+    +'<div class="preview-toolbar"><span class="ptxt">👁 ตัวอย่างก่อนพิมพ์ — เลือก "บันทึกเป็น PDF" ที่ปลายทางการพิมพ์</span>'
+    +'<button class="pb-print" onclick="window.print()">🖨 พิมพ์ / บันทึก PDF</button><button class="pb-close" onclick="window.close()">✕ ปิด</button></div>'
+    +'<div class="doc-page"><div class="hd"><h2>รายงานสินค้าเข้า</h2><p>'+esc(irRangeText(f))+' · '+_rpLast.cnCount+' ใบ CN · พิมพ์เมื่อ '
+    +new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})+'</p></div>'
+    +irReportHtml(_rpLast)+'</div></body></html>';
+  var w=window.open('','_blank','width=1100,height=740');
+  if(!w){ toast('กรุณาอนุญาต popup','error'); return; }
+  w.document.write(html); w.document.close();
+}
+
 /* คำนวณระยะเวลาตั้งแต่ "กำลังดำเนินการ" ถึง "เสร็จสิ้น" เป็นจำนวนวัน
    - ถ้ายังไม่มี processingAt หรือ completedAt → แสดง "-"
    - ปัดเศษวันขึ้นเสมอ (แม้ใช้เวลาไม่ถึง 1 วันก็นับเป็น 1 วัน เพื่อความเข้าใจง่าย) */
@@ -4692,6 +4994,10 @@ document.addEventListener('DOMContentLoaded',function(){
   window.saveCN = saveCN;
   window.goBack = goBack;
   window.exportCSV = exportCSV;
+  window.irRun = irRun;
+  window.irXlsx = irXlsx;
+  window.irPrint = irPrint;
+  window.loadIntakeReport = loadIntakeReport;
   window.loadUser = loadUser;
   window.loadAdmin = loadAdmin;
   window.loadUsers = loadUsers;
