@@ -3441,21 +3441,37 @@ function irPeriodLabel(key,freq){
   var q=key.split('-'), e=new Date(+q[0],+q[1]-1,+q[2]+6);
   return 'สัปดาห์ '+irYmdBE(key)+' – '+irYmdBE(irYmdOfDate(e));
 }
-/* lines: [{wh,product,unit,qty}] → ตารางแถว=(สินค้า,หน่วย) คอลัมน์=คลัง + แถวรวมต่อหน่วย */
+/* ชื่อคลังที่แสดง: "1" → "คลัง 1" (ถ้าขึ้นต้นด้วย "คลัง" อยู่แล้วคงเดิม) — ค่าอ้างอิงภายในยังเป็นเลขเดิม */
+function irWhLabel(w){ w=String(w==null?'':w).trim(); return /^คลัง/.test(w) ? w : 'คลัง '+w; }
+/* lines: [{wh,product,unit,qty}] → ตารางแถว=(สินค้า,หน่วย) คอลัมน์=คลัง + คอลัมน์รวมทุกคลังต่อแถว */
 function irSummarize(lines){
-  var whSet={}, rowMap={}, rows=[], totMap={}, totals=[];
+  var whSet={}, rowMap={}, rows=[];
   lines.forEach(function(l){
     whSet[l.wh]=1;
     var rk=l.product+'\u0001'+l.unit, row=rowMap[rk];
     if(!row){ row=rowMap[rk]={product:l.product,unit:l.unit,cells:{},total:0}; rows.push(row); }
     row.cells[l.wh]=irRound((row.cells[l.wh]||0)+l.qty); row.total=irRound(row.total+l.qty);
-    var t=totMap[l.unit];
-    if(!t){ t=totMap[l.unit]={unit:l.unit,cells:{},total:0}; totals.push(t); }
-    t.cells[l.wh]=irRound((t.cells[l.wh]||0)+l.qty); t.total=irRound(t.total+l.qty);
   });
   rows.sort(function(a,b){ return irCmp(a.product,b.product) || irCmp(a.unit,b.unit); });
-  totals.sort(function(a,b){ return irCmp(a.unit,b.unit); });
-  return { whs:Object.keys(whSet).sort(irCmp), rows:rows, totals:totals };
+  return { whs:Object.keys(whSet).sort(irCmp), rows:rows };
+}
+/* detail → [{product, totals:[{unit,total}], lines}] เรียงสินค้า → คลัง → วันที่ → เลข CN (ยอดแยกตามหน่วย ไม่บวกข้ามหน่วย) */
+function irGroupByProduct(detail){
+  var map={}, groups=[];
+  detail.forEach(function(d){
+    var g=map[d.product];
+    if(!g){ g=map[d.product]={product:d.product,totals:[],lines:[]}; groups.push(g); }
+    g.lines.push(d);
+    var t=g.totals.find(function(x){return x.unit===d.unit;});
+    if(!t){ t={unit:d.unit,total:0}; g.totals.push(t); }
+    t.total=irRound(t.total+d.qty);
+  });
+  groups.sort(function(a,b){ return irCmp(a.product,b.product); });
+  groups.forEach(function(g){
+    g.totals.sort(function(a,b){ return irCmp(a.unit,b.unit); });
+    g.lines.sort(function(a,b){ return irCmp(a.wh,b.wh) || irCmp(a.day,b.day) || irCmp(a.id,b.id); });
+  });
+  return groups;
 }
 /* f: {from,to:'YYYY-MM-DD', freq:'all|day|week|month', customers:[irCustKey], reps:[lineUID], ids:[CN id]} */
 function buildIntakeReport(recs,f){
@@ -3501,45 +3517,69 @@ var IR_CSS='.rpt{width:100%;border-collapse:collapse;margin:6px 0 14px;font-size
   +'.rp-h{font-size:.95rem;font-weight:700;margin:18px 0 4px;color:var(--ink,#000)}'
   +'.rp-sub{font-size:.8rem;font-weight:700;margin:12px 0 2px;color:var(--ink2,#333)}'
   +'.rp-empty,.rp-stat{color:var(--muted,#666);font-size:.82rem;padding:6px 0}'
-  +'.rp-scroll{overflow-x:auto}';
+  +'.rp-scroll{overflow-x:auto}'
+  +'.rp-cards{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 6px}'
+  +'.rp-card{flex:1;min-width:120px;border:1px solid var(--border,#ddd);border-radius:8px;padding:9px 12px;background:var(--surface2,#f6f6f6)}'
+  +'.rp-card b{display:block;font-size:1.25rem;line-height:1.2;color:var(--ink,#000)}'
+  +'.rp-card span{font-size:.72rem;color:var(--muted,#666)}'
+  +'.rp-note{font-size:.76rem;color:var(--muted,#666);margin:0 0 6px;line-height:1.6}'
+  +'.rp-sec>summary{cursor:pointer;list-style:none;font-size:.95rem;font-weight:700;margin:18px 0 4px;color:var(--ink,#000)}'
+  +'.rp-sec>summary::-webkit-details-marker{display:none}'
+  +'.rp-sec>summary::before{content:"▾ ";color:var(--muted,#666)}'
+  +'.rp-sec:not([open])>summary::before{content:"▸ "}'
+  +'.rp-grp>summary{cursor:pointer;font-size:.84rem;font-weight:700;margin:10px 0 2px;color:var(--ink,#000)}'
+  +'.rp-grp>summary small{font-weight:400;color:var(--muted,#666)}';
 var _rpTs=null, _rpLast=null, _rpF=null;
 
 function irFmt(v){ return Number(v).toLocaleString('en-US',{maximumFractionDigits:4}); }
 function irMatrixHtml(s){
   if(!s.rows.length) return '<div class="rp-empty">ไม่มีข้อมูล</div>';
   var h='<div class="rp-scroll"><table class="rpt"><thead><tr><th>สินค้า</th><th>หน่วย</th>'
-    +s.whs.map(function(w){return '<th class="n">'+esc(w)+'</th>';}).join('')+'<th class="n">รวม</th></tr></thead><tbody>';
+    +s.whs.map(function(w){return '<th class="n">'+esc(irWhLabel(w))+'</th>';}).join('')+'<th class="n">รวมทุกคลัง</th></tr></thead><tbody>';
   s.rows.forEach(function(r){
     h+='<tr><td>'+esc(r.product)+'</td><td>'+esc(r.unit)+'</td>'
       +s.whs.map(function(w){return '<td class="n">'+(r.cells[w]==null?'':irFmt(r.cells[w]))+'</td>';}).join('')
       +'<td class="n"><b>'+irFmt(r.total)+'</b></td></tr>';
   });
-  s.totals.forEach(function(t){
-    h+='<tr class="tot"><td>รวมทั้งหมด</td><td>'+esc(t.unit)+'</td>'
-      +s.whs.map(function(w){return '<td class="n">'+(t.cells[w]==null?'':irFmt(t.cells[w]))+'</td>';}).join('')
-      +'<td class="n">'+irFmt(t.total)+'</td></tr>';
-  });
   return h+'</tbody></table></div>';
 }
+/* รายละเอียดจัดกลุ่มตามสินค้า — แต่ละสินค้ายุบ/ขยายได้ หัวกลุ่มบอกยอดรวมแยกหน่วย */
 function irDetailHtml(rep){
   if(!rep.detail.length) return '<div class="rp-empty">ไม่มีข้อมูล</div>';
-  var h='<div class="rp-scroll"><table class="rpt"><thead><tr><th>#</th>'+(rep.freq!=='all'?'<th>ช่วง</th>':'')
-    +'<th>เลขที่ CN</th><th>วันที่รับเข้า</th><th>ลูกค้า</th><th>ผู้แทน</th><th>เลขที่คลัง</th><th>สินค้า</th><th>วันหมดอายุ</th><th class="n">จำนวน</th><th>หน่วย</th></tr></thead><tbody>';
-  rep.detail.forEach(function(d,i){
-    h+='<tr><td>'+(i+1)+'</td>'+(rep.freq!=='all'?'<td>'+esc(irPeriodLabel(d.period,rep.freq))+'</td>':'')
-      +'<td>'+esc(d.id)+'</td><td>'+irYmdBE(d.day)+'</td><td>'+esc((d.code?d.code+' ':'')+d.customer)+'</td><td>'+esc(d.rep)+'</td>'
-      +'<td>'+esc(d.wh)+'</td><td>'+esc(d.product)+'</td><td>'+irYmdBE(d.expiry)+'</td>'
-      +'<td class="n">'+irFmt(d.qty)+'</td><td>'+esc(d.unit)+'</td></tr>';
-  });
-  return h+'</tbody></table></div>';
+  var byP=rep.freq!=='all';
+  return irGroupByProduct(rep.detail).map(function(g){
+    var tot=g.totals.map(function(t){return irFmt(t.total)+' '+esc(t.unit);}).join(', ');
+    var h='<details class="rp-grp" open><summary>'+esc(g.product)+' — รวม '+tot+' <small>('+g.lines.length+' บรรทัด)</small></summary>'
+      +'<div class="rp-scroll"><table class="rpt"><thead><tr>'+(byP?'<th>ช่วง</th>':'')
+      +'<th>เลขที่ CN</th><th>วันที่รับเข้า</th><th>ลูกค้า</th><th>ผู้แทน</th><th>คลัง</th><th>วันหมดอายุ</th><th class="n">จำนวน</th><th>หน่วย</th></tr></thead><tbody>';
+    g.lines.forEach(function(d){
+      h+='<tr>'+(byP?'<td>'+esc(irPeriodLabel(d.period,rep.freq))+'</td>':'')
+        +'<td>'+esc(d.id)+'</td><td>'+irYmdBE(d.day)+'</td><td>'+esc((d.code?d.code+' ':'')+d.customer)+'</td><td>'+esc(d.rep)+'</td>'
+        +'<td>'+esc(irWhLabel(d.wh))+'</td><td>'+irYmdBE(d.expiry)+'</td>'
+        +'<td class="n">'+irFmt(d.qty)+'</td><td>'+esc(d.unit)+'</td></tr>';
+    });
+    return h+'</tbody></table></div></details>';
+  }).join('');
+}
+function irCardsHtml(rep){
+  var prods={}, whs={};
+  rep.detail.forEach(function(d){ prods[d.product]=1; whs[d.wh]=1; });
+  var c=function(n,l){ return '<div class="rp-card"><b>'+n+'</b><span>'+l+'</span></div>'; };
+  return '<div class="rp-cards">'+c(rep.cnCount,'ใบ CN')+c(Object.keys(prods).length,'ชนิดสินค้า')
+    +c(Object.keys(whs).length,'คลังที่รับเข้า')+c(rep.detail.length,'บรรทัดรับเข้า')+'</div>';
 }
 function irReportHtml(rep){
-  var h='<div class="rp-h">สรุปยอดรับเข้าแยกตามคลัง'+(rep.freq!=='all'?' (รวมทั้งช่วง)':'')+'</div>'+irMatrixHtml(rep.summary);
+  var sec=function(title,note,body){ return '<details class="rp-sec" open><summary>'+title+'</summary><p class="rp-note">'+note+'</p>'+body+'</details>'; };
+  var note1='1 แถว = สินค้า 1 ชนิด ต่อ 1 หน่วย · ตัวเลขในช่อง = จำนวนที่คลังนั้นรับเข้า · ช่องว่าง = คลังนั้นไม่มีการรับเข้า · "รวมทุกคลัง" = ยอดของสินค้านั้นทุกคลังรวมกัน (แยกตามหน่วย ไม่บวกข้ามหน่วย)';
+  var h=irCardsHtml(rep)+sec('สรุปยอดรับเข้าแยกตามคลัง'+(rep.freq!=='all'?' (รวมทั้งช่วง)':''),note1,irMatrixHtml(rep.summary));
   if(rep.periods.length){
-    h+='<div class="rp-h">แยกตามช่วงเวลา</div>';
-    rep.periods.forEach(function(p){ h+='<div class="rp-sub">'+esc(p.label)+'</div>'+irMatrixHtml(p.summary); });
+    h+=sec('แยกตามช่วงเวลา','ตารางสรุปแบบเดียวกัน แยกเป็นช่วง ตามความถี่ที่เลือก (รายสัปดาห์ = จันทร์–อาทิตย์)',
+      rep.periods.map(function(p){ return '<div class="rp-sub">'+esc(p.label)+'</div>'+irMatrixHtml(p.summary); }).join(''));
   }
-  return h+'<div class="rp-h">รายละเอียดทีละรายการ</div>'+irDetailHtml(rep);
+  return h+sec('รายละเอียดทีละรายการ (จัดกลุ่มตามสินค้า)','แต่ละสินค้าแสดงว่ารับเข้าจาก CN ใบไหน ลูกค้าใคร คลังไหน วันที่เท่าไร · กดที่ชื่อสินค้าเพื่อยุบ/ขยาย',irDetailHtml(rep));
+}
+function irToggleAll(open){
+  document.querySelectorAll('#rp-out details').forEach(function(d){ d.open=open; });
 }
 function irRangeText(f){
   if(f.ids&&f.ids.length) return 'เฉพาะเลขที่ CN ที่เลือก ('+f.ids.length+' ใบ)';
@@ -3556,7 +3596,10 @@ function irRun(quiet){
   if(f.from && f.to && f.from>f.to){ if(!quiet) toast('วันที่เริ่มต้องไม่เกินวันที่สิ้นสุด','error'); return; }
   _rpLast=buildIntakeReport(adminRecs,f); _rpF=f;
   var out=document.getElementById('rp-out'); if(!out) return;
-  out.innerHTML='<div class="rp-stat">'+esc(irRangeText(f))+' · '+_rpLast.cnCount+' ใบ CN · '+_rpLast.detail.length+' บรรทัด</div>'+irReportHtml(_rpLast);
+  var fl={all:'รวมทั้งช่วง',day:'รายวัน',week:'รายสัปดาห์',month:'รายเดือน'}[f.freq]||'';
+  out.innerHTML='<div class="rp-stat">'+esc(irRangeText(f))+' · ความถี่: '+fl
+    +(_rpLast.detail.length?' · <a href="#" onclick="irToggleAll(true);return false;">ขยายทั้งหมด</a> | <a href="#" onclick="irToggleAll(false);return false;">ยุบทั้งหมด</a>':'')+'</div>'
+    +(_rpLast.detail.length?irReportHtml(_rpLast):'<div class="rp-empty">ไม่พบรายการรับเข้าตามเงื่อนไขที่เลือก</div>');
 }
 function irInit(){
   if(_rpTs) return;
@@ -3597,9 +3640,8 @@ async function loadIntakeReport(silent,gen,viewId){
 }
 
 function irMatrixAoa(s){
-  var aoa=[['สินค้า','หน่วย'].concat(s.whs,['รวม'])];
+  var aoa=[['สินค้า','หน่วย'].concat(s.whs.map(irWhLabel),['รวมทุกคลัง'])];
   s.rows.forEach(function(r){ aoa.push([r.product,r.unit].concat(s.whs.map(function(w){return r.cells[w]==null?'':r.cells[w];}),[r.total])); });
-  s.totals.forEach(function(t){ aoa.push(['รวมทั้งหมด',t.unit].concat(s.whs.map(function(w){return t.cells[w]==null?'':t.cells[w];}),[t.total])); });
   return aoa;
 }
 function irLoadXlsx(){
@@ -3626,13 +3668,14 @@ async function irXlsx(){
     var s2=XLSX.utils.aoa_to_sheet(aoa); s2['!cols']=[{wch:28},{wch:10}];
     XLSX.utils.book_append_sheet(wb,s2,'แยกตามช่วง');
   }
-  var dh=['เลขที่ CN','วันที่รับเข้า','รหัสลูกค้า','ลูกค้า','ผู้แทน','เลขที่คลัง','สินค้า','วันหมดอายุ','จำนวน','หน่วย'];
+  var dh=['สินค้า','คลัง','เลขที่ CN','วันที่รับเข้า','รหัสลูกค้า','ลูกค้า','ผู้แทน','วันหมดอายุ','จำนวน','หน่วย'];
   if(byP) dh.unshift('ช่วง');
-  var rows=rep.detail.map(function(d){
-    var r=[d.id,irYmdBE(d.day),d.code,d.customer,d.rep,d.wh,d.product,irYmdBE(d.expiry),d.qty,d.unit];
+  var rows=[];   // เรียงสินค้า → คลัง → วันที่ (ตารางเรียบ กรอง/Pivot ต่อได้)
+  irGroupByProduct(rep.detail).forEach(function(g){ g.lines.forEach(function(d){
+    var r=[d.product,irWhLabel(d.wh),d.id,irYmdBE(d.day),d.code,d.customer,d.rep,irYmdBE(d.expiry),d.qty,d.unit];
     if(byP) r.unshift(irPeriodLabel(d.period,rep.freq));
-    return r;
-  });
+    rows.push(r);
+  }); });
   var s3=XLSX.utils.aoa_to_sheet([dh].concat(rows));
   s3['!cols']=dh.map(function(h){return {wch:Math.max(12,h.length+2)};});
   XLSX.utils.book_append_sheet(wb,s3,'รายละเอียด');
@@ -4995,6 +5038,7 @@ document.addEventListener('DOMContentLoaded',function(){
   window.goBack = goBack;
   window.exportCSV = exportCSV;
   window.irRun = irRun;
+  window.irToggleAll = irToggleAll;
   window.irXlsx = irXlsx;
   window.irPrint = irPrint;
   window.loadIntakeReport = loadIntakeReport;
