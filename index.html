@@ -65,6 +65,9 @@
   --purple:    #7C3AED;
   --purple-dim: rgba(124,58,237,.12);
   --purple-b:  rgba(124,58,237,.3);
+  --teal:      #0E7490;
+  --teal-dim:  rgba(14,116,144,.12);
+  --teal-b:    rgba(14,116,144,.3);
 
   /* Primary — Forest Green ใช้กับปุ่ม Primary Action และจุดเน้นหลัก */
   --accent:    #15803D;
@@ -134,6 +137,9 @@
     --purple:    #A78BFA;
   --purple-dim: rgba(167,139,250,.14);
   --purple-b:  rgba(167,139,250,.35);
+  --teal:      #22D3EE;
+  --teal-dim:  rgba(34,211,238,.14);
+  --teal-b:    rgba(34,211,238,.35);
 
     --accent:    #22A757;
     --accent-h:  #1B8A47;
@@ -178,6 +184,9 @@
   --purple:    #A78BFA;
   --purple-dim: rgba(167,139,250,.14);
   --purple-b:  rgba(167,139,250,.35);
+  --teal:      #22D3EE;
+  --teal-dim:  rgba(34,211,238,.14);
+  --teal-b:    rgba(34,211,238,.35);
 
   --accent:    #22A757;
   --accent-h:  #1B8A47;
@@ -404,6 +413,7 @@ body {
 .stat-card.s-wait::before  { background: linear-gradient(90deg, var(--amber), transparent); }
 .stat-card.s-proc::before  { background: linear-gradient(90deg, var(--blue), transparent); }
 .stat-card.s-review::before { background: linear-gradient(90deg, var(--purple), transparent); }
+.stat-card.s-check::before { background: linear-gradient(90deg, var(--teal), transparent); }
 .stat-card.s-done::before  { background: linear-gradient(90deg, var(--green), transparent); }
 .stat-card:hover {
   border-color: var(--accent);
@@ -490,6 +500,7 @@ body {
 .bp { background: var(--blue-dim);  color: var(--blue);  border-color: var(--blue-b); }
 .bd { background: var(--green-dim); color: var(--green); border-color: var(--green-b); }
 .bv { background: var(--purple-dim); color: var(--purple); border-color: var(--purple-b); }
+.bk { background: var(--teal-dim); color: var(--teal); border-color: var(--teal-b); }
 
 /* Table */
 .tw { overflow-x: auto; }
@@ -723,6 +734,7 @@ select.fc option { background: var(--surface2); }
 .chip-supervisor{background:var(--purple-dim);color:var(--purple);border:1px solid var(--purple-b);padding:1px 7px;border-radius:12px;font-size:.68rem;font-weight:700;}
 .chip-warehouse{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-b);padding:1px 7px;border-radius:12px;font-size:.68rem;font-weight:700;}
 .chip-accountant{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-b);padding:1px 7px;border-radius:12px;font-size:.68rem;font-weight:700;}
+.chip-checker{background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-b);padding:1px 7px;border-radius:12px;font-size:.68rem;font-weight:700;}
 .chip-user{background:var(--green-dim);color:var(--green);border:1px solid var(--green-b);padding:1px 7px;border-radius:12px;font-size:.68rem;font-weight:700;}
 
 #page-auth {
@@ -890,7 +902,8 @@ select.fc option { background: var(--surface2); }
             <div class="stat-card s-total"><div class="stat-num" id="s-all">0</div><div class="stat-label">ทั้งหมด</div><div class="stat-icon">📋</div></div>
             <div class="stat-card s-wait"><div class="stat-num" id="s-wait">0</div><div class="stat-label">รอของ</div><div class="stat-icon">⏳</div></div>
             <div class="stat-card s-proc"><div class="stat-num" id="s-proc">0</div><div class="stat-label">ดำเนินการ</div><div class="stat-icon">⚙️</div></div>
-            <div class="stat-card s-review"><div class="stat-num" id="s-review">0</div><div class="stat-label">รอตรวจสอบ</div><div class="stat-icon">🔍</div></div>
+            <div class="stat-card s-check"><div class="stat-num" id="s-check">0</div><div class="stat-label">รอตรวจสอบสินค้า</div><div class="stat-icon">📦</div></div>
+            <div class="stat-card s-review"><div class="stat-num" id="s-review">0</div><div class="stat-label">รอตรวจสอบเอกสาร</div><div class="stat-icon">🔍</div></div>
             <div class="stat-card s-done"><div class="stat-num" id="s-done">0</div><div class="stat-label">เสร็จสิ้น</div><div class="stat-icon">✅</div></div>
           </div>
           <div class="card">
@@ -922,7 +935,8 @@ select.fc option { background: var(--surface2); }
             <div class="stat-card s-total"><div class="stat-num" id="as-all">0</div><div class="stat-label">ทั้งหมด</div><div class="stat-icon">📋</div></div>
             <div class="stat-card s-wait"><div class="stat-num" id="as-wait">0</div><div class="stat-label">รอของ</div><div class="stat-icon">⏳</div></div>
             <div class="stat-card s-proc"><div class="stat-num" id="as-proc">0</div><div class="stat-label">ดำเนินการ</div><div class="stat-icon">⚙️</div></div>
-            <div class="stat-card s-review"><div class="stat-num" id="as-review">0</div><div class="stat-label">รอตรวจสอบ</div><div class="stat-icon">🔍</div></div>
+            <div class="stat-card s-check"><div class="stat-num" id="as-check">0</div><div class="stat-label">รอตรวจสอบสินค้า</div><div class="stat-icon">📦</div></div>
+            <div class="stat-card s-review"><div class="stat-num" id="as-review">0</div><div class="stat-label">รอตรวจสอบเอกสาร</div><div class="stat-icon">🔍</div></div>
             <div class="stat-card s-done"><div class="stat-num" id="as-done">0</div><div class="stat-label">เสร็จสิ้น</div><div class="stat-icon">✅</div></div>
           </div>
           <div class="card">
@@ -953,7 +967,8 @@ select.fc option { background: var(--surface2); }
                   <option value="">ทุกสถานะ</option>
                   <option value="รอของ">รอของ</option>
                   <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
-                  <option value="รอตรวจสอบ">รอตรวจสอบ</option>
+                  <option value="รอตรวจสอบสินค้า">รอตรวจสอบสินค้า</option>
+                  <option value="รอตรวจสอบเอกสาร">รอตรวจสอบเอกสาร</option>
                   <option value="เสร็จสิ้น">เสร็จสิ้น</option>
                 </select>
                 <input type="date" id="fdt" class="fc" style="max-width:145px;" onchange="doFilter()"/>
@@ -1259,21 +1274,18 @@ select.fc option { background: var(--surface2); }
           </div>
         </div>
 
-        <!-- ── VIEW: ตรวจสอบนำสินค้าเข้า (Warehouse Supervisor + Admin) ── -->
+        <!-- ── VIEW: ตรวจสินค้า (Checker/Admin) และตรวจเอกสาร/อนุมัติ (Warehouse Supervisor/Admin) — ใช้หน้าเดียว เลือกปุ่มตามสถานะ ── -->
         <div id="view-review" style="display:none;">
           <div class="card" style="max-width:1100px;">
             <div class="card-header">
-              <span class="card-title">ตรวจสอบนำสินค้าเข้าคลัง</span>
+              <span class="card-title" id="review-title">ตรวจสอบนำสินค้าเข้าคลัง</span>
               <span id="review-id-badge" class="mono" style="color:var(--blue);"></span>
             </div>
             <div class="card-body">
               <div id="review-err" class="alert ae" style="margin-bottom:12px;"></div>
               <div id="review-submit-info" style="font-size:.78rem;color:var(--muted);margin-bottom:10px;"></div>
               <div id="review-detail" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;"></div>
-              <p style="font-size:.78rem;color:var(--ink2);margin-bottom:10px;line-height:1.7;">
-                ตรวจข้อมูลด้านบนให้ครบ — ถ้า<b>ถูกต้อง</b> กด "เสร็จสิ้น" ระบบจะเซฟ PDF และลงชื่อคุณเป็น <b>ผู้ตรวจสินค้า</b> ให้อัตโนมัติ
-                ถ้า<b>ไม่ถูกต้อง</b> กด "ส่งกลับแก้ไข" แล้วระบุเหตุผล รายการจะกลับไป "กำลังดำเนินการ" ให้คลังแก้
-              </p>
+              <p id="review-help" style="font-size:.78rem;color:var(--ink2);margin-bottom:10px;line-height:1.7;"></p>
               <div id="review-reject-box" style="display:none;margin-bottom:12px;">
                 <label class="lbl">เหตุผลที่ส่งกลับแก้ไข <span class="req">*</span></label>
                 <textarea id="review-reason" class="fc" rows="3" maxlength="300" placeholder="ระบุสิ่งที่ต้องแก้ เช่น จำนวนไม่ตรงกับที่นับจริง"></textarea>
@@ -1283,6 +1295,7 @@ select.fc option { background: var(--surface2); }
                 </div>
               </div>
               <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:8px;">
+                <button id="review-check-btn" class="btn btn-primary" onclick="checkReview()" style="flex:1;min-width:180px;justify-content:center;">✅ ตรวจแล้ว — ส่งต่อตรวจสอบเอกสาร</button>
                 <button id="review-approve-btn" class="btn btn-primary" onclick="approveReview()" style="flex:1;min-width:180px;justify-content:center;">✅ ถูกต้อง — เสร็จสิ้น</button>
                 <button id="review-reject-btn" class="btn btn-outline" onclick="startReject()" style="flex:1;min-width:150px;justify-content:center;">↩ ส่งกลับแก้ไข</button>
                 <button class="btn btn-ghost" onclick="goBack()" style="min-width:90px;justify-content:center;">ปิด</button>
@@ -1488,9 +1501,10 @@ function invalidateCache(viewId){
 }
 
 function goBack(){
-  if(ST.fromAdmin || isAdminLevel() || (ST.user && ST.user.role==='Accountant')){
+  if(ST.fromAdmin || isAdminLevel() || (ST.user && (ST.user.role==='Accountant' || ST.user.role==='Checker'))){
     var title = _isWh(ST.user.role)?'Warehouse Dashboard'
-               :ST.user.role==='Accountant'?'รายงาน (ฝ่ายบัญชี)':'Admin Dashboard';
+               :ST.user.role==='Accountant'?'รายงาน (ฝ่ายบัญชี)'
+               :ST.user.role==='Checker'?'ตรวจสินค้า (ฝ่ายบัญชี)':'Admin Dashboard';
     showView('view-admin-dash', title);
   } else {
     showView('view-user-dash','Dashboard ของฉัน');
@@ -1576,8 +1590,8 @@ function fitPt(text, widthPt, maxPt, minPt){
   return Math.max(minPt, Math.min(maxPt, Math.round(widthPt / (n * 0.5) * 10) / 10));
 }
 function badge(s){
-  var cls={'รอของ':'bw','กำลังดำเนินการ':'bp','รอตรวจสอบ':'bv','เสร็จสิ้น':'bd'};
-  var dotColor={'รอของ':'var(--amber)','กำลังดำเนินการ':'var(--blue)','รอตรวจสอบ':'var(--purple)','เสร็จสิ้น':'var(--green)'};
+  var cls={'รอของ':'bw','กำลังดำเนินการ':'bp','รอตรวจสอบสินค้า':'bk','รอตรวจสอบเอกสาร':'bv','เสร็จสิ้น':'bd'};
+  var dotColor={'รอของ':'var(--amber)','กำลังดำเนินการ':'var(--blue)','รอตรวจสอบสินค้า':'var(--teal)','รอตรวจสอบเอกสาร':'var(--purple)','เสร็จสิ้น':'var(--green)'};
   var dot=dotColor[s]?'<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:'+dotColor[s]+';flex-shrink:0;"></span> ':'';
   return '<span class="badge '+(cls[s]||'')+'" style="gap:5px;">'+dot+esc(s)+'</span>';
 }
@@ -1720,8 +1734,12 @@ function _isWh(role){ return role==='Warehouse' || role==='WarehouseSupervisor';
 function isAdminLevel(){ return ST.user && (ST.user.role==='Admin' || _isWh(ST.user.role)); }
 // Admin + Warehouse Supervisor = ตรวจสอบ / อนุมัติ / ส่งกลับแก้ไขได้
 function isSupervisorLevel(){ return ST.user && (ST.user.role==='Admin' || ST.user.role==='WarehouseSupervisor'); }
-// Admin + Warehouse + Supervisor + Accountant = view/report access
-function isViewLevel(){  return ST.user && (ST.user.role==='Admin' || _isWh(ST.user.role) || ST.user.role==='Accountant'); }
+// Admin + Checker (ผู้ตรวจสินค้า ฝ่ายบัญชี) = ตรวจสินค้า / ลงชื่อ / ส่งกลับแก้ไขใบที่ "รอตรวจสอบสินค้า"
+function isCheckerLevel(){ return ST.user && (ST.user.role==='Admin' || ST.user.role==='Checker'); }
+// สถานะที่อยู่ระหว่างตรวจ (ข้อมูลนิ่ง): รอตรวจสอบสินค้า (Checker) → รอตรวจสอบเอกสาร (หัวหน้า)
+function isReviewStatus(s){ return s==='รอตรวจสอบสินค้า' || s==='รอตรวจสอบเอกสาร'; }
+// Admin + Warehouse + Supervisor + Accountant + Checker = view/report access
+function isViewLevel(){  return ST.user && (ST.user.role==='Admin' || _isWh(ST.user.role) || ST.user.role==='Accountant' || ST.user.role==='Checker'); }
 // User only
 function isUserOnly(){   return ST.user && ST.user.role==='User'; }
 
@@ -1731,13 +1749,14 @@ function roleBadge(role){
     'Warehouse':  '<span class="chip-warehouse">Warehouse</span>',
     'WarehouseSupervisor': '<span class="chip-supervisor">Warehouse Supervisor</span>',
     'Accountant': '<span class="chip-accountant">Accountant</span>',
+    'Checker':    '<span class="chip-checker">Checker</span>',
     'User':       '<span class="chip-user">User</span>',
   };
   return map[role]||('<span class="chip-user">'+role+'</span>');
 }
 
 function roleLabel(role){
-  var map={Admin:'ผู้ดูแลระบบ',Warehouse:'ฝ่ายคลังสินค้า',WarehouseSupervisor:'Warehouse Supervisor',Accountant:'ฝ่ายบัญชี',User:'ผู้ใช้งาน'};
+  var map={Admin:'ผู้ดูแลระบบ',Warehouse:'ฝ่ายคลังสินค้า',WarehouseSupervisor:'Warehouse Supervisor',Accountant:'ฝ่ายบัญชี',Checker:'ผู้ตรวจสินค้า (Checker)',User:'ผู้ใช้งาน'};
   return map[role]||role;
 }
 
@@ -1773,6 +1792,8 @@ async function enterApp(){
       targetView='view-admin-dash'; targetTitle='Warehouse Dashboard'; loadFn=loadAdmin;
     } else if(u.role === 'Accountant'){
       targetView='view-admin-dash'; targetTitle='รายงาน (ฝ่ายบัญชี)'; loadFn=loadAdmin;
+    } else if(u.role === 'Checker'){
+      targetView='view-admin-dash'; targetTitle='ตรวจสินค้า (ฝ่ายบัญชี)'; loadFn=loadAdmin;
     } else {
       targetView='view-user-dash'; targetTitle='Dashboard ของฉัน'; loadFn=loadUser;
     }
@@ -1859,6 +1880,15 @@ function buildNav(role){
     html += navItem('view-intake-report','รายงานสินค้าเข้า',iBox,IR_NAV);
     html += navItem('','Export CSV',iDl,"exportCSV();");
 
+  } else if(role === 'Checker'){
+    // ผู้ตรวจสินค้า (ฝ่ายบัญชี): ดูรายการ/รายงานได้ และกด "ตรวจสินค้า" ใบที่รอตรวจสอบสินค้า
+    html += navSection('หลัก');
+    html += navItem('view-admin-dash','ภาพรวม CN',iGrid,"showView('view-admin-dash','ตรวจสินค้า (ฝ่ายบัญชี)');(async()=>{await loadViewCached('view-admin-dash',loadAdmin);})();");
+    html += navSection('รายงาน');
+    html += navItem('','รายงานรายเดือน',iCal,"openMonthReport();");
+    html += navItem('view-intake-report','รายงานสินค้าเข้า',iBox,IR_NAV);
+    html += navItem('','Export CSV',iDl,"exportCSV();");
+
   } else {
     // User
     html += navSection('หลัก');
@@ -1892,7 +1922,8 @@ async function loadUser(silent, gen, viewId){
     document.getElementById('s-all').textContent  = r.length;
     document.getElementById('s-wait').textContent = r.filter(function(x){return x.status==='รอของ';}).length;
     document.getElementById('s-proc').textContent = r.filter(function(x){return x.status==='กำลังดำเนินการ';}).length;
-    document.getElementById('s-review').textContent = r.filter(function(x){return x.status==='รอตรวจสอบ';}).length;
+    document.getElementById('s-check').textContent = r.filter(function(x){return x.status==='รอตรวจสอบสินค้า';}).length;
+    document.getElementById('s-review').textContent = r.filter(function(x){return x.status==='รอตรวจสอบเอกสาร';}).length;
     document.getElementById('s-done').textContent = r.filter(function(x){return x.status==='เสร็จสิ้น';}).length;
     filterUserTbl();
   } catch(e){
@@ -2002,7 +2033,8 @@ function updateAdminStats(recs){
   document.getElementById('as-all').textContent=recs.length;
   document.getElementById('as-wait').textContent=recs.filter(function(x){return x.status==='รอของ';}).length;
   document.getElementById('as-proc').textContent=recs.filter(function(x){return x.status==='กำลังดำเนินการ';}).length;
-  document.getElementById('as-review').textContent=recs.filter(function(x){return x.status==='รอตรวจสอบ';}).length;
+  document.getElementById('as-check').textContent=recs.filter(function(x){return x.status==='รอตรวจสอบสินค้า';}).length;
+  document.getElementById('as-review').textContent=recs.filter(function(x){return x.status==='รอตรวจสอบเอกสาร';}).length;
   document.getElementById('as-done').textContent=recs.filter(function(x){return x.status==='เสร็จสิ้น';}).length;
 }
 
@@ -2023,10 +2055,11 @@ function renderAdminTbl(recs){
   var isAdmin    = ST.user && ST.user.role === 'Admin';
   var isWarehouse= ST.user && _isWh(ST.user.role);
   var canReview  = isSupervisorLevel();
+  var canCheck   = isCheckerLevel();
   tb.innerHTML=recs.map(function(r){
     var key='_cn_'+r.id.replace(/\W/g,'_');
     window[key]=r;
-    var printOk = canPrint && (r.status==='กำลังดำเนินการ'||r.status==='รอตรวจสอบ'||r.status==='เสร็จสิ้น');
+    var printOk = canPrint && (r.status==='กำลังดำเนินการ'||isReviewStatus(r.status)||r.status==='เสร็จสิ้น');
     var printBtn = canPrint
       ? (printOk
           ? '<button class="btn btn-ghost btn-sm" onclick="printCNForm(window[\''+key+'\'])" title="พิมพ์ฟอร์ม PDF">🖨</button>'
@@ -2040,11 +2073,11 @@ function renderAdminTbl(recs){
           ? '<button class="btn btn-ghost btn-sm" style="opacity:.22;cursor:not-allowed;" title="Warehouse ไม่สามารถลบรายการที่เสร็จสิ้นแล้ว" disabled>🗑</button>'
           : '');
     // แก้ไขได้: Admin แก้ได้ทุก status | Warehouse แก้ไม่ได้ถ้ารายการ "เสร็จสิ้น" แล้ว
-    var canEditThis = canEdit && (isAdmin || (r.status !== 'เสร็จสิ้น' && r.status !== 'รอตรวจสอบ'));
+    var canEditThis = canEdit && (isAdmin || (r.status !== 'เสร็จสิ้น' && !isReviewStatus(r.status)));
     var editBtn = canEdit
       ? (canEditThis
           ? '<button class="btn btn-outline btn-sm" onclick="openForm(\''+r.id+'\',true)" title="แก้ไข">✏️</button>'
-          : '<button class="btn btn-ghost btn-sm" style="opacity:.22;cursor:not-allowed;" title="รายการเสร็จสิ้น/รอตรวจสอบแล้ว แก้ไขได้เฉพาะ Admin (หรือรอให้ส่งกลับแก้ไข)" disabled>✏️</button>')
+          : '<button class="btn btn-ghost btn-sm" style="opacity:.22;cursor:not-allowed;" title="รายการเสร็จสิ้น/อยู่ระหว่างรอตรวจสอบ แก้ไขได้เฉพาะ Admin (หรือรอให้ส่งกลับแก้ไข)" disabled>✏️</button>')
       : '';
     return '<tr style="height:52px;">'
       +'<td class="mono" style="font-size:.78rem;font-weight:600;">'+r.id+'</td>'
@@ -2058,7 +2091,8 @@ function renderAdminTbl(recs){
       +'<button class="btn btn-ghost btn-sm" onclick="viewDetail(\''+r.id+'\',true)" title="ดูรายละเอียด">👁</button>'
       +printBtn
       +(canEdit && r.status==='กำลังดำเนินการ' ? '<button class="btn btn-primary btn-sm" onclick="openIntakeForm(\''+r.id+'\')" title="นำสินค้าเข้า / ส่งตรวจสอบ">📦</button>' : '')
-      +(canReview && r.status==='รอตรวจสอบ' ? '<button class="btn btn-primary btn-sm" onclick="openReviewForm(\''+r.id+'\')" title="ตรวจสอบ / อนุมัติ / ส่งกลับแก้ไข">🔍 ตรวจสอบ</button>' : '')
+      +(canCheck && r.status==='รอตรวจสอบสินค้า' ? '<button class="btn btn-primary btn-sm" onclick="openReviewForm(\''+r.id+'\')" title="ตรวจสินค้า / ลงชื่อ / ส่งกลับแก้ไข">🔍 ตรวจสินค้า</button>' : '')
+      +(canReview && r.status==='รอตรวจสอบเอกสาร' ? '<button class="btn btn-primary btn-sm" onclick="openReviewForm(\''+r.id+'\')" title="ตรวจสอบเอกสาร / อนุมัติ / ส่งกลับแก้ไข">🔍 ตรวจสอบเอกสาร</button>' : '')
       +(canEdit ? '<button class="btn btn-outline btn-sm" onclick="openStatusModal(\''+r.id+'\',\''+r.status+'\')" title="เปลี่ยนสถานะ">🔄</button>' : '')
       +editBtn
       +deleteBtn
@@ -2154,7 +2188,8 @@ function _intakeDetailHtml(r){
         +'<th style="'+th+'">เลขที่คลัง</th><th style="'+th+'">สินค้า</th><th style="'+th+'">วันหมดอายุ</th><th style="'+th+'">จำนวน</th><th style="'+th+'">หน่วย</th></tr></thead><tbody>'+rows+'</tbody></table>' : '')
     +(d.remark ? '<div style="font-size:.78rem;color:var(--ink2);margin-top:6px;">หมายเหตุ: '+esc(d.remark)+'</div>' : '')
     +(d.submittedBy ? '<div style="font-size:.74rem;color:var(--muted);margin-top:6px;">ส่งตรวจสอบโดย '+esc(d.submittedBy)+(d.submittedAt ? ' · '+fDateFull(d.submittedAt) : '')+'</div>' : '')
-    +(d.reviewedBy ? '<div style="font-size:.74rem;color:var(--green);margin-top:2px;">ตรวจสอบโดย '+esc(d.reviewedBy)+(d.reviewedAt ? ' · '+fDateFull(d.reviewedAt) : '')+'</div>' : '')
+    +(d.checkedBy ? '<div style="font-size:.74rem;color:var(--teal);margin-top:2px;">ตรวจสินค้าโดย '+esc(d.checkedBy)+(d.checkedAt ? ' · '+fDateFull(d.checkedAt) : '')+'</div>' : '')
+    +(d.reviewedBy ? '<div style="font-size:.74rem;color:var(--green);margin-top:2px;">ตรวจสอบเอกสาร/อนุมัติโดย '+esc(d.reviewedBy)+(d.reviewedAt ? ' · '+fDateFull(d.reviewedAt) : '')+'</div>' : '')
     +(r.intakePdfUrl ? '<a class="btn btn-outline btn-sm" style="margin-top:8px;" href="'+esc(r.intakePdfUrl)+'" target="_blank" rel="noopener">📄 เปิด PDF นำสินค้าเข้า</a>' : '')
     +'</div>';
 }
@@ -2635,8 +2670,8 @@ function openForm(editId,fromAdmin){
       }
 
       // Lock: รายการที่ "เสร็จสิ้น" แล้ว เปิดแก้ไขได้เฉพาะ Admin เท่านั้น
-      if(_editOrigStatus === 'รอตรวจสอบ' && myRole !== 'Admin'){
-        toast('รายการนี้อยู่ระหว่างรอตรวจสอบ แก้ไขได้หลังถูกส่งกลับเท่านั้น','error');
+      if(isReviewStatus(_editOrigStatus) && myRole !== 'Admin'){
+        toast('รายการนี้อยู่ระหว่าง'+_editOrigStatus+' แก้ไขได้หลังถูกส่งกลับเท่านั้น','error');
         showView('view-admin-dash', _isWh(myRole) ? 'Warehouse Dashboard' : 'Admin Dashboard');
         return;
       }
@@ -2980,12 +3015,13 @@ function openStatusModal(id, currentStatus){
   var stCfg = {
     'รอของ':          { icon:'⏳', color:'var(--amber)', dim:'var(--amber-dim)', border:'rgba(180,83,9,.4)',  sub:'รายการรอรับสินค้าคืน' },
     'กำลังดำเนินการ': { icon:'🔄', color:'var(--blue)',  dim:'var(--blue-dim)',  border:'rgba(37,99,235,.4)', sub:'อยู่ระหว่างดำเนินการ' },
-    'รอตรวจสอบ':      { icon:'🔍', color:'var(--purple)', dim:'var(--purple-dim)', border:'var(--purple-b)',  sub:'ส่งให้ Warehouse Supervisor ตรวจสอบ' },
+    'รอตรวจสอบสินค้า': { icon:'📦', color:'var(--teal)', dim:'var(--teal-dim)', border:'var(--teal-b)', sub:'ส่งให้ผู้ตรวจสินค้า (Checker ฝ่ายบัญชี) ตรวจนับ' },
+    'รอตรวจสอบเอกสาร': { icon:'🔍', color:'var(--purple)', dim:'var(--purple-dim)', border:'var(--purple-b)',  sub:'Checker ตรวจแล้ว — รอ Warehouse Supervisor ตรวจเอกสาร' },
     'เสร็จสิ้น':      { icon:'✅', color:'var(--green)', dim:'var(--green-dim)', border:'rgba(22,163,74,.4)',  sub:'ตรวจสอบถูกต้อง ดำเนินการเสร็จสิ้นแล้ว' }
   };
 
   var isWarehouseRole = ST.user && _isWh(ST.user.role);
-  var statusOrder = ['รอของ','กำลังดำเนินการ','รอตรวจสอบ','เสร็จสิ้น'];
+  var statusOrder = ['รอของ','กำลังดำเนินการ','รอตรวจสอบสินค้า','รอตรวจสอบเอกสาร','เสร็จสิ้น'];
   var currentIdx  = statusOrder.indexOf(currentStatus);
   // Warehouse: เห็นเฉพาะขั้นถัดไป + ปัจจุบัน (ย้อนไม่ได้ ข้ามไม่ได้)
   // ถ้า "เสร็จสิ้น" แล้ว → lock ทั้งหมด
@@ -3005,7 +3041,9 @@ function openStatusModal(id, currentStatus){
         disabled = true; disabledReason = 'ไม่สามารถย้อนสถานะกลับได้';
       } else if(sIdx > currentIdx + 1){
         disabled = true; disabledReason = 'ต้องเปลี่ยนทีละขั้นเท่านั้น';
-      } else if(s==='เสร็จสิ้น' && currentStatus==='รอตรวจสอบ' && !isSupervisorLevel()){
+      } else if(s==='รอตรวจสอบเอกสาร' && currentStatus==='รอตรวจสอบสินค้า' && !isCheckerLevel()){
+        disabled = true; disabledReason = 'เฉพาะผู้ตรวจสินค้า (Checker)/Admin เท่านั้นที่ตรวจสินค้าได้';
+      } else if(s==='เสร็จสิ้น' && currentStatus==='รอตรวจสอบเอกสาร' && !isSupervisorLevel()){
         disabled = true; disabledReason = 'เฉพาะ Warehouse Supervisor/Admin เท่านั้นที่อนุมัติได้';
       }
     }
@@ -3043,8 +3081,8 @@ function openStatusModal(id, currentStatus){
 
   // คำอธิบายตอนเลือก "เสร็จสิ้น" — ต้องกรอกฟอร์มนำสินค้าเข้าก่อน (ไม่มีช่องแนบรูปใน modal นี้แล้ว)
   var uploadHtml = isLocked ? '' :
-    '<div id="status-modal-hint" style="display:'+((currentStatus==='เสร็จสิ้น'||currentStatus==='รอตรวจสอบ')?'block':'none')+';margin-top:4px;padding:10px 12px;background:var(--green-dim);border:1px solid var(--green-b);border-radius:8px;font-size:.78rem;color:var(--green);line-height:1.6;">'
-    +'ℹ️ <b>"รอตรวจสอบ"</b> = เปิดฟอร์มนำสินค้าเข้าเพื่อส่งตรวจ | <b>"เสร็จสิ้น"</b> = เปิดหน้าตรวจสอบ/อนุมัติ (เฉพาะ Warehouse Supervisor/Admin) — ตั้งสถานะตรง ๆ ไม่ได้</div>';
+    '<div id="status-modal-hint" style="display:'+((currentStatus==='เสร็จสิ้น'||isReviewStatus(currentStatus))?'block':'none')+';margin-top:4px;padding:10px 12px;background:var(--green-dim);border:1px solid var(--green-b);border-radius:8px;font-size:.78rem;color:var(--green);line-height:1.6;">'
+    +'ℹ️ <b>"รอตรวจสอบสินค้า"</b> = เปิดฟอร์มนำสินค้าเข้าเพื่อส่งตรวจ | <b>"รอตรวจสอบเอกสาร"</b> = เปิดหน้าตรวจสินค้า (เฉพาะ Checker/Admin) | <b>"เสร็จสิ้น"</b> = เปิดหน้าตรวจสอบ/อนุมัติ (เฉพาะ Warehouse Supervisor/Admin) — ตั้งสถานะตรง ๆ ไม่ได้</div>';
 
   openMdl(
     'เปลี่ยนสถานะรายการ',
@@ -3074,7 +3112,8 @@ function openStatusModal(id, currentStatus){
           var lbl = r.closest('label');
           if(!lbl) return;
           var s = r.value;
-          var cfg = {'รอตรวจสอบ':{color:'var(--purple)',dim:'var(--purple-dim)',border:'var(--purple-b)'},
+          var cfg = {'รอตรวจสอบสินค้า':{color:'var(--teal)',dim:'var(--teal-dim)',border:'var(--teal-b)'},
+                     'รอตรวจสอบเอกสาร':{color:'var(--purple)',dim:'var(--purple-dim)',border:'var(--purple-b)'},
                      'รอของ':{color:'var(--amber)',dim:'var(--amber-dim)',border:'rgba(180,83,9,.4)'},
                      'กำลังดำเนินการ':{color:'var(--blue)',dim:'var(--blue-dim)',border:'rgba(37,99,235,.4)'},
                      'เสร็จสิ้น':{color:'var(--green)',dim:'var(--green-dim)',border:'rgba(22,163,74,.4)'}};
@@ -3088,7 +3127,7 @@ function openStatusModal(id, currentStatus){
           if(dotEl)  dotEl.textContent = ck ? '●' : '○', dotEl.style.color = ck ? cfg[s].color : 'var(--border)';
         });
         var hint = document.getElementById('status-modal-hint');
-        if(hint) hint.style.display = (val==='เสร็จสิ้น'||val==='รอตรวจสอบ') ? 'block' : 'none';
+        if(hint) hint.style.display = (val==='เสร็จสิ้น'||isReviewStatus(val)) ? 'block' : 'none';
       });
     });
     var btn = document.getElementById('confirm-status-btn');
@@ -3104,21 +3143,29 @@ async function confirmStatusChange(cnId){
   var rec = adminRecs.find(function(r){ return String(r.id).trim()===cnId; });
   var prevStatus = rec ? rec.status : '';
 
-  // "รอตรวจสอบ" / "เสร็จสิ้น" ตั้งตรง ๆ ไม่ได้ (docs/adr/0001) — พาไปฟอร์มที่เหมาะสมแทน
+  // "รอตรวจสอบสินค้า" / "รอตรวจสอบเอกสาร" / "เสร็จสิ้น" ตั้งตรง ๆ ไม่ได้ (docs/adr/0001) — พาไปฟอร์มที่เหมาะสมแทน
   // กด "กำลังดำเนินการ" ซ้ำกับใบที่ค้างอยู่ (หรือถูกส่งกลับ) = เปิดฟอร์มกรอกต่อ ไม่ต้องยิง API
   if(newStatus==='กำลังดำเนินการ' && prevStatus==='กำลังดำเนินการ'){ closeMdl(); openIntakeForm(cnId); return; }
-  if(newStatus==='รอตรวจสอบ'){
+  if(newStatus==='รอตรวจสอบสินค้า'){
     if(prevStatus==='กำลังดำเนินการ'){ closeMdl(); openIntakeForm(cnId); return; }
-    if(prevStatus==='รอตรวจสอบ'){ closeMdl(); if(isSupervisorLevel()) openReviewForm(cnId); return; }
+    if(prevStatus==='รอตรวจสอบสินค้า'){ closeMdl(); if(isCheckerLevel()) openReviewForm(cnId); return; }
     toast('ต้องอยู่ในสถานะ "กำลังดำเนินการ" ก่อนจึงจะส่งตรวจสอบได้','error'); return;
   }
+  if(newStatus==='รอตรวจสอบเอกสาร'){
+    if(prevStatus==='รอตรวจสอบสินค้า'){
+      if(!isCheckerLevel()){ toast('เฉพาะผู้ตรวจสินค้า (Checker)/Admin เท่านั้นที่ตรวจสินค้าได้','error'); return; }
+      closeMdl(); openReviewForm(cnId); return;
+    }
+    if(prevStatus==='รอตรวจสอบเอกสาร'){ closeMdl(); if(isSupervisorLevel()) openReviewForm(cnId); return; }
+    toast('ต้องส่งตรวจสอบสินค้า แล้วให้ Checker ตรวจก่อน','error'); return;
+  }
   if(newStatus==='เสร็จสิ้น'){
-    if(prevStatus==='รอตรวจสอบ'){
+    if(prevStatus==='รอตรวจสอบเอกสาร'){
       if(!isSupervisorLevel()){ toast('เฉพาะ Warehouse Supervisor/Admin เท่านั้นที่อนุมัติได้','error'); return; }
       closeMdl(); openReviewForm(cnId); return;
     }
     if(prevStatus==='เสร็จสิ้น'){ closeMdl(); openIntakeForm(cnId); return; }   // Admin แก้ข้อมูลนำสินค้าเข้า
-    toast('ต้องส่งตรวจสอบ แล้วให้ Warehouse Supervisor/Admin อนุมัติก่อน','error'); return;
+    toast('ต้องผ่านการตรวจสินค้า (Checker) และตรวจเอกสาร (Warehouse Supervisor/Admin อนุมัติ) ก่อน','error'); return;
   }
 
   L.show('กำลังบันทึกสถานะ...');
@@ -3139,13 +3186,14 @@ async function confirmStatusChange(cnId){
 }
 
 /* ══════════════════════════════════════════
-   ฟอร์มนำสินค้าเข้าคลัง — บันทึกแล้ว = "รอตรวจสอบ" (PDF สร้างตอนหัวหน้าอนุมัติ)
+   ฟอร์มนำสินค้าเข้าคลัง — บันทึกแล้ว = "รอตรวจสอบสินค้า" (Checker ตรวจ → รอตรวจสอบเอกสาร → PDF สร้างตอนหัวหน้าอนุมัติ)
    ══════════════════════════════════════════ */
 var IK_ROWS = 8;       // เท่ากับจำนวนบรรทัดในใบพิมพ์
 var _intakeRec = null, _ikSaving = false;
 
 function _intakeDashTitle(){
-  return ST.user && _isWh(ST.user.role) ? 'Warehouse Dashboard' : 'Admin Dashboard';
+  return ST.user && _isWh(ST.user.role) ? 'Warehouse Dashboard'
+       : ST.user && ST.user.role==='Checker' ? 'ตรวจสินค้า (ฝ่ายบัญชี)' : 'Admin Dashboard';
 }
 
 function ikDatePreview(i){
@@ -3237,7 +3285,7 @@ async function submitIntake(){
       var html = buildCNFormHtml(Object.assign({}, _intakeRec, { intakeData: JSON.stringify(Object.assign({}, prevI, intake)) }), { pdf:true });
       d = await apiPost({ action:'completeCN', id:ST.intakeId, intake:intake, html:html, imageUrl: imageUrl || undefined });
     } else {
-      // ส่งตรวจสอบ: สถานะเป็น "รอตรวจสอบ" ยังไม่สร้าง PDF (สร้างตอนหัวหน้าอนุมัติ)
+      // ส่งตรวจ: สถานะเป็น "รอตรวจสอบสินค้า" ยังไม่สร้าง PDF (สร้างตอนหัวหน้าอนุมัติ)
       d = await apiPost({ action:'submitIntake', id:ST.intakeId, intake:intake, imageUrl: imageUrl || undefined });
     }
     L.hide();
@@ -3247,7 +3295,7 @@ async function submitIntake(){
     await loadAdmin(true);
     showView('view-admin-dash', _intakeDashTitle());
     if(!isRedo){
-      toast('ส่งตรวจสอบแล้ว — รอ Warehouse Supervisor ตรวจสอบ','success');
+      toast('ส่งตรวจแล้ว — รอผู้ตรวจสินค้า (Checker ฝ่ายบัญชี) ตรวจสินค้า','success');
       return;
     }
     toast('บันทึกข้อมูลนำสินค้าเข้าฉบับใหม่แล้ว','success');
@@ -3277,18 +3325,53 @@ var _reviewRec = null, _rvBusy = false;
 function openReviewForm(cnId){
   var rec = adminRecs.find(function(r){ return String(r.id).trim()===cnId; });
   if(!rec){ toast('ไม่พบรายการ','error'); return; }
-  if(!isSupervisorLevel()){ toast('เฉพาะ Warehouse Supervisor หรือ Admin เท่านั้นที่ตรวจสอบได้','error'); return; }
-  if(rec.status!=='รอตรวจสอบ'){ toast('รายการนี้ไม่ได้อยู่ในสถานะ "รอตรวจสอบ"','error'); return; }
+  var checkMode = rec.status==='รอตรวจสอบสินค้า';   // Checker ตรวจสินค้า | ไม่ใช่ = หัวหน้าตรวจเอกสาร/อนุมัติ
+  if(!isReviewStatus(rec.status)){ toast('รายการนี้ไม่ได้อยู่ในสถานะรอตรวจสอบ','error'); return; }
+  if(checkMode && !isCheckerLevel()){ toast('เฉพาะผู้ตรวจสินค้า (Checker) หรือ Admin เท่านั้นที่ตรวจสินค้าได้','error'); return; }
+  if(!checkMode && !isSupervisorLevel()){ toast('เฉพาะ Warehouse Supervisor หรือ Admin เท่านั้นที่ตรวจเอกสารได้','error'); return; }
   _reviewRec = rec; ST.reviewId = cnId;
   hideErr('review-err');
   var it = {}; try{ it = JSON.parse(rec.intakeData || '{}'); }catch(e){}
   document.getElementById('review-id-badge').textContent = cnId;
-  document.getElementById('review-submit-info').textContent = it.submittedBy
-    ? 'ส่งตรวจสอบโดย '+it.submittedBy+(it.submittedAt ? ' · '+fDateFull(it.submittedAt) : '') : '';
+  document.getElementById('review-title').textContent = checkMode ? 'ตรวจสินค้าที่นำเข้าคลัง (ผู้ตรวจสินค้า ฝ่ายบัญชี)' : 'ตรวจสอบเอกสารและอนุมัติ';
+  var info = it.submittedBy ? 'คลังส่งตรวจโดย '+it.submittedBy+(it.submittedAt ? ' · '+fDateFull(it.submittedAt) : '') : '';
+  if(!checkMode && it.checkedBy) info += (info?' | ':'')+'ตรวจสินค้าโดย '+it.checkedBy+(it.checkedAt ? ' · '+fDateFull(it.checkedAt) : '');
+  document.getElementById('review-submit-info').textContent = info;
+  document.getElementById('review-help').innerHTML = checkMode
+    ? 'ตรวจจำนวน/รายการสินค้าด้านบนให้ตรงกับของจริง — ถ้า<b>ถูกต้อง</b> กด "ตรวจแล้ว" ระบบจะลงชื่อคุณเป็น <b>ผู้ตรวจสินค้า (ฝ่ายบัญชี)</b> ในใบ CN แล้วส่งต่อ "รอตรวจสอบเอกสาร" '
+      +'ถ้า<b>ไม่ถูกต้อง</b> กด "ส่งกลับแก้ไข" แล้วระบุเหตุผล รายการจะกลับไป "กำลังดำเนินการ" ให้คลังแก้'
+    : 'ตรวจเอกสารด้านบนให้ครบ — ถ้า<b>ถูกต้อง</b> กด "เสร็จสิ้น" ระบบจะเซฟ PDF และลงชื่อคุณเป็น <b>ผู้ตรวจสินค้า (ฝ่ายคลังสินค้า)</b> ให้อัตโนมัติ '
+      +'ถ้า<b>ไม่ถูกต้อง</b> กด "ส่งกลับแก้ไข" แล้วระบุเหตุผล รายการจะกลับไป "กำลังดำเนินการ" ให้คลังแก้ (ต้องให้ Checker ตรวจใหม่)';
+  document.getElementById('review-check-btn').style.display = checkMode ? '' : 'none';
+  document.getElementById('review-approve-btn').style.display = checkMode ? 'none' : '';
   document.getElementById('review-detail').innerHTML = cnDetailBodyHtml(rec);
   document.getElementById('review-reject-box').style.display = 'none';
   document.getElementById('review-reason').value = '';
-  showView('view-review', 'ตรวจสอบ '+cnId);
+  showView('view-review', (checkMode ? 'ตรวจสินค้า ' : 'ตรวจสอบเอกสาร ')+cnId);
+}
+
+/* Checker/Admin ตรวจสินค้าแล้ว → ลงชื่อ → รอตรวจสอบเอกสาร (ชื่อที่ลงมาจาก backend เท่านั้น) */
+async function checkReview(){
+  if(_rvBusy || !_reviewRec) return;
+  hideErr('review-err');
+  _rvBusy = true;
+  var btn = document.getElementById('review-check-btn'); if(btn){ btn.disabled = true; btn.style.opacity = '.6'; }
+  L.show('กำลังบันทึกการตรวจสินค้า...');
+  try{
+    var d = await apiPost({ action:'checkIntake', id:ST.reviewId });
+    L.hide();
+    if(!d.success){ showErr('review-err', d.message || 'บันทึกไม่สำเร็จ'); return; }
+    toast('ตรวจสินค้าแล้ว — ลงชื่อแล้ว ส่งต่อ "รอตรวจสอบเอกสาร"','success');
+    invalidateCache('view-admin-dash');
+    await loadAdmin(true);
+    showView('view-admin-dash', _intakeDashTitle());
+  } catch(e){
+    L.hide();
+    showErr('review-err', e.message);
+  } finally {
+    _rvBusy = false;
+    if(btn){ btn.disabled = false; btn.style.opacity = ''; }
+  }
 }
 
 function startReject(){
@@ -3303,7 +3386,7 @@ async function approveReview(){
   var btn = document.getElementById('review-approve-btn'); if(btn){ btn.disabled = true; btn.style.opacity = '.6'; }
   L.show('กำลังอนุมัติและสร้าง PDF...');
   try{
-    // ใบพิมพ์ใส่ตัวแทนชื่อผู้ตรวจ — backend แทนด้วยชื่อผู้อนุมัติจริงเอง
+    // ใบพิมพ์ใส่ตัวแทนชื่อผู้ตรวจ (ผู้อนุมัติ + Checker) — backend แทนด้วยชื่อจริงเอง (ผู้อนุมัติ=actor, Checker=ค่าที่เก็บตอนตรวจ)
     var html = buildCNFormHtml(_reviewRec, { pdf:true, reviewTokens:true });
     var d = await apiPost({ action:'approveCN', id:ST.reviewId, html:html });
     L.hide();
@@ -3748,9 +3831,11 @@ function printMonthReport(monthKey){
       ?'background:#d4edda;color:#155724;'
       :r.status==='กำลังดำเนินการ'
         ?'background:#cce5ff;color:#004085;'
-        :r.status==='รอตรวจสอบ'
+        :r.status==='รอตรวจสอบเอกสาร'
           ?'background:#e9d5ff;color:#5b21b6;'
-          :'background:#fff3cd;color:#856404;';
+          :r.status==='รอตรวจสอบสินค้า'
+            ?'background:#cffafe;color:#0e7490;'
+            :'background:#fff3cd;color:#856404;';
     var durText = calcProcessingDuration(r.processingAt, r.completedAt);
     return '<tr>'
       +'<td style="text-align:center;">'+(i+1)+'</td>'
@@ -3767,7 +3852,8 @@ function printMonthReport(monthKey){
 
   var wait=recs.filter(function(r){return r.status==='รอของ';}).length;
   var proc=recs.filter(function(r){return r.status==='กำลังดำเนินการ';}).length;
-  var rev=recs.filter(function(r){return r.status==='รอตรวจสอบ';}).length;
+  var chk=recs.filter(function(r){return r.status==='รอตรวจสอบสินค้า';}).length;
+  var rev=recs.filter(function(r){return r.status==='รอตรวจสอบเอกสาร';}).length;
   var done=recs.filter(function(r){return r.status==='เสร็จสิ้น';}).length;
 
   // คำนวณระยะเวลาเฉลี่ยจากรายการที่มีทั้ง processingAt และ completedAt
@@ -3834,7 +3920,8 @@ function printMonthReport(monthKey){
     +'<div class="sum">'
     +'<div class="si"><div class="sn" style="color:#856404;">'+wait+'</div><div class="sl">รอของ</div></div>'
     +'<div class="si"><div class="sn" style="color:#004085;">'+proc+'</div><div class="sl">ดำเนินการ</div></div>'
-    +'<div class="si"><div class="sn" style="color:#5b21b6;">'+rev+'</div><div class="sl">รอตรวจสอบ</div></div>'
+    +'<div class="si"><div class="sn" style="color:#0e7490;">'+chk+'</div><div class="sl">รอตรวจสินค้า</div></div>'
+    +'<div class="si"><div class="sn" style="color:#5b21b6;">'+rev+'</div><div class="sl">รอตรวจเอกสาร</div></div>'
     +'<div class="si"><div class="sn" style="color:#155724;">'+done+'</div><div class="sl">เสร็จสิ้น</div></div>'
     +'<div class="si"><div class="sn" style="color:#5a3d00;">'+avgDurationText+'</div><div class="sl">เฉลี่ย/รายการ</div></div>'
     +'<div class="si" style="background:#f8f8f8;"><div class="sn">'+recs.length+'</div><div class="sl">รวมทั้งหมด</div></div>'
@@ -3885,6 +3972,20 @@ function _reviewerOf(r, opts){
     return { name:esc(d.reviewedBy), date:dt, label:'' };
   }
   return { name:'', date:'', label:'(คุณรังสรรค์ ,ภคพงษ์,ชนินทร์)' };
+}
+
+/* ชื่อ/วันที่ผู้ตรวจสินค้า (ฝ่ายบัญชี) = Checker ในใบพิมพ์
+   - opts.reviewTokens (ตอนส่งอนุมัติ): ใส่ตัวแทน backend แทนด้วยค่าที่เก็บไว้ตอน Checker ตรวจ (client ปลอมไม่ได้)
+   - ใบที่ Checker ตรวจแล้ว (intakeData.checkedBy): ชื่อ + วันที่ (พ.ศ.) | ยังไม่ตรวจ/ใบเก่า: เส้นว่าง */
+function _checkerOf(r, opts){
+  if(opts && opts.reviewTokens) return { name:'%%CHECKER_NAME%%', date:'%%CHECKER_DATE%%' };
+  var d = {}; try{ d = r.intakeData ? (typeof r.intakeData==='string' ? JSON.parse(r.intakeData) : r.intakeData) : {}; }catch(e){ d = {}; }
+  if(d && d.checkedBy){
+    var dt = '';
+    if(d.checkedAt){ var x = new Date(d.checkedAt); if(!isNaN(x)){ var dd=x.getDate(), mm=x.getMonth()+1; dt = (dd<10?'0'+dd:dd)+'/'+(mm<10?'0'+mm:mm)+'/'+(x.getFullYear()+543); } }
+    return { name:esc(d.checkedBy), date:dt };
+  }
+  return { name:'', date:'' };
 }
 
 function buildCNFormHtml(r, opts){
@@ -4011,6 +4112,9 @@ html,body{font-family:'Sarabun',sans-serif;font-size:8.5pt;color:#000;background
 
 .sig-wrap{width:100%;margin-top:5pt;}
 .sig-pair{display:table;width:100%;margin-bottom:8pt;}
+.sig-pair.sig-rel{position:relative;}
+.sig-mid{position:absolute;left:50%;top:0;transform:translateX(-50%);width:112pt;}
+.sn-line.nar{width:68pt;}
 .sig-l{display:table-cell;width:44%;vertical-align:top;padding:0 4pt 0 2pt;}
 .sig-gap{display:table-cell;width:12%;}
 .sig-r{display:table-cell;width:44%;vertical-align:top;padding:0 2pt 0 4pt;}
@@ -4120,12 +4224,15 @@ body{background:#525659;}
     +'</div>';
 
   /* 6. Signatures */
-  function snCell(posLabel, nameLabel, repName, repDate){
+  function snCell(posLabel, nameLabel, repName, repDate, narrow){
+    var cls = narrow ? 'sn-line nar' : 'sn-line';
+    // ช่องแคบ (ผู้ตรวจสินค้า ฝ่ายบัญชี กลางแถว): ย่อตัวอักษรชื่อให้พอดีเส้น ไม่ตัดบรรทัด
+    var nameSize = narrow ? fitPt(repName, 66, 7.5, 5) : 7.5;
     var lineContent = repName
-      ? '<div class="sn-line" style="position:relative;">'
-        +'<span style="position:absolute;bottom:1pt;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:7.5pt;font-weight:700;color:#000;">'+repName+'</span>'
+      ? '<div class="'+cls+'" style="position:relative;">'
+        +'<span style="position:absolute;bottom:1pt;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:'+nameSize+'pt;font-weight:700;color:#000;">'+repName+'</span>'
         +'</div>'
-      : '<div class="sn-line"></div>';
+      : '<div class="'+cls+'"></div>';
     return '<div class="sn-wrap">'
       +'<div class="sn-row"><span class="sn-pre">ลงชื่อ</span>'+lineContent+'</div>'
       +(posLabel  ? '<div class="sn-center">'+posLabel+'</div>'  : '')
@@ -4135,6 +4242,7 @@ body{background:#525659;}
   }
 
   var _rv = _reviewerOf(r, opts);
+  var _ck = _checkerOf(r, opts);
   html+='<div class="sig-wrap">';
   // "ผู้รับสินค้า" — แสดงชื่อ + วันที่อัตโนมัติ เมื่อมีคนเปลี่ยนสถานะเป็น "กำลังดำเนินการ" แล้ว (processedBy)
   // (เดิมผูกกับ "เสร็จสิ้น" — เปลี่ยนให้เริ่มลงชื่อได้ตั้งแต่ขั้นตอนรับเข้าคลังแล้ว)
@@ -4152,7 +4260,10 @@ body{background:#525659;}
     +'<div class="sig-gap"></div>'
     +'<div class="sig-r">'+snCell('ผู้แทน / ผู้จัดทำ','',repName,repDate)+'</div>'
     +'</div>';
-  html+='<div class="sig-pair">'
+  // แถวที่ 2: ซ้าย ผู้ตรวจสินค้า (ฝ่ายคลังสินค้า) = ผู้อนุมัติ | กลาง ผู้ตรวจสินค้า (ฝ่ายบัญชี) = Checker | ขวา ฝ่ายบัญชี
+  // ช่องกลางวางลอยกลางแถว (ไม่ดันช่องซ้าย/ขวา) เพื่อให้เส้นลงชื่อตรงกับแถวอื่น
+  html+='<div class="sig-pair sig-rel">'
+    +'<div class="sig-mid">'+snCell('ผู้ตรวจสินค้า (ฝ่ายบัญชี)','',_ck.name,_ck.date,true)+'</div>'
     +'<div class="sig-l">'+snCell('ผู้ตรวจสินค้า (ฝ่ายคลังสินค้า)',_rv.label,_rv.name,_rv.date)+'</div>'
     +'<div class="sig-gap"></div>'
     +'<div class="sig-r">'+snCell('ฝ่ายบัญชี','(คุณอภิชญา นิตย์ภิรมย์)','','')+'</div>'
@@ -4584,10 +4695,11 @@ function renderUsersTbl(users){
       +'<option value="User"'+(u.role==='User'?' selected':'')+'>👤 User</option>'
       +'<option value="Warehouse"'+(u.role==='Warehouse'?' selected':'')+'>🏭 Warehouse</option>'
       +'<option value="Accountant"'+(u.role==='Accountant'?' selected':'')+'>📊 Accountant</option>'
+      +(canSetAdmin?'<option value="Checker"'+(u.role==='Checker'?' selected':'')+'>🔎 Checker (ผู้ตรวจสินค้า ฝ่ายบัญชี)</option>':'')
       +(canSetAdmin?'<option value="WarehouseSupervisor"'+(u.role==='WarehouseSupervisor'?' selected':'')+'>🧑‍💼 Warehouse Supervisor</option>':'')
       +(canSetAdmin?'<option value="Admin"'+(u.role==='Admin'?' selected':'')+'>⚙️ Admin</option>':'');
     // role Warehouse Supervisor ตั้ง/แก้/ลบได้เฉพาะ Admin
-    var lockedRow = (u.role==='WarehouseSupervisor' && !canSetAdmin);
+    var lockedRow = ((u.role==='WarehouseSupervisor' || u.role==='Checker') && !canSetAdmin);
     var roleCell = (canManage && !lockedRow)
       ? '<select class="role-select" onchange="changeUserRole(\''+u.lineUID+'\',this.value)">'+roleOpts+'</select>'
       : roleBadge(u.role);
@@ -4614,8 +4726,8 @@ async function changeUserRole(lineUID, newRole){
   if(ST.user && _isWh(ST.user.role) && newRole==='Admin'){
     toast('Warehouse ไม่มีสิทธิ์กำหนด role Admin','error'); loadUsers(); return;
   }
-  if(ST.user && ST.user.role!=='Admin' && newRole==='WarehouseSupervisor'){
-    toast('เฉพาะ Admin เท่านั้นที่ตั้ง role Warehouse Supervisor','error'); loadUsers(); return;
+  if(ST.user && ST.user.role!=='Admin' && (newRole==='WarehouseSupervisor' || newRole==='Checker')){
+    toast('เฉพาะ Admin เท่านั้นที่ตั้ง role Warehouse Supervisor / Checker','error'); loadUsers(); return;
   }
   try{
     var d = await apiPost({action:'updateUserRole', lineUID:lineUID, role:newRole});
@@ -5037,6 +5149,7 @@ document.addEventListener('DOMContentLoaded',function(){
   window.saveCN = saveCN;
   window.goBack = goBack;
   window.exportCSV = exportCSV;
+  window.checkReview = checkReview;
   window.irRun = irRun;
   window.irToggleAll = irToggleAll;
   window.irXlsx = irXlsx;
