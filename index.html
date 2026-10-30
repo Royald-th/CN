@@ -605,7 +605,6 @@ select.fc option { background: var(--surface2); }
 .ik-row{padding:8px 0;border-bottom:1px dashed var(--border);}
 .ik-cell{min-width:0;}
 .ik-no{border-radius:999px !important;text-align:center;}
-.ik-dp{display:block;font-size:.7rem;color:var(--muted);margin-top:3px;min-height:1em;}
 @media (max-width:768px){
   .ik-head{display:none;}
   .ik-row{grid-template-columns:1fr 1fr;}
@@ -3196,9 +3195,40 @@ function _intakeDashTitle(){
        : ST.user && ST.user.role==='Checker' ? 'ตรวจสินค้า (ฝ่ายบัญชี)' : 'Admin Dashboard';
 }
 
-function ikDatePreview(i){
-  var v = document.getElementById('ik-d-'+i).value;
-  document.getElementById('ik-dp-'+i).textContent = v ? '('+fDateBE(v)+')' : '';
+/* วันหมดอายุพิมพ์เอง วว/ดด/ปปปป (พ.ศ.) — เก็บเป็น YYYY-MM-DD (ค.ศ.) เหมือนเดิม */
+/* IK-PURE-START */
+function ikIsoToBe(iso){
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  return m ? m[3]+'/'+m[2]+'/'+(Number(m[1])+543) : '';
+}
+/* เก็บเฉพาะตัวเลข ≤ 8 หลัก แล้วใส่ / ให้ (15032570 → 15/03/2570) */
+function ikDateMask(raw){
+  var d = String(raw || '').replace(/\D/g,'').slice(0,8), out = d.slice(0,2);
+  if(d.length > 2) out += '/' + d.slice(2,4);
+  if(d.length > 4) out += '/' + d.slice(4);
+  return out;
+}
+/* ว่าง = ok ไม่มีวัน | ปี ≥ 2400 ถือเป็น พ.ศ. ไม่งั้น ค.ศ. | ตรวจวันที่มีจริง */
+function ikParseDate(text){
+  var t = String(text || '').trim();
+  if(!t) return { ok:true, iso:'' };
+  var m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(t);
+  if(!m) return { ok:false, iso:'' };
+  var dd = +m[1], mm = +m[2], yy = +m[3];
+  if(yy >= 2400) yy -= 543;
+  if(yy < 1900 || yy > 2200 || mm < 1 || mm > 12 || dd < 1) return { ok:false, iso:'' };
+  var dim = [31, ((yy%4===0 && yy%100!==0) || yy%400===0) ? 29 : 28, 31,30,31,30,31,31,30,31,30,31][mm-1];
+  if(dd > dim) return { ok:false, iso:'' };
+  return { ok:true, iso: yy+'-'+(mm<10?'0':'')+mm+'-'+(dd<10?'0':'')+dd };
+}
+/* IK-PURE-END */
+function ikDateInput(el){
+  var v = ikDateMask(el.value);
+  if(v !== el.value) el.value = v;
+  el.style.borderColor = '';
+}
+function ikDateCheck(el){
+  el.style.borderColor = ikParseDate(el.value).ok ? '' : 'var(--red)';
 }
 
 function renderIntakeRows(prevLines){
@@ -3211,8 +3241,7 @@ function renderIntakeRows(prevLines){
     h += '<div class="ik-row">'
       +'<div class="ik-cell" data-l="เลขที่คลัง"><input type="text" id="ik-no-'+i+'" class="fc ik-no" maxlength="30" placeholder="เลขที่คลัง" value="'+esc(L.no||'')+'"/></div>'
       +'<div class="ik-cell ik-c-prod" data-l="สินค้า"><select id="ik-p-'+i+'"></select></div>'
-      +'<div class="ik-cell" data-l="วันหมดอายุ"><input type="date" id="ik-d-'+i+'" class="fc" value="'+esc(L.date||'')+'" oninput="ikDatePreview('+i+')"/>'
-        +'<span class="ik-dp" id="ik-dp-'+i+'">'+(L.date ? '('+fDateBE(L.date)+')' : '')+'</span></div>'
+      +'<div class="ik-cell" data-l="วันหมดอายุ"><input type="text" inputmode="numeric" maxlength="10" autocomplete="off" id="ik-d-'+i+'" class="fc" placeholder="วว/ดด/ปปปป" value="'+esc(ikIsoToBe(L.date))+'" oninput="ikDateInput(this)" onblur="ikDateCheck(this)"/></div>'
       +'<div class="ik-cell" data-l="จำนวน"><input type="number" min="0" step="any" id="ik-q-'+i+'" class="fc" value="'+esc(L.qty!==undefined ? String(L.qty) : '')+'"/></div>'
       +'<div class="ik-cell" data-l="หน่วย"><input type="text" id="ik-u-'+i+'" class="fc" maxlength="30" value="'+esc(L.unit||'')+'"/></div>'
       +'</div>';
@@ -3257,11 +3286,14 @@ async function submitIntake(){
     var no = document.getElementById('ik-no-'+i).value.trim();
     var sel = document.getElementById('ik-p-'+i);
     var product = (sel && sel.value || '').trim();
-    var date = document.getElementById('ik-d-'+i).value;
+    var dateTxt = document.getElementById('ik-d-'+i).value.trim();
     var qty = document.getElementById('ik-q-'+i).value.trim();
     var unit = document.getElementById('ik-u-'+i).value.trim();
-    if(!no && !product && !date && !qty && !unit) continue;   // บรรทัดว่างทั้งบรรทัด ข้าม
+    if(!no && !product && !dateTxt && !qty && !unit) continue;   // บรรทัดว่างทั้งบรรทัด ข้าม
     var tag = 'บรรทัดที่ '+(i+1)+': ';
+    var pd = ikParseDate(dateTxt);
+    if(!pd.ok){ showErr('intake-err', tag+'วันหมดอายุไม่ถูกต้อง (พิมพ์ วว/ดด/ปปปป เช่น 15/03/2570 หรือเว้นว่าง)'); return; }
+    var date = pd.iso;
     if(!no){ showErr('intake-err', tag+'กรุณากรอกเลขที่คลัง'); return; }
     if(!product){ showErr('intake-err', tag+'กรุณาเลือกสินค้า'); return; }
     var qn = Number(qty);
@@ -5133,7 +5165,8 @@ document.addEventListener('DOMContentLoaded',function(){
   window.onCompanyChange = onCompanyChange;
   window.openIntakeForm = openIntakeForm;
   window.submitIntake = submitIntake;
-  window.ikDatePreview = ikDatePreview;
+  window.ikDateInput = ikDateInput;
+  window.ikDateCheck = ikDateCheck;
   window.openReviewForm = openReviewForm;
   window.approveReview = approveReview;
   window.startReject = startReject;
