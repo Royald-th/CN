@@ -18,8 +18,8 @@
 <!-- preconnect → ลด DNS/TLS handshake ก่อน font โหลด -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
-<noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/></noscript>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/></noscript>
 <!-- LIFF SDK โหลด async เพื่อไม่ block render -->
 <link rel="preconnect" href="https://static.line-scdn.net"/>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" defer></script>
@@ -92,8 +92,15 @@
 
   --r:    8px;
   --r2:   12px;
-  --font: 'Noto Sans Thai', sans-serif;
+  /* ฟอนต์สำรองที่รองรับอักษรไทย (ระหว่างรอ Noto Sans Thai โหลด ไม่ตกไปฟอนต์ที่ไม่มีไทย) */
+  --font: 'Noto Sans Thai', 'Sarabun', 'Leelawadee UI', 'Tahoma', sans-serif;
   --mono: 'IBM Plex Mono', monospace;
+  /* บทบาทตัวอักษร (ฐาน root 87.5% = 14px ที่ค่าปริยาย แต่ตามขนาดที่ผู้ใช้ตั้งในเบราว์เซอร์)
+     พื้นต่ำสุดของข้อความใด ๆ = --fs-meta (12.25px) ห้ามประกาศขนาดเล็กกว่านี้ */
+  --fs-meta: .875rem;    /* หัวตาราง ป้ายกำกับ badge หัวข้อเมนู คำอธิบายใต้ข้อมูล */
+  --fs-ui:   .9375rem;   /* เซลล์ตาราง ปุ่ม เมนู ช่องกรอก รายการนำทาง */
+  --fs-body: 1rem;       /* ข้อความอ่าน คำอธิบาย โมดัล */
+  --fs-lead: 1.125rem;   /* ชื่อลูกค้าในการ์ด หัวข้อการ์ด/โมดัล */
   --ease: cubic-bezier(.16,1,.3,1);
   color-scheme: light;
 }
@@ -142,7 +149,7 @@
   --teal-b:    rgba(34,211,238,.35);
 
     --accent:    #22A757;
-    --accent-h:  #1B8A47;
+    --accent-h:  #2BBF66;   /* hover ธีมมืดสว่างขึ้น (เดิม #1B8A47 ทำให้ตัวอักษรเข้มบนปุ่มได้ 4.3:1 ต่ำกว่า AA) */
 
     --zebra:    rgba(255,255,255,.025);
     --shadow:   rgba(0,0,0,.45);
@@ -189,7 +196,7 @@
   --teal-b:    rgba(34,211,238,.35);
 
   --accent:    #22A757;
-  --accent-h:  #1B8A47;
+  --accent-h:  #2BBF66;
 
   --zebra:    rgba(255,255,255,.025);
   --shadow:   rgba(0,0,0,.45);
@@ -204,7 +211,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 14px; scroll-behavior: smooth; }
+html { font-size: 87.5%; scroll-behavior: smooth; }   /* = 14px ที่ค่าปริยาย แต่ตามการตั้งค่าขนาดตัวอักษรของผู้ใช้ */
 body {
   font-family: var(--font);
   background: var(--bg);
@@ -257,29 +264,37 @@ body {
   border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--mono);
-  font-size: .75rem; font-weight: 600;
+  font-size: var(--fs-meta); font-weight: 600;
   color: var(--on-accent);
   flex-shrink: 0;
   box-shadow: none;
 }
-.brand-text { font-size: .8rem; font-weight: 600; color: var(--ink); }
-.brand-sub  { font-size: .68rem; color: var(--muted); margin-top: 1px; }
+.brand-text { font-size: var(--fs-ui); font-weight: 600; color: var(--ink); }
+.brand-sub  { font-size: var(--fs-meta); color: var(--muted); margin-top: 1px; }
 
 .sidebar-nav { flex: 1; padding: 14px 10px; overflow-y: auto; }
-.nav-section { padding: 14px 10px 5px; font-size: .65rem; font-weight: 700; color: var(--muted); letter-spacing: .09em; text-transform: uppercase; opacity:.75; }
+.nav-section { padding: 14px 10px 5px; font-size: var(--fs-meta); font-weight: 700; color: var(--muted); opacity:.75; }
 .nav-section:first-child { padding-top: 4px; }
 .nav-item {
   display: flex; align-items: center; gap: 11px;
   padding: 10px 14px;
   margin: 2px 0;
   cursor: pointer;
-  font-size: .83rem; font-weight: 500;
+  font-size: var(--fs-ui); font-weight: 500;
   color: var(--muted);
   border-radius: 8px;
   transition: all .15s var(--ease);
   user-select: none;
 }
 .nav-item:hover { color: var(--ink); background: var(--surface2); }
+.nav-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.sidebar-toggle { font: inherit; color: var(--muted); }
+.sidebar-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ผู้ใช้ที่ตั้ง "ลดการเคลื่อนไหว" ในระบบ: ปิดแอนิเมชันวนซ้ำ/การเลื่อนนุ่ม ๆ ทั้งหมด (สถานะยังบอกด้วยแถบ/จุดที่ไม่ขยับ) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
 .nav-item.active { color: var(--accent); background: var(--green-dim); font-weight: 600; }
 .nav-item svg { flex-shrink: 0; opacity: .65; transition: opacity .15s; }
 .nav-item:hover svg { opacity: .9; }
@@ -297,16 +312,17 @@ body {
   background: linear-gradient(135deg, var(--purple), var(--blue));
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: .72rem; font-weight: 700; color: #fff;
+  font-size: var(--fs-meta); font-weight: 700; color: #fff;
   flex-shrink: 0;
 }
-.user-name  { font-size: .78rem; font-weight: 600; color: var(--ink); }
-.user-role  { font-size: .66rem; color: var(--muted); }
+.user-name  { font-size: var(--fs-meta); font-weight: 600; color: var(--ink); }
+.user-role  { font-size: var(--fs-meta); color: var(--muted); }
 
 /* MAIN CONTENT */
 .main-content {
   margin-left: 220px;
   flex: 1;
+  min-width: 0;   /* ไม่ให้ตารางกว้างดันทั้งหน้าให้ล้นจอ — ตารางเลื่อนในกรอบ .tw เอง */
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -316,12 +332,12 @@ body {
 .topbar {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  padding: 0 28px;
+  padding: 8px 28px;
   height: 60px;
   display: flex; align-items: center; justify-content: space-between;
   position: sticky; top: 0; z-index: 40;
 }
-.topbar-title { font-size: .95rem; font-weight: 600; color: var(--ink); }
+.topbar-title { font-size: var(--fs-body); font-weight: 600; color: var(--ink); }
 .topbar-actions { display: flex; gap: 8px; align-items: center; }
 
 /* ── SWR indicators: progress bar บาง ๆ + pulse dot (ไม่บล็อก UI) ── */
@@ -359,7 +375,7 @@ body {
 }
 
 /* PAGE CONTENT */
-.content { padding: 32px; }
+.content { padding: 32px; min-width: 0; }
 
 /* ══════════════════════════════════════════
    COMPONENTS
@@ -371,6 +387,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--r2);
   overflow: hidden;
+  min-width: 0;
 }
 .card-header {
   padding: 18px 24px;
@@ -380,8 +397,8 @@ body {
   background: var(--surface2);
 }
 .card-title {
-  font-size: .78rem; font-weight: 700;
-  letter-spacing: .06em; text-transform: uppercase;
+  font-size: var(--fs-meta); font-weight: 700;
+
   color: var(--muted);
 }
 .card-body { padding: 24px; }
@@ -421,9 +438,39 @@ body {
   box-shadow: none;
 }
 .stat-num   { font-size: 1.9rem; font-weight: 700; color: var(--ink); font-family: var(--mono); line-height: 1.1; }
-.stat-label { font-size: .71rem; color: var(--muted); margin-top: 5px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.stat-label { font-size: var(--fs-meta); color: var(--muted); margin-top: 5px; font-weight: 600; }
 .stat-icon  { position: absolute; top: 16px; right: 16px; font-size: 1.9rem; transition: opacity .2s, transform .2s; }
 .stat-card:hover .stat-icon { opacity: .28; transform: scale(1.08); }
+/* ไอคอนวาดเอง (เส้นเดียวกันทั้งชุด) แทนอีโมจิ ในการ์ดตัวกรองของแดชบอร์ดเจ้าหน้าที่ */
+.stat-icon.svg { display: block; width: 26px; height: 26px; font-size: 0; color: var(--muted); opacity: .6; }
+.stat-icon.svg svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.stat-card:hover .stat-icon.svg, button.stat-card[aria-pressed="true"] .stat-icon.svg { opacity: .9; transform: none; color: var(--accent); }
+
+/* ── การ์ดสถานะแดชบอร์ดเจ้าหน้าที่ = ตัวกรอง (ปุ่ม) กดซ้ำ = กลับไปทั้งหมด ── */
+button.stat-card { font: inherit; text-align: left; width: 100%; cursor: pointer; color: inherit; }
+button.stat-card > span { display: block; }
+button.stat-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.stat-card[aria-pressed="true"] {
+  border-color: var(--accent); background: var(--surface2);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+.stat-sub { display: block; font-size: var(--fs-meta); color: var(--muted); margin-top: 3px; line-height: 1.4; }
+/* "รอคุณ" = การ์ดนำ: อยู่ก่อนเสมอ แถบบนทึบสีหลัก ตัวเลขเด่นกว่า (มือถือเต็มแถว) */
+.stat-card.s-mine::before { background: var(--accent); height: 4px; }
+.stat-card.s-mine .stat-num { font-size: 2.3rem; color: var(--accent); }
+.stat-card.s-mine .stat-label { color: var(--ink); text-transform: none; letter-spacing: 0; font-size: var(--fs-ui); }
+/* จอกว้าง: การ์ดสูงสุด 7 ใบ (รอคุณ + 6 สถานะ) ต้องเรียงแถวเดียว ไม่ให้ใบสุดท้ายตกมาอยู่ลำพัง */
+#view-admin-dash .stats-grid { grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); }
+/* มือถือ: การ์ด "รอคุณ" เต็มแถวอยู่บนสุด การ์ดสถานะอื่นย่อเป็น 3 คอลัมน์กระชับ (ตัวกรอง ไม่ใช่เนื้อหาหลัก) ให้ตารางขึ้นมาอยู่ในหน้าจอแรก */
+@media (max-width: 768px) {
+  #view-admin-dash .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  #view-admin-dash .stat-card.s-mine { grid-column: 1 / -1; padding: 14px 16px; }
+  #view-admin-dash .stat-card.s-mine .stat-num { font-size: 2rem; }
+  #view-admin-dash .stat-card:not(.s-mine) { padding: 10px 10px 9px; border-radius: var(--r); }
+  #view-admin-dash .stat-card:not(.s-mine) .stat-icon { display: none; }
+  #view-admin-dash .stat-card:not(.s-mine) .stat-num { font-size: 1.35rem; }
+  #view-admin-dash .stat-card:not(.s-mine) .stat-label { font-size: var(--fs-meta); text-transform: none; letter-spacing: 0; margin-top: 3px; line-height: 1.3; }
+}
 
 /* Buttons */
 .btn {
@@ -432,7 +479,7 @@ body {
   border-radius: var(--r);
   border: 1px solid transparent;
   font-family: var(--font);
-  font-size: .8rem; font-weight: 600;
+  font-size: var(--fs-ui); font-weight: 600;
   cursor: pointer;
   transition: all .15s var(--ease);
   text-decoration: none;
@@ -474,8 +521,8 @@ body {
 .btn-danger { background: transparent; border-color: var(--red); color: var(--red); }
 .btn-danger:hover { background: var(--red-dim); border-color: var(--red); }
 
-.btn-xs  { padding: 2px 8px; font-size: .72rem; }
-.btn-sm  { padding: 6px 13px; font-size: .80rem; min-height: 34px; border-radius: 6px; }
+.btn-xs  { padding: 2px 8px; font-size: var(--fs-meta); }
+.btn-sm  { padding: 6px 13px; font-size: var(--fs-ui); min-height: 34px; border-radius: 6px; }
 .btn-full { width: 100%; justify-content: center; }
 
 /* ปุ่มไอคอนล้วน (ไม่มีข้อความ) เช่น ✕ ปิด/ลบแถว — บังคับเป็นวงกลม/สี่เหลี่ยมเท่ากันเสมอ กดง่ายบนมือถือ */
@@ -483,7 +530,7 @@ body {
   display: inline-flex; align-items: center; justify-content: center;
   width: 30px; height: 30px; padding: 0;
   border-radius: 7px;
-  font-size: .95rem;
+  font-size: var(--fs-body);
   flex-shrink: 0;
 }
 
@@ -492,7 +539,7 @@ body {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 3px 10px 3px 8px;
   border-radius: 20px;
-  font-size: .73rem; font-weight: 600;
+  font-size: var(--fs-meta); font-weight: 600;
   border: 1px solid transparent;
   white-space: nowrap;
 }
@@ -504,12 +551,12 @@ body {
 
 /* Table */
 .tw { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+table { width: 100%; border-collapse: collapse; font-size: var(--fs-ui); }
 th {
   padding: 13px 18px;
   text-align: left;
-  font-size: .68rem; font-weight: 700;
-  letter-spacing: .07em; text-transform: uppercase;
+  font-size: var(--fs-meta); font-weight: 700;
+
   color: var(--muted);
   border-bottom: 1px solid var(--border2);
   background: var(--surface2);
@@ -527,17 +574,20 @@ tbody tr { transition: background .15s var(--ease); }
 tbody tr:nth-child(even) { background: var(--zebra); }
 tbody tr:hover { background: var(--surface3); cursor: pointer; }
 tbody tr:hover td { background: transparent; }
-.te { text-align: center; padding: 40px; color: var(--muted); font-size: .85rem; }
-.mono { font-family: var(--mono); font-size: .76rem; color: var(--blue); }
+.te { text-align: center; padding: 40px; color: var(--muted); font-size: var(--fs-ui); }
+/* หน้าจอสัมผัส: ช่องกรอก 16px กันไม่ให้ iOS (LINE) ซูมหน้าเองตอนแตะช่อง */
+@media (pointer: coarse) { input, select, textarea, .fc, .ts-control, .ts-control input { font-size: 16px !important; } }
+.mono, .stat-num, .ith td { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--mono); font-size: var(--fs-meta); color: var(--blue); }
 
 /* Form */
 .fg { margin-bottom: 18px; }
 .lbl {
   display: block;
-  font-size: .72rem; font-weight: 700;
+  font-size: var(--fs-meta); font-weight: 700;
   color: var(--muted);
   margin-bottom: 5px;
-  letter-spacing: .04em; text-transform: uppercase;
+
 }
 .lbl .req { color: var(--red); margin-left: 2px; }
 .fc {
@@ -545,7 +595,7 @@ tbody tr:hover td { background: transparent; }
   padding: 10px 14px;
   border: 1px solid var(--border2);
   border-radius: var(--r);
-  font-family: var(--font); font-size: .85rem;
+  font-family: var(--font); font-size: var(--fs-ui);
   color: var(--ink);
   background: var(--surface);
   outline: none;
@@ -565,7 +615,7 @@ select.fc option { background: var(--surface2); }
   color: var(--ink) !important;
   padding: 10px 14px !important;
   font-family: var(--font) !important;
-  font-size: .85rem !important;
+  font-size: var(--fs-ui) !important;
   min-height: unset !important;
   box-shadow: none !important;
 }
@@ -581,7 +631,7 @@ select.fc option { background: var(--surface2); }
   border-radius: var(--r) !important;
   color: var(--ink) !important;
   font-family: var(--font) !important;
-  font-size: .85rem !important;
+  font-size: var(--fs-ui) !important;
   box-shadow: 0 8px 24px var(--shadow) !important;
   z-index: 200 !important;
 }
@@ -592,16 +642,16 @@ select.fc option { background: var(--surface2); }
   color: var(--ink2) !important;
 }
 .ts-dropdown .active { background: var(--blue-dim) !important; color: var(--blue) !important; }
-.ts-dropdown .no-results { padding: 10px; color: var(--muted) !important; font-size: .8rem; }
+.ts-dropdown .no-results { padding: 10px; color: var(--muted) !important; font-size: var(--fs-ui); }
 .ts-wrapper.single .ts-control::after { border-color: var(--muted) transparent transparent transparent !important; }
 .ts-wrapper .plugin-clear_button .clear { color: var(--muted) !important; }
 .ts-wrapper.disabled .ts-control { opacity: .5; background: var(--surface) !important; }
 
 .ith .ts-wrapper{width:100%;}
-.ith .ts-wrapper.single .ts-control{padding:5px 8px !important;min-height:34px !important;font-size:.82rem !important;}
+.ith .ts-wrapper.single .ts-control{padding:5px 8px !important;min-height:34px !important;font-size:var(--fs-ui) !important;}
 
 .ik-head,.ik-row{display:grid;grid-template-columns:110px minmax(220px,1fr) 170px 100px 100px;gap:8px;align-items:start;}
-.ik-head{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:0 0 6px;border-bottom:1px solid var(--border2);}
+.ik-head{font-size:var(--fs-meta);font-weight:700;color:var(--muted);padding:0 0 6px;border-bottom:1px solid var(--border2);}
 .ik-row{padding:8px 0;border-bottom:1px dashed var(--border);}
 .ik-cell{min-width:0;}
 .ik-no{border-radius:999px !important;text-align:center;}
@@ -609,7 +659,7 @@ select.fc option { background: var(--surface2); }
   .ik-head{display:none;}
   .ik-row{grid-template-columns:1fr 1fr;}
   .ik-cell.ik-c-prod{grid-column:1 / -1;order:-1;}
-  .ik-cell::before{content:attr(data-l);display:block;font-size:.66rem;color:var(--muted);margin-bottom:2px;}
+  .ik-cell::before{content:attr(data-l);display:block;font-size:var(--fs-meta);color:var(--muted);margin-bottom:2px;}
 }
 
 /* Radio */
@@ -622,7 +672,7 @@ select.fc option { background: var(--surface2); }
   border-radius: var(--r);
   transition: all .15s;
   flex: 1; min-width: 140px;
-  font-size: .82rem;
+  font-size: var(--fs-ui);
 }
 .ro:has(input:checked) { border-color: var(--accent); background: var(--green-dim); color: var(--accent); }
 .ro input { accent-color: var(--accent); }
@@ -630,18 +680,18 @@ select.fc option { background: var(--surface2); }
 /* Items table */
 .itw { overflow-x: auto; border: 1px solid var(--border2); border-radius: var(--r); }
 .ith { width: 100%; border-collapse: collapse; min-width: 420px; }
-.ith th { background: var(--surface2); padding: 7px 9px; text-align: center; font-size: .68rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border2); }
+.ith th { background: var(--surface2); padding: 7px 9px; text-align: center; font-size: var(--fs-meta); font-weight: 700; color: var(--muted); border-bottom: 1px solid var(--border2); }
 .ith td { padding: 2px 3px; border-bottom: 1px solid var(--border); }
 .ith tr:last-child td { border-bottom: none; }
-.ith td input { width: 100%; padding: 6px 8px; border: 1px solid transparent; border-radius: 4px; font-family: var(--font); font-size: .82rem; color: var(--ink); background: transparent; outline: none; transition: all .15s; }
+.ith td input { width: 100%; padding: 6px 8px; border: 1px solid transparent; border-radius: 4px; font-family: var(--font); font-size: var(--fs-ui); color: var(--ink); background: transparent; outline: none; transition: all .15s; }
 .ith td input:focus { border-color: var(--blue); background: var(--surface); }
-.itn { width: 28px; text-align: center; color: var(--muted); font-size: .76rem; padding: 0 4px !important; }
+.itn { width: 28px; text-align: center; color: var(--muted); font-size: var(--fs-meta); padding: 0 4px !important; }
 .itq { width: 72px; }
 .itu { width: 62px; }
 .itd { width: 38px; text-align: center; }
 
 /* Alert */
-.alert { padding: 10px 14px; border-radius: var(--r); font-size: .82rem; display: none; }
+.alert { padding: 10px 14px; border-radius: var(--r); font-size: var(--fs-ui); display: none; }
 .alert.on { display: flex; align-items: center; gap: 8px; }
 .ae { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-b); }
 .as { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-b); }
@@ -668,9 +718,9 @@ select.fc option { background: var(--surface2); }
 .uz input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 .upr { margin-top: 10px; display: none; }
 .upr img { max-width: 100%; max-height: 160px; object-fit: contain; border-radius: var(--r); border: 1px solid var(--border); }
-.udone { display: none; align-items: center; gap: 8px; padding: 9px 12px; background: var(--green-dim); border: 1px solid var(--green-b); border-radius: var(--r); color: var(--green); font-size: .82rem; margin-top: 8px; }
+.udone { display: none; align-items: center; gap: 8px; padding: 9px 12px; background: var(--green-dim); border: 1px solid var(--green-b); border-radius: var(--r); color: var(--green); font-size: var(--fs-ui); margin-top: 8px; }
 .udone a { color: var(--green); font-weight: 600; }
-.uloading { display: none; align-items: center; gap: 8px; padding: 9px 12px; background: var(--blue-dim); border: 1px solid var(--blue-b); border-radius: var(--r); color: var(--blue); font-size: .82rem; margin-top: 8px; }
+.uloading { display: none; align-items: center; gap: 8px; padding: 9px 12px; background: var(--blue-dim); border: 1px solid var(--blue-b); border-radius: var(--r); color: var(--blue); font-size: var(--fs-ui); margin-top: 8px; }
 
 /* Filter bar */
 .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -684,7 +734,7 @@ select.fc option { background: var(--surface2); }
 
 /* Proof image */
 .piw img { max-width: 100%; max-height: 160px; object-fit: contain; border-radius: var(--r); border: 1px solid var(--border); display: block; margin-top: 4px; }
-.piw a { display: inline-flex; align-items: center; gap: 4px; font-size: .76rem; color: var(--blue); margin-top: 5px; }
+.piw a { display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-meta); color: var(--blue); margin-top: 5px; }
 
 /* Empty state */
 .empty-state { text-align: center; padding: 56px 20px; }
@@ -696,12 +746,12 @@ select.fc option { background: var(--surface2); }
   0%,100% { transform: translateY(0); }
   50%     { transform: translateY(-6px); }
 }
-.empty-title { font-size: .96rem; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
-.empty-sub { font-size: .81rem; color: var(--muted); line-height: 1.5; }
+.empty-title { font-size: var(--fs-body); font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.empty-sub { font-size: var(--fs-ui); color: var(--muted); line-height: 1.5; }
 
 /* Month report modal */
 .month-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap: 8px; margin-top: 12px; }
-.month-btn { background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r); padding: 10px 8px; text-align: center; cursor: pointer; transition: all .15s; font-size: .8rem; color: var(--ink2); }
+.month-btn { background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r); padding: 10px 8px; text-align: center; cursor: pointer; transition: all .15s; font-size: var(--fs-ui); color: var(--ink2); }
 .month-btn:hover { border-color: var(--blue); background: var(--blue-dim); color: var(--blue); }
 
 /* ── TOAST ── */
@@ -709,7 +759,7 @@ select.fc option { background: var(--surface2); }
   background:var(--surface);border:1px solid var(--border2);
   border-radius:var(--r);padding:10px 14px;
   display:flex;align-items:center;gap:9px;
-  font-size:.8rem;color:var(--ink);
+  font-size:var(--fs-ui);color:var(--ink);
   box-shadow:0 4px 16px var(--shadow);
   min-width:220px;max-width:320px;
   pointer-events:all;
@@ -718,23 +768,24 @@ select.fc option { background: var(--surface2); }
 .toast.out{ animation:toast-out .25s ease forwards; }
 @keyframes toast-in{ from{opacity:0;transform:translateX(20px);} to{opacity:1;transform:translateX(0);} }
 @keyframes toast-out{ from{opacity:1;transform:translateX(0);} to{opacity:0;transform:translateX(20px);} }
-.toast-icon{ font-size:1rem;flex-shrink:0; }
-.toast-success{ border-left:3px solid var(--green); }
-.toast-error  { border-left:3px solid var(--red);   }
-.toast-info   { border-left:3px solid var(--blue);  }
-.toast-warn   { border-left:3px solid var(--amber); }
+.toast-icon{ display:flex;width:18px;height:18px;flex-shrink:0; }
+.toast-icon svg{ width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round; }
+.toast-success{ border-color:var(--green-b); } .toast-success .toast-icon{ color:var(--green); }
+.toast-error  { border-color:var(--red-b);   } .toast-error   .toast-icon{ color:var(--red);   }
+.toast-info   { border-color:var(--blue-b);  } .toast-info    .toast-icon{ color:var(--blue);  }
+.toast-warn   { border-color:var(--amber-b); } .toast-warn    .toast-icon{ color:var(--amber); }
 
 /* ── USER MANAGEMENT (Admin view) ── */
-.role-select{ background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--ink);font-family:var(--font);font-size:.78rem;padding:3px 7px;cursor:pointer;outline:none; }
+.role-select{ background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--ink);font-family:var(--font);font-size:var(--fs-meta);padding:3px 7px;cursor:pointer;outline:none; }
 .role-select:focus{ border-color:var(--blue); }
 
 /* Role badge colors */
-.chip-admin{background:var(--red-dim);color:var(--red);border:1px solid var(--red-b);padding:1px 7px;border-radius:12px;font-size:.68rem;font-weight:700;}
-.chip-supervisor{background:var(--purple-dim);color:var(--purple);border:1px solid var(--purple-b);padding:1px 7px;border-radius:12px;font-size:.68rem;font-weight:700;}
-.chip-warehouse{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-b);padding:1px 7px;border-radius:12px;font-size:.68rem;font-weight:700;}
-.chip-accountant{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-b);padding:1px 7px;border-radius:12px;font-size:.68rem;font-weight:700;}
-.chip-checker{background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-b);padding:1px 7px;border-radius:12px;font-size:.68rem;font-weight:700;}
-.chip-user{background:var(--green-dim);color:var(--green);border:1px solid var(--green-b);padding:1px 7px;border-radius:12px;font-size:.68rem;font-weight:700;}
+.chip-admin{background:var(--red-dim);color:var(--red);border:1px solid var(--red-b);padding:1px 7px;border-radius:12px;font-size:var(--fs-meta);font-weight:700;}
+.chip-supervisor{background:var(--purple-dim);color:var(--purple);border:1px solid var(--purple-b);padding:1px 7px;border-radius:12px;font-size:var(--fs-meta);font-weight:700;}
+.chip-warehouse{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-b);padding:1px 7px;border-radius:12px;font-size:var(--fs-meta);font-weight:700;}
+.chip-accountant{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-b);padding:1px 7px;border-radius:12px;font-size:var(--fs-meta);font-weight:700;}
+.chip-checker{background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-b);padding:1px 7px;border-radius:12px;font-size:var(--fs-meta);font-weight:700;}
+.chip-user{background:var(--green-dim);color:var(--green);border:1px solid var(--green-b);padding:1px 7px;border-radius:12px;font-size:var(--fs-meta);font-weight:700;}
 
 #page-auth {
   background: var(--bg);
@@ -755,12 +806,12 @@ select.fc option { background: var(--surface2); }
   background: linear-gradient(135deg, var(--accent), var(--accent-h));
   border-radius: 12px;
   display: inline-flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 1.1rem; font-weight: 700; color: var(--on-accent);
+  font-family: var(--mono); font-size: var(--fs-lead); font-weight: 700; color: var(--on-accent);
   margin-bottom: 12px;
   box-shadow: none;
 }
 .auth-logo h1 { font-size: 1.25rem; font-weight: 700; color: var(--ink); }
-.auth-logo p  { font-size: .78rem; color: var(--muted); margin-top: 3px; }
+.auth-logo p  { font-size: var(--fs-meta); color: var(--muted); margin-top: 3px; }
 
 /* ══════════════════════════════════════════
    RESPONSIVE — Sidebar collapse on mobile
@@ -776,7 +827,7 @@ select.fc option { background: var(--surface2); }
     width: 36px; height: 36px;
     background: var(--surface2); border: 1px solid var(--border2);
     border-radius: var(--r); cursor: pointer; color: var(--muted);
-    font-size: 1.1rem;
+    font-size: var(--fs-lead);
   }
   .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 49; }
   .sidebar-overlay.on { display: block; }
@@ -786,6 +837,65 @@ select.fc option { background: var(--surface2); }
   .stats-grid { grid-template-columns: repeat(2,1fr); }
   .content { padding: 14px; }
 }
+
+/* ── ตารางรายการ CN (แดชบอร์ด) → การ์ดต่อใบ เมื่อพื้นที่เนื้อหาแคบกว่าตาราง (~1037px) ──
+   breakpoint ตามเนื้อหา: ตารางต้องการ ~1037px + แถบเมนู 220px + ขอบ 64px = ~1321px จึงใช้การ์ดเมื่อจอแคบกว่า 1340px
+   (กว้างกว่านี้ตารางพอดีโดยไม่เลื่อนข้าง) การ์ด: เลขที่ + สถานะ บนสุด / ชื่อลูกค้า / ข้อมูลรอง (วันที่ ผู้ทำรายการ ประเภท จังหวัด) / ปุ่ม (สูง ≥44px) */
+@media (max-width: 1340px) {
+  #view-admin-dash .tw table, #view-admin-dash .tw tbody { display: block; }
+  #view-admin-dash .tw thead { display: none; }
+  #atbl tr {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px;
+    height: auto !important; padding: 14px 16px;
+    border-bottom: 1px solid var(--border); cursor: pointer;
+  }
+  #atbl tr:last-child { border-bottom: none; }
+  #atbl td { display: block; padding: 0; border: 0; min-width: 0; }
+  #atbl td.te { flex: 1 1 100%; padding: 32px 8px; }
+  #atbl .c-id   { order: 1; flex: 1 1 auto; }
+  #atbl .c-st   { order: 2; margin-left: auto; }
+  #atbl .c-cust { order: 3; flex: 1 1 100%; font-size: var(--fs-body); margin-top: 2px; }
+  #atbl .c-date, #atbl .c-by, #atbl .c-type, #atbl .c-prov { order: 4; font-size: var(--fs-meta); flex: 0 1 auto; }
+  #atbl .c-act  { order: 5; flex: 1 1 100%; margin-top: 8px; }
+  #atbl .c-act > div { flex-wrap: wrap !important; gap: 8px !important; }
+  #atbl .c-act .btn { min-height: 44px; min-width: 44px; justify-content: center; }
+  #atbl .c-act .row-primary { flex: 1 1 auto; }
+}
+
+/* ── ปุ่มต่อแถว: หนึ่งปุ่มหลักตามสถานะ + เมนู "เพิ่มเติม" (ข้อความล้วน) ──
+   เมนูเป็น element เดียวลอยเหนือเนื้อหา (ไม่โดน overflow:hidden ของตาราง); จอ ≤768px เป็นแผ่นเลื่อนจากล่าง นิ้วโป้งถึง */
+.row-primary { white-space: nowrap; }
+.row-more { gap: 6px; }
+.rowmenu-bk { position: fixed; inset: 0; z-index: 199; display: none; background: transparent; }
+.rowmenu-bk.on { display: block; }
+.rowmenu {
+  position: fixed; z-index: 200; display: none;
+  min-width: 220px; max-width: calc(100vw - 16px);
+  background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r);
+  box-shadow: 0 8px 24px rgba(0,0,0,.16); padding: 6px;
+}
+.rowmenu.on { display: block; }
+.rowmenu button {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%;
+  min-height: 42px; padding: 9px 12px; border: 0; border-radius: 6px;
+  background: none; color: var(--ink); font: inherit; font-size: var(--fs-ui); text-align: left; cursor: pointer;
+}
+.rowmenu button:hover, .rowmenu button:focus-visible { background: var(--surface3); outline: none; }
+.rowmenu button:focus-visible { box-shadow: 0 0 0 2px var(--accent) inset; }
+.rowmenu button[disabled] { color: var(--muted); cursor: not-allowed; }
+.rowmenu button[disabled]:hover { background: none; }
+.rowmenu button small { font-size: var(--fs-meta); color: var(--muted); font-weight: 400; }
+.rowmenu button.danger { color: var(--red); }
+.rowmenu hr { border: 0; border-top: 1px solid var(--border); margin: 5px 4px; }
+@media (max-width: 768px) {
+  .rowmenu-bk.on { background: rgba(0,0,0,.4); }
+  .rowmenu {
+    left: 0 !important; right: 0 !important; top: auto !important; bottom: 0;
+    min-width: 0; max-width: none; border-radius: 16px 16px 0 0; border-bottom: 0;
+    padding: 8px 8px calc(12px + env(safe-area-inset-bottom));
+  }
+  .rowmenu button { min-height: 52px; font-size: var(--fs-body); padding: 12px 14px; }
+}
 </style>
 </head>
 <body>
@@ -794,18 +904,22 @@ select.fc option { background: var(--surface2); }
 <div class="lov" id="lov">
   <div class="lbox">
     <div class="spin"></div>
-    <p style="color:var(--muted);font-size:.82rem;" id="ltxt">กำลังโหลด...</p>
+    <p style="color:var(--muted);font-size:var(--fs-ui);" id="ltxt">กำลังโหลด...</p>
   </div>
 </div>
 
 <!-- ── TOAST NOTIFICATION ── -->
 <div id="toast-wrap" style="position:fixed;top:16px;right:16px;z-index:9998;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
 
+<!-- ── เมนูเพิ่มเติมต่อแถว (ตารางรายการ CN) ── -->
+<div class="rowmenu-bk" id="rowmenu-bk" onclick="closeRowMenu()"></div>
+<div class="rowmenu" id="rowmenu" role="menu" aria-label="เมนูของรายการ"></div>
+
 <!-- ── MODAL ── -->
 <div class="mov" id="mov" onclick="closeMdl(event)">
   <div class="mdl">
     <div class="mhd">
-      <span style="font-weight:700;font-size:.92rem;color:var(--ink);" id="mtitle">รายละเอียด</span>
+      <span style="font-weight:700;font-size:var(--fs-body);color:var(--ink);" id="mtitle">รายละเอียด</span>
       <button class="btn btn-ghost btn-icon-only" onclick="closeMdl()" title="ปิด" aria-label="ปิดหน้าต่าง">✕</button>
     </div>
     <div class="mbody" id="mbody"></div>
@@ -827,15 +941,15 @@ select.fc option { background: var(--surface2); }
       <p>Royal-D Thailand</p>
     </div>
     <div id="auth-login">
-      <p style="text-align:center;color:var(--muted);font-size:.84rem;margin-bottom:16px;">กรุณาเข้าสู่ระบบผ่าน LINE</p>
-      <button class="btn btn-primary btn-full" onclick="initLiff()" style="font-size:.875rem;padding:10px;">
+      <p style="text-align:center;color:var(--muted);font-size:var(--fs-ui);margin-bottom:16px;">กรุณาเข้าสู่ระบบผ่าน LINE</p>
+      <button class="btn btn-primary btn-full" onclick="initLiff()" style="font-size:var(--fs-ui);padding:10px;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
         เข้าสู่ระบบด้วย LINE
       </button>
       <div id="auth-err" class="alert ae" style="margin-top:12px;"></div>
     </div>
     <div id="auth-reg" style="display:none;">
-      <p style="color:var(--muted);font-size:.82rem;margin-bottom:14px;">ยังไม่พบข้อมูลในระบบ กรุณาลงทะเบียน</p>
+      <p style="color:var(--muted);font-size:var(--fs-ui);margin-bottom:14px;">ยังไม่พบข้อมูลในระบบ กรุณาลงทะเบียน</p>
       <div class="fg"><label class="lbl">ชื่อ <span class="req">*</span></label><input type="text" id="reg-fn" class="fc" placeholder="ชื่อจริง"/></div>
       <div class="fg"><label class="lbl">นามสกุล <span class="req">*</span></label><input type="text" id="reg-ln" class="fc" placeholder="นามสกุล"/></div>
       <div id="reg-err" class="alert ae" style="margin-bottom:10px;"></div>
@@ -881,7 +995,7 @@ select.fc option { background: var(--surface2); }
       <!-- TOP BAR -->
       <div class="topbar" style="position:relative;">
         <div style="display:flex;align-items:center;gap:10px;">
-          <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+          <button type="button" class="sidebar-toggle" onclick="toggleSidebar()" aria-label="เปิด/ปิดเมนู" aria-controls="sidebar">☰</button>
           <span class="topbar-title" id="topbar-title">Dashboard</span>
           <span id="swr-dot" class="swr-dot" title="กำลังอัปเดตข้อมูล..."></span>
         </div>
@@ -909,7 +1023,7 @@ select.fc option { background: var(--surface2); }
             <div class="card-header">
               <span class="card-title">รายการ CN ของฉัน</span>
               <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                <input type="text" id="user-search" class="fc" placeholder="🔍 ค้นหา..." oninput="filterUserTbl()" style="width:160px;padding:5px 10px;font-size:.78rem;"/>
+                <input type="text" id="user-search" class="fc" placeholder="🔍 ค้นหา..." oninput="filterUserTbl()" style="width:160px;padding:5px 10px;font-size:var(--fs-meta);"/>
                 <button class="btn btn-ghost btn-sm" onclick="loadUser()" title="รีเฟรช">
                   <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
                 </button>
@@ -930,17 +1044,18 @@ select.fc option { background: var(--surface2); }
 
         <!-- ── VIEW: ADMIN DASHBOARD ── -->
         <div id="view-admin-dash" style="display:none;">
-          <div class="stats-grid">
-            <div class="stat-card s-total"><div class="stat-num" id="as-all">0</div><div class="stat-label">ทั้งหมด</div><div class="stat-icon">📋</div></div>
-            <div class="stat-card s-wait"><div class="stat-num" id="as-wait">0</div><div class="stat-label">รอของ</div><div class="stat-icon">⏳</div></div>
-            <div class="stat-card s-proc"><div class="stat-num" id="as-proc">0</div><div class="stat-label">ดำเนินการ</div><div class="stat-icon">⚙️</div></div>
-            <div class="stat-card s-check"><div class="stat-num" id="as-check">0</div><div class="stat-label">รอตรวจสอบสินค้า</div><div class="stat-icon">📦</div></div>
-            <div class="stat-card s-review"><div class="stat-num" id="as-review">0</div><div class="stat-label">รอตรวจสอบเอกสาร</div><div class="stat-icon">🔍</div></div>
-            <div class="stat-card s-done"><div class="stat-num" id="as-done">0</div><div class="stat-label">เสร็จสิ้น</div><div class="stat-icon">✅</div></div>
+          <div class="stats-grid" role="group" aria-label="กรองรายการตามสถานะ">
+            <button type="button" class="stat-card s-mine" id="stat-mine" data-f="__mine" aria-pressed="false" style="display:none;" onclick="setStatusFilter('__mine')"><span class="stat-num" id="as-mine">0</span><span class="stat-label">รอคุณ</span><span class="stat-sub" id="as-mine-sub"></span></button>
+            <button type="button" class="stat-card s-total" data-f="" aria-pressed="true" onclick="setStatusFilter('')"><span class="stat-num" id="as-all">0</span><span class="stat-label">ทั้งหมด</span><span class="stat-icon svg" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 4h6a1 1 0 011 1v1H8V5a1 1 0 011-1z"/><rect x="5" y="6" width="14" height="15" rx="2"/><path d="M9 11h6M9 15h4"/></svg></span></button>
+            <button type="button" class="stat-card s-wait" data-f="รอของ" aria-pressed="false" onclick="setStatusFilter('รอของ')"><span class="stat-num" id="as-wait">0</span><span class="stat-label">รอของ</span><span class="stat-icon svg" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h10M7 21h10M8 3v4l4 5-4 5v4M16 3v4l-4 5 4 5v4"/></svg></span></button>
+            <button type="button" class="stat-card s-proc" data-f="กำลังดำเนินการ" aria-pressed="false" onclick="setStatusFilter('กำลังดำเนินการ')"><span class="stat-num" id="as-proc">0</span><span class="stat-label">ดำเนินการ</span><span class="stat-icon svg" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-3-6.7"/><path d="M21 4v5h-5"/></svg></span></button>
+            <button type="button" class="stat-card s-check" data-f="รอตรวจสอบสินค้า" aria-pressed="false" onclick="setStatusFilter('รอตรวจสอบสินค้า')"><span class="stat-num" id="as-check">0</span><span class="stat-label">รอตรวจสอบสินค้า</span><span class="stat-icon svg" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></span></button>
+            <button type="button" class="stat-card s-review" data-f="รอตรวจสอบเอกสาร" aria-pressed="false" onclick="setStatusFilter('รอตรวจสอบเอกสาร')"><span class="stat-num" id="as-review">0</span><span class="stat-label">รอตรวจสอบเอกสาร</span><span class="stat-icon svg" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 14l2 2 4-4"/></svg></span></button>
+            <button type="button" class="stat-card s-done" data-f="เสร็จสิ้น" aria-pressed="false" onclick="setStatusFilter('เสร็จสิ้น')"><span class="stat-num" id="as-done">0</span><span class="stat-label">เสร็จสิ้น</span><span class="stat-icon svg" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/></svg></span></button>
           </div>
           <div class="card">
             <div class="card-header">
-              <span class="card-title">รายการ CN ทั้งหมด</span>
+              <span class="card-title" id="adm-title" aria-live="polite">รายการ CN ทั้งหมด</span>
               <div style="display:flex;gap:7px;flex-wrap:wrap;">
                 <button class="btn btn-ghost btn-sm" onclick="loadAdmin()" title="รีเฟรช">
                   <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
@@ -958,7 +1073,7 @@ select.fc option { background: var(--surface2); }
             </div>
             <div style="padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface2);">
               <div class="filter-bar" style="margin:0;">
-                <input type="text" id="fs" class="fc" placeholder="🔍 ค้นหา เลขที่ / ลูกค้า..." oninput="doFilter()" style="min-width:180px;"/>
+                <input type="text" id="fs" class="fc" placeholder="ค้นหา เลขที่ / ลูกค้า..." aria-label="ค้นหาเลขที่หรือลูกค้า" oninput="doFilter()" style="min-width:180px;"/>
                 <select id="fuser" class="fc" style="max-width:170px;" onchange="doFilter()">
                   <option value="">ทุกผู้ทำรายการ</option>
                 </select>
@@ -1012,7 +1127,7 @@ select.fc option { background: var(--surface2); }
                 <div class="fg" style="margin:0;">
                   <label class="lbl">รหัสลูกค้า <span class="req">*</span></label>
                   <select id="f-custcode" class="fc"><option value="">-- เลือกบริษัทก่อน --</option></select>
-                  <div id="custcode-hint" style="font-size:.72rem;margin-top:4px;min-height:14px;color:var(--muted);"></div>
+                  <div id="custcode-hint" style="font-size:var(--fs-meta);margin-top:4px;min-height:14px;color:var(--muted);"></div>
                 </div>
                 <div class="fg" style="margin:0;"><label class="lbl">ชื่อลูกค้า</label><input type="text" id="f-cust" class="fc" placeholder="เติมอัตโนมัติจากรหัสลูกค้า" readonly/></div>
               </div>
@@ -1069,13 +1184,13 @@ select.fc option { background: var(--surface2); }
                 <div class="uz" id="at-uz" ondragover="uzOver(event)" ondragleave="uzLeave(event)" ondrop="upDrop(event,'attach')">
                   <input type="file" id="at-img" accept="image/*" multiple onchange="upSelect(event,'attach')"/>
                   <div style="font-size:1.3rem;margin-bottom:5px;">📷</div>
-                  <div style="font-size:.82rem;font-weight:600;color:var(--ink2);">คลิกหรือลากรูปมาวางที่นี่</div>
-                  <div style="font-size:.72rem;color:var(--muted);margin-top:2px;">JPG, PNG, WEBP — เลือกหลายรูปพร้อมกันได้ (≤ 20 MB ต่อรูป)</div>
+                  <div style="font-size:var(--fs-ui);font-weight:600;color:var(--ink2);">คลิกหรือลากรูปมาวางที่นี่</div>
+                  <div style="font-size:var(--fs-meta);color:var(--muted);margin-top:2px;">JPG, PNG, WEBP — เลือกหลายรูปพร้อมกันได้ (≤ 20 MB ต่อรูป)</div>
                 </div>
                 <div id="at-preview-grid" style="display:none;margin-top:10px;">
                   <div id="at-preview-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
                   <div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;">
-                    <span id="at-count-lbl" style="font-size:.72rem;color:var(--muted);"></span>
+                    <span id="at-count-lbl" style="font-size:var(--fs-meta);color:var(--muted);"></span>
                     <button type="button" class="btn btn-ghost btn-xs" onclick="UP.attach.clear()" style="color:var(--red);">✕ ลบทั้งหมด</button>
                   </div>
                 </div>
@@ -1126,13 +1241,13 @@ select.fc option { background: var(--surface2); }
     <div class="mhd" style="background:var(--surf2);">
       <div style="display:flex;align-items:center;gap:10px;">
         <span id="confirm-mdl-icon" style="font-size:1.4rem;">⚠️</span>
-        <span style="font-weight:700;font-size:.92rem;color:var(--ink);" id="confirm-mdl-title">ยืนยันการดำเนินการ</span>
+        <span style="font-weight:700;font-size:var(--fs-body);color:var(--ink);" id="confirm-mdl-title">ยืนยันการดำเนินการ</span>
       </div>
       <button class="btn btn-ghost btn-sm" onclick="closeConfirmMdl()" style="padding:3px 7px;">✕</button>
     </div>
     <div class="mbody">
-      <p id="confirm-mdl-body" style="font-size:.85rem;color:var(--txt);line-height:1.7;"></p>
-      <div id="confirm-mdl-detail" style="margin-top:10px;padding:10px 12px;background:var(--surf2);border-radius:var(--r);font-size:.78rem;color:var(--txt2);display:none;"></div>
+      <p id="confirm-mdl-body" style="font-size:var(--fs-ui);color:var(--txt);line-height:1.7;"></p>
+      <div id="confirm-mdl-detail" style="margin-top:10px;padding:10px 12px;background:var(--surf2);border-radius:var(--r);font-size:var(--fs-meta);color:var(--txt2);display:none;"></div>
     </div>
     <div class="mft">
       <button class="btn btn-ghost" onclick="closeConfirmMdl()">ยกเลิก</button>
@@ -1176,10 +1291,10 @@ select.fc option { background: var(--surface2); }
         <div id="view-backup" style="display:none;">
           <!-- Action cards -->
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:20px;">
-            <div class="card" style="border-left:3px solid var(--green);">
+            <div class="card" style="border-color:var(--green-b);">
               <div class="card-body" style="padding:18px;">
-                <div style="font-size:.88rem;font-weight:700;color:var(--ink);margin-bottom:5px;">💾 Backup ทันที</div>
-                <div style="font-size:.78rem;color:var(--txt2);margin-bottom:12px;">สำรองข้อมูล CN_Records ทั้งหมดไปยัง Sheet ใหม่ทันที</div>
+                <div style="font-size:var(--fs-ui);font-weight:700;color:var(--ink);margin-bottom:5px;">💾 Backup ทันที</div>
+                <div style="font-size:var(--fs-meta);color:var(--txt2);margin-bottom:12px;">สำรองข้อมูล CN_Records ทั้งหมดไปยัง Sheet ใหม่ทันที</div>
                 <div class="fg" style="margin-bottom:10px;">
                   <label class="lbl">หมายเหตุ (ไม่บังคับ)</label>
                   <input type="text" id="bk-note" class="fc" placeholder="เช่น ก่อน deploy version ใหม่"/>
@@ -1190,10 +1305,10 @@ select.fc option { background: var(--surface2); }
                 </button>
               </div>
             </div>
-            <div class="card" style="border-left:3px solid var(--amber);">
+            <div class="card" style="border-color:var(--amber-b);">
               <div class="card-body" style="padding:18px;">
-                <div style="font-size:.88rem;font-weight:700;color:var(--ink);margin-bottom:5px;">📦 Archive รายการเสร็จสิ้น</div>
-                <div style="font-size:.78rem;color:var(--txt2);margin-bottom:12px;">ย้ายรายการ CN ที่ "เสร็จสิ้น" ทั้งหมดไปยัง Archive Sheet เพื่อลดขนาดข้อมูล</div>
+                <div style="font-size:var(--fs-ui);font-weight:700;color:var(--ink);margin-bottom:5px;">📦 Archive รายการเสร็จสิ้น</div>
+                <div style="font-size:var(--fs-meta);color:var(--txt2);margin-bottom:12px;">ย้ายรายการ CN ที่ "เสร็จสิ้น" ทั้งหมดไปยัง Archive Sheet เพื่อลดขนาดข้อมูล</div>
                 <div class="fg" style="margin-bottom:10px;">
                   <label class="lbl">Archive รายการก่อนวันที่ (ไม่บังคับ)</label>
                   <input type="date" id="arc-before" class="fc"/>
@@ -1234,7 +1349,7 @@ select.fc option { background: var(--surface2); }
               <div id="intake-err" class="alert ae" style="margin-bottom:12px;"></div>
               <div id="intake-warn"></div>
               <div id="intake-detail" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;"></div>
-              <p style="font-size:.76rem;color:var(--muted);margin-bottom:6px;">
+              <p style="font-size:var(--fs-meta);color:var(--muted);margin-bottom:6px;">
                 กรอกอย่างน้อย 1 บรรทัด (สูงสุด 8) — เลขที่คลัง / สินค้า / จำนวน / หน่วย ต้องครบในบรรทัดที่ใช้ (วันหมดอายุไม่บังคับ) บรรทัดที่เว้นว่างทั้งบรรทัดจะถูกข้าม
               </p>
               <div id="intake-rows"></div>
@@ -1248,12 +1363,12 @@ select.fc option { background: var(--surface2); }
                 <div class="uz" id="ik-uz" ondragover="uzOver(event)" ondragleave="uzLeave(event)" ondrop="upDrop(event,'intake')">
                   <input type="file" id="ik-img" accept="image/*" multiple onchange="upSelect(event,'intake')"/>
                   <div style="font-size:1.3rem;margin-bottom:5px;">📎</div>
-                  <div style="font-size:.82rem;font-weight:600;color:var(--ink2);">คลิกหรือลากรูปมาวางที่นี่</div>
+                  <div style="font-size:var(--fs-ui);font-weight:600;color:var(--ink2);">คลิกหรือลากรูปมาวางที่นี่</div>
                 </div>
                 <div id="ik-preview-grid" style="display:none;margin-top:10px;">
                   <div id="ik-preview-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
                   <div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;">
-                    <span id="ik-count-lbl" style="font-size:.72rem;color:var(--muted);"></span>
+                    <span id="ik-count-lbl" style="font-size:var(--fs-meta);color:var(--muted);"></span>
                     <button type="button" class="btn btn-ghost btn-xs" onclick="UP.intake.clear()" style="color:var(--red);">✕ ลบทั้งหมด</button>
                   </div>
                 </div>
@@ -1282,9 +1397,9 @@ select.fc option { background: var(--surface2); }
             </div>
             <div class="card-body">
               <div id="review-err" class="alert ae" style="margin-bottom:12px;"></div>
-              <div id="review-submit-info" style="font-size:.78rem;color:var(--muted);margin-bottom:10px;"></div>
+              <div id="review-submit-info" style="font-size:var(--fs-meta);color:var(--muted);margin-bottom:10px;"></div>
               <div id="review-detail" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;"></div>
-              <p id="review-help" style="font-size:.78rem;color:var(--ink2);margin-bottom:10px;line-height:1.7;"></p>
+              <p id="review-help" style="font-size:var(--fs-meta);color:var(--ink2);margin-bottom:10px;line-height:1.7;"></p>
               <div id="review-reject-box" style="display:none;margin-bottom:12px;">
                 <label class="lbl">เหตุผลที่ส่งกลับแก้ไข <span class="req">*</span></label>
                 <textarea id="review-reason" class="fc" rows="3" maxlength="300" placeholder="ระบุสิ่งที่ต้องแก้ เช่น จำนวนไม่ตรงกับที่นับจริง"></textarea>
@@ -1308,7 +1423,7 @@ select.fc option { background: var(--surface2); }
           <div class="card">
             <div class="card-header"><span class="card-title">รายงานสินค้าเข้า</span></div>
             <div class="card-body">
-              <p style="font-size:.82rem;color:var(--ink2);margin-bottom:14px;line-height:1.7;">
+              <p style="font-size:var(--fs-ui);color:var(--ink2);margin-bottom:14px;line-height:1.7;">
                 สรุปสินค้าที่คลังรับเข้าแต่ละคลัง จาก CN ที่ "เสร็จสิ้น" แล้ว นับตามวันที่เสร็จสิ้น
                 ถ้าเลือก "เลขที่ CN" ระบบจะดึงเฉพาะใบนั้นและไม่ใช้ช่วงวันที่ ยอดรวมแยกตามหน่วย ไม่บวกข้ามหน่วย
               </p>
@@ -1343,7 +1458,7 @@ select.fc option { background: var(--surface2); }
               <span class="card-title">QR Code สำหรับเข้าใช้งานระบบ</span>
             </div>
             <div class="card-body">
-              <p style="font-size:.84rem;color:var(--ink2);margin-bottom:18px;line-height:1.7;">
+              <p style="font-size:var(--fs-ui);color:var(--ink2);margin-bottom:18px;line-height:1.7;">
                 ให้พนักงานสแกน QR นี้เพื่อเข้าใช้งานระบบ CN
                 เมื่อสแกนแล้วจะเปิดในแอป LINE และเข้าสู่ระบบด้วยบัญชี LINE ที่ใช้อยู่โดยอัตโนมัติ
                 ผู้ใช้ใหม่จะเข้าหน้าลงทะเบียนก่อน แล้ว Admin ค่อยกำหนดสิทธิ์ให้ภายหลังที่เมนู "ผู้ใช้งาน"
@@ -1356,7 +1471,7 @@ select.fc option { background: var(--surface2); }
                 <div style="flex:1;min-width:230px;">
                   <div class="lbl">ลิงก์เข้าใช้งาน</div>
                   <div id="qr-url" class="mono"
-                    style="font-size:.76rem;color:var(--blue);word-break:break-all;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:9px 11px;margin-bottom:14px;"></div>
+                    style="font-size:var(--fs-meta);color:var(--blue);word-break:break-all;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:9px 11px;margin-bottom:14px;"></div>
                   <div style="display:flex;flex-direction:column;gap:8px;">
                     <button class="btn btn-primary" onclick="downloadQRPlain()">
                       <span class="btn-icon">⬇</span> โหลด QR อย่างเดียว (PNG)
@@ -1371,7 +1486,7 @@ select.fc option { background: var(--surface2); }
                 </div>
               </div>
 
-              <div id="qr-fallback" style="display:none;padding:26px 20px;text-align:center;color:var(--muted);font-size:.84rem;">
+              <div id="qr-fallback" style="display:none;padding:26px 20px;text-align:center;color:var(--muted);font-size:var(--fs-ui);">
                 <div style="font-size:1.6rem;margin-bottom:8px;">⏳</div>
                 กำลังโหลดตัวสร้าง QR Code...
               </div>
@@ -1762,6 +1877,7 @@ function roleLabel(role){
 async function enterApp(){
   // L.show() ถูกเปิดค้างไว้จาก checkUser() แล้ว — คงไว้จนข้อมูลตารางพร้อม
   L.show('กำลังโหลดข้อมูล...');
+  _adminDefaultSet = false;   // เข้าสู่ระบบใหม่ → คำนวณตัวกรองเริ่มต้น "รอคุณ" ใหม่
 
   document.getElementById('page-auth').classList.remove('active');
   document.getElementById('auth-login').style.display='block';
@@ -1831,7 +1947,8 @@ function buildNav(role){
   var IR_NAV = "showView('view-intake-report','รายงานสินค้าเข้า');(async()=>{await loadViewCached('view-intake-report',loadIntakeReport);})();";
 
   function navItem(view, label, icon, clickFn){
-    return '<div class="nav-item"'+(view?' data-view="'+view+'"':'')+' onclick="'+clickFn+'">'+icon+label+'</div>';
+    // role/tabindex: เข้าถึงด้วยคีย์บอร์ด/screen reader ได้ (Enter/Space เปิด — ดู keydown บน #sidebar-nav)
+    return '<div class="nav-item" role="button" tabindex="0"'+(view?' data-view="'+view+'"':'')+' onclick="'+clickFn+'">'+icon+label+'</div>';
   }
   function navSection(label){
     return '<div class="nav-section">'+label+'</div>';
@@ -1948,10 +2065,10 @@ function renderUserTbl(recs){
     var key='_cn_'+r.id.replace(/\W/g,'_');
     window[key]=r;
     return '<tr style="height:52px;">'
-      +'<td class="mono" style="font-size:.8rem;font-weight:600;">'+r.id+'</td>'
-      +'<td style="font-size:.8rem;color:var(--muted);white-space:nowrap;">'+fDate(r.createdAt)+'</td>'
-      +'<td style="font-size:.8rem;">'+r.docType+'</td>'
-      +'<td style="font-weight:600;color:var(--ink);font-size:.88rem;">'+esc(r.customerName)+'</td>'
+      +'<td class="mono" style="font-size:var(--fs-ui);font-weight:600;">'+r.id+'</td>'
+      +'<td style="font-size:var(--fs-ui);color:var(--muted);white-space:nowrap;">'+fDate(r.createdAt)+'</td>'
+      +'<td style="font-size:var(--fs-ui);">'+r.docType+'</td>'
+      +'<td style="font-weight:600;color:var(--ink);font-size:var(--fs-ui);">'+esc(r.customerName)+'</td>'
       +'<td>'+badge(r.status)+'</td>'
       +'<td><div style="display:flex;gap:5px;">'
       +'<button class="btn btn-ghost btn-sm" onclick="viewDetail(\''+r.id+'\',false)" title="ดูรายละเอียด">👁 ดู</button>'
@@ -1987,7 +2104,13 @@ async function loadAdmin(silent, gen, viewId){
     adminRecs.forEach(function(r){ if(r.lineUID&&!userMap[r.lineUID]) userMap[r.lineUID]=r.creatorName; });
     allUsers = Object.keys(userMap).map(function(k){ return{uid:k, name:userMap[k]}; });
     buildUserDropdown();
+    ensureQueueOption();
     updateAdminStats(adminRecs);
+    if(!_adminDefaultSet){
+      // เปิดมาเป็น "รอคุณ" ถ้าคิวมีงาน ไม่งั้นเป็น "ทั้งหมด" (ไม่ให้เห็นตารางว่างตั้งแต่แรก)
+      _adminDefaultSet = true;
+      document.getElementById('fst').value = (_myQueue() && adminRecs.some(_inMyQueue)) ? '__mine' : '';
+    }
     // ใช้ doFilter() แทน paginateAdmin(adminRecs) — คงเงื่อนไขค้นหา/กรองที่ผู้ใช้ตั้งไว้
     // เดิมทุกครั้งที่ SWR revalidate เบื้องหลัง ตารางจะถูกรีเซ็ตกลับเป็น "ทั้งหมด" ทั้งที่ช่องค้นหายังมีข้อความอยู่
     doFilter();
@@ -2008,11 +2131,11 @@ function showLoadError(tbId, colspan, retryFn){
   if(!tb) return;
   tb.innerHTML = '<tr><td colspan="'+colspan+'">'
     +'<div class="empty-state" style="padding:28px 0;">'
-    +'<div class="empty-icon">⚠️</div>'
-    +'<div class="empty-title" style="color:var(--yellow);">โหลดไม่สำเร็จ</div>'
+    +'<div class="empty-icon" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg></div>'
+    +'<div class="empty-title" style="color:var(--amber);">โหลดไม่สำเร็จ</div>'
     +'<div class="empty-sub" style="margin-bottom:12px;">เซิร์ฟเวอร์ใช้เวลาตอบสนองนาน หรือเครือข่ายขัดข้อง</div>'
     +'<button class="btn btn-out btn-sm" onclick="('+retryFn.toString()+')()">'
-    +'🔄 โหลดใหม่</button>'
+    +'<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> โหลดใหม่</button>'
     +'</div></td></tr>';
 }
 
@@ -2028,7 +2151,43 @@ function buildUserDropdown(){
   if(prev && allUsers.some(function(u){ return u.uid===prev; })) sel.value=prev;
 }
 
+/* ── คิว "รอคุณ" ตาม role (ตาม brief; Admin/Accountant ไม่มีคิวผูกตามหน้าที่) ── */
+var QUEUE_BY_ROLE = {
+  Checker:             { statuses:['รอตรวจสอบสินค้า'],                 sub:'ตรวจสินค้า' },
+  WarehouseSupervisor: { statuses:['รอตรวจสอบเอกสาร','กำลังดำเนินการ'], sub:'ตรวจเอกสาร · นำสินค้าเข้า' },
+  Warehouse:           { statuses:['รอของ','กำลังดำเนินการ'],           sub:'เริ่มงาน · นำสินค้าเข้า' }
+};
+var _adminDefaultSet = false;   // ตั้งตัวกรองเริ่มต้นครั้งเดียวต่อการเข้าสู่ระบบ — รีเฟรชเบื้องหลังต้องไม่รีเซ็ตสิ่งที่ผู้ใช้เลือก
+function _myQueue(){ return ST.user ? QUEUE_BY_ROLE[ST.user.role] : null; }
+function queueStatuses(){ var q=_myQueue(); return q ? q.statuses : []; }
+function _inMyQueue(r){ return queueStatuses().indexOf(r.status) >= 0; }
+// ใส่/เอาตัวเลือก "รอคุณ" ในช่องสถานะตาม role ปัจจุบัน
+function ensureQueueOption(){
+  var sel=document.getElementById('fst'); if(!sel) return;
+  var has=!!sel.querySelector('option[value="__mine"]'), need=!!_myQueue();
+  if(need && !has){ var o=document.createElement('option'); o.value='__mine'; o.textContent='รอคุณ'; sel.insertBefore(o, sel.options[1]||null); }
+  if(!need && has){ if(sel.value==='__mine') sel.value=''; sel.querySelector('option[value="__mine"]').remove(); }
+}
+function setStatusFilter(v){
+  var sel=document.getElementById('fst'); if(!sel) return;
+  sel.value = (sel.value===v) ? '' : v;      // กดการ์ดเดิมซ้ำ = กลับไปทั้งหมด
+  doFilter();
+}
+function syncStatCards(){
+  var cur=(document.getElementById('fst')||{}).value||'';
+  document.querySelectorAll('#view-admin-dash .stats-grid .stat-card').forEach(function(c){
+    c.setAttribute('aria-pressed', c.getAttribute('data-f')===cur ? 'true' : 'false');
+  });
+}
 function updateAdminStats(recs){
+  var q=_myQueue(), mine=document.getElementById('stat-mine');
+  if(mine){
+    mine.style.display = q ? '' : 'none';
+    if(q){
+      document.getElementById('as-mine').textContent = recs.filter(_inMyQueue).length;
+      document.getElementById('as-mine-sub').textContent = q.sub;
+    }
+  }
   document.getElementById('as-all').textContent=recs.length;
   document.getElementById('as-wait').textContent=recs.filter(function(x){return x.status==='รอของ';}).length;
   document.getElementById('as-proc').textContent=recs.filter(function(x){return x.status==='กำลังดำเนินการ';}).length;
@@ -2042,63 +2201,149 @@ function renderAdminTbl(recs){
   if(!recs.length){
     // ถ้า adminRecs ก็ว่างด้วย แสดงว่ายังไม่มีข้อมูลเลย (ไม่ใช่ filter ไม่เจอ)
     var isEmpty = !adminRecs.length;
+    var fstEl = document.getElementById('fst');
+    if(!isEmpty && fstEl && fstEl.value==='__mine' && !document.getElementById('fs').value && !document.getElementById('fuser').value && !document.getElementById('fdt').value){
+      // คิวของฉันว่างจริง (ไม่ใช่เพราะค้นหา/กรองอื่น) → บอกชัดและมีทางไปดูทั้งหมด
+      tb.innerHTML='<tr><td colspan="8"><div class="empty-state">'
+        +'<div class="empty-title">ไม่มีรายการรอคุณ</div>'
+        +'<div class="empty-sub" style="margin-bottom:12px;">คิวของคุณว่างแล้ว</div>'
+        +'<button type="button" class="btn btn-outline btn-sm" onclick="setStatusFilter(\'\')">ดูรายการทั้งหมด</button>'
+        +'</div></td></tr>';
+      return;
+    }
     tb.innerHTML='<tr><td colspan="8"><div class="empty-state">'
-      +'<div class="empty-icon">'+(isEmpty?'📋':'🔍')+'</div>'
+      +'<div class="empty-icon" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'
+        +(isEmpty?'<path d="M9 4h6a1 1 0 011 1v1H8V5a1 1 0 011-1z"/><rect x="5" y="6" width="14" height="15" rx="2"/><path d="M9 11h6M9 15h4"/>'
+                 :'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>')+'</svg></div>'
       +'<div class="empty-title">'+(isEmpty?'ยังไม่มีรายการ CN':'ไม่พบรายการ')+'</div>'
       +'<div class="empty-sub">'+(isEmpty?'กดปุ่มสร้างรายการ CN เพื่อเริ่มต้น':'ลองเปลี่ยนเงื่อนไขการค้นหา')+'</div>'
       +'</div></td></tr>';
     return;
   }
-  var canEdit    = isAdminLevel();
-  var canPrint   = isAdminLevel();
-  var isAdmin    = ST.user && ST.user.role === 'Admin';
-  var isWarehouse= ST.user && _isWh(ST.user.role);
-  var canReview  = isSupervisorLevel();
-  var canCheck   = isCheckerLevel();
   tb.innerHTML=recs.map(function(r){
     var key='_cn_'+r.id.replace(/\W/g,'_');
     window[key]=r;
-    var printOk = canPrint && (r.status==='กำลังดำเนินการ'||isReviewStatus(r.status)||r.status==='เสร็จสิ้น');
-    var printBtn = canPrint
-      ? (printOk
-          ? '<button class="btn btn-ghost btn-sm" onclick="printCNForm(window[\''+key+'\'])" title="พิมพ์ฟอร์ม PDF">🖨</button>'
-          : '<button class="btn btn-ghost btn-sm" style="opacity:.3;cursor:not-allowed;" title="ต้องเปลี่ยนสถานะเป็นกำลังดำเนินการก่อน" disabled>🖨</button>')
+    var acts = rowActs(r);
+    var primaryBtn = '<button class="btn '+(acts.primary.quiet?'btn-outline':'btn-primary')+' btn-sm row-primary" onclick="rowPrimary(\''+r.id+'\')">'+esc(acts.primary.label)+'</button>';
+    var moreBtn = acts.menu.length
+      ? '<button class="btn btn-outline btn-sm row-more" aria-haspopup="menu" aria-expanded="false" aria-label="เพิ่มเติม — '+esc(r.id)+'" onclick="openRowMenu(this,\''+r.id+'\')">'
+        +'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>เพิ่มเติม</button>'
       : '';
-    // Admin: ลบได้ทุก status | Warehouse: ลบได้เฉพาะที่ไม่ใช่ "เสร็จสิ้น"
-    var canDelete = isAdmin || (isWarehouse && r.status !== 'เสร็จสิ้น');
-    var deleteBtn = canDelete
-      ? '<button class="btn btn-danger btn-sm" onclick="doDelete(\''+r.id+'\')" title="ลบรายการ">🗑</button>'
-      : (isWarehouse
-          ? '<button class="btn btn-ghost btn-sm" style="opacity:.22;cursor:not-allowed;" title="Warehouse ไม่สามารถลบรายการที่เสร็จสิ้นแล้ว" disabled>🗑</button>'
-          : '');
-    // แก้ไขได้: Admin แก้ได้ทุก status | Warehouse แก้ไม่ได้ถ้ารายการ "เสร็จสิ้น" แล้ว
-    var canEditThis = canEdit && (isAdmin || (r.status !== 'เสร็จสิ้น' && !isReviewStatus(r.status)));
-    var editBtn = canEdit
-      ? (canEditThis
-          ? '<button class="btn btn-outline btn-sm" onclick="openForm(\''+r.id+'\',true)" title="แก้ไข">✏️</button>'
-          : '<button class="btn btn-ghost btn-sm" style="opacity:.22;cursor:not-allowed;" title="รายการเสร็จสิ้น/อยู่ระหว่างรอตรวจสอบ แก้ไขได้เฉพาะ Admin (หรือรอให้ส่งกลับแก้ไข)" disabled>✏️</button>')
-      : '';
-    return '<tr style="height:52px;">'
-      +'<td class="mono" style="font-size:.78rem;font-weight:600;">'+r.id+'</td>'
-      +'<td style="font-size:.78rem;color:var(--muted);white-space:nowrap;">'+fDate(r.createdAt)+'</td>'
-      +'<td style="font-size:.8rem;color:var(--blue);font-weight:500;">'+esc(r.creatorName)+'</td>'
-      +'<td style="font-size:.76rem;">'+r.docType+'</td>'
-      +'<td style="font-weight:600;color:var(--ink);font-size:.85rem;">'+esc(r.customerName)+'</td>'
-      +'<td style="font-size:.78rem;color:var(--muted);">'+esc(r.province)+(r.district?' / '+esc(r.district):'')+'</td>'
-      +'<td>'+badge(r.status)+'</td>'
-      +'<td><div style="display:flex;gap:5px;flex-wrap:nowrap;align-items:center;">'
-      +'<button class="btn btn-ghost btn-sm" onclick="viewDetail(\''+r.id+'\',true)" title="ดูรายละเอียด">👁</button>'
-      +printBtn
-      +(canEdit && r.status==='กำลังดำเนินการ' ? '<button class="btn btn-primary btn-sm" onclick="openIntakeForm(\''+r.id+'\')" title="นำสินค้าเข้า / ส่งตรวจสอบ">📦</button>' : '')
-      +(canCheck && r.status==='รอตรวจสอบสินค้า' ? '<button class="btn btn-primary btn-sm" onclick="openReviewForm(\''+r.id+'\')" title="ตรวจสินค้า / ลงชื่อ / ส่งกลับแก้ไข">🔍 ตรวจสินค้า</button>' : '')
-      +(canReview && r.status==='รอตรวจสอบเอกสาร' ? '<button class="btn btn-primary btn-sm" onclick="openReviewForm(\''+r.id+'\')" title="ตรวจสอบเอกสาร / อนุมัติ / ส่งกลับแก้ไข">🔍 ตรวจสอบเอกสาร</button>' : '')
-      +(canEdit ? '<button class="btn btn-outline btn-sm" onclick="openStatusModal(\''+r.id+'\',\''+r.status+'\')" title="เปลี่ยนสถานะ">🔄</button>' : '')
-      +editBtn
-      +deleteBtn
+    return '<tr style="height:52px;" onclick="rowClick(event,\''+r.id+'\')">'
+      +'<td class="mono c-id" style="font-size:var(--fs-meta);font-weight:600;">'+r.id+'</td>'
+      +'<td class="c-date" style="font-size:var(--fs-meta);color:var(--muted);white-space:nowrap;">'+fDate(r.createdAt)+'</td>'
+      +'<td class="c-by" style="font-size:var(--fs-ui);color:var(--blue);font-weight:500;">'+esc(r.creatorName)+'</td>'
+      +'<td class="c-type" style="font-size:var(--fs-meta);">'+r.docType+'</td>'
+      +'<td class="c-cust" style="font-weight:600;color:var(--ink);font-size:var(--fs-ui);">'+esc(r.customerName)+'</td>'
+      +'<td class="c-prov" style="font-size:var(--fs-meta);color:var(--muted);">'+esc(r.province)+(r.district?' / '+esc(r.district):'')+'</td>'
+      +'<td class="c-st">'+badge(r.status)+'</td>'
+      +'<td class="c-act"><div style="display:flex;gap:8px;flex-wrap:nowrap;align-items:center;">'
+      +primaryBtn+moreBtn
       +'</div></td>'
       +'</tr>';
   }).join('');
 }
+
+/* ── การดำเนินการต่อแถว: แหล่งเดียวของสิทธิ์/เงื่อนไขบนหน้าจอ (backend บังคับสิทธิ์จริงอีกชั้น) ──
+   primary = ขั้นถัดไปของใบนี้สำหรับ role นี้ (มีได้ปุ่มเดียว) | menu = ที่เหลือ (ข้อความล้วน มีเหตุผลกำกับเมื่อกดไม่ได้) */
+function rowActs(r){
+  var id = r.id;
+  var canEdit = isAdminLevel(), canPrint = isAdminLevel();
+  var isAdmin = ST.user && ST.user.role === 'Admin';
+  var isWarehouse = ST.user && _isWh(ST.user.role);
+  var view = { label:'ดูรายละเอียด', quiet:true, run:function(){ viewDetail(id,true); } };
+  var statusAct = { label:'เปลี่ยนสถานะ', run:function(){ openStatusModal(id, r.status); } };
+  var primary = view;
+  if(canEdit && r.status==='กำลังดำเนินการ') primary = { label:'นำสินค้าเข้า', run:function(){ openIntakeForm(id); } };
+  else if(isCheckerLevel() && r.status==='รอตรวจสอบสินค้า') primary = { label:'ตรวจสินค้า', run:function(){ openReviewForm(id); } };
+  else if(isSupervisorLevel() && r.status==='รอตรวจสอบเอกสาร') primary = { label:'ตรวจสอบเอกสาร', run:function(){ openReviewForm(id); } };
+  else if(canEdit && r.status==='รอของ') primary = statusAct;
+
+  var menu = [];
+  if(primary !== view) menu.push(view);
+  if(canPrint){
+    var printOk = r.status==='กำลังดำเนินการ' || isReviewStatus(r.status) || r.status==='เสร็จสิ้น';
+    menu.push({ label:'พิมพ์ฟอร์ม PDF', disabled:!printOk, hint:printOk?'':'ต้องเปลี่ยนสถานะเป็น "กำลังดำเนินการ" ก่อน', run:function(){ printCNForm(r); } });
+  }
+  if(canEdit){
+    if(primary !== statusAct) menu.push(statusAct);
+    // แก้ไขได้: Admin แก้ได้ทุก status | Warehouse แก้ไม่ได้ถ้า "เสร็จสิ้น" หรืออยู่ระหว่างตรวจ
+    var canEditThis = isAdmin || (r.status !== 'เสร็จสิ้น' && !isReviewStatus(r.status));
+    menu.push({ label:'แก้ไขรายการ', disabled:!canEditThis, hint:canEditThis?'':'แก้ไขได้เฉพาะ Admin (หรือรอให้ส่งกลับแก้ไข)', run:function(){ openForm(id,true); } });
+  }
+  // Admin: ลบได้ทุก status | Warehouse: ลบได้เฉพาะที่ไม่ใช่ "เสร็จสิ้น" (ลบแล้วย้อนไม่ได้ → มีหน้ายืนยันใน doDelete)
+  var canDelete = isAdmin || (isWarehouse && r.status !== 'เสร็จสิ้น');
+  if(canDelete || isWarehouse){
+    menu.push({ label:'ลบรายการ', danger:true, sep:true, disabled:!canDelete, hint:canDelete?'':'ลบรายการที่เสร็จสิ้นแล้วไม่ได้', run:function(){ doDelete(id); } });
+  }
+  return { primary:primary, menu:menu };
+}
+function _recById(id){ return adminRecs.find(function(r){ return String(r.id).trim()===String(id).trim(); }); }
+function rowPrimary(id){ var r=_recById(id); if(r) rowActs(r).primary.run(); }
+// แตะทั้งแถว/การ์ด = เปิดรายละเอียด (ปุ่มในแถวทำงานของตัวเอง)
+function rowClick(ev,id){
+  if(ev.target.closest && ev.target.closest('button,a,input,select')) return;
+  var r=_recById(id); if(r) viewDetail(id,true);
+}
+
+var _rowMenuActs = [], _rowMenuBtn = null;
+function closeRowMenu(refocus){
+  var m=document.getElementById('rowmenu'); if(!m) return;
+  m.classList.remove('on'); document.getElementById('rowmenu-bk').classList.remove('on');
+  if(_rowMenuBtn){ _rowMenuBtn.setAttribute('aria-expanded','false'); if(refocus===true) _rowMenuBtn.focus(); }
+  _rowMenuBtn = null;
+}
+function openRowMenu(btn,id){
+  var r=_recById(id); if(!r) return;
+  if(_rowMenuBtn===btn){ closeRowMenu(true); return; }
+  closeRowMenu();
+  var acts=rowActs(r); _rowMenuActs=acts.menu;
+  var m=document.getElementById('rowmenu');
+  m.innerHTML=acts.menu.map(function(a,i){
+    return (a.sep?'<hr/>':'')
+      +'<button type="button" role="menuitem" tabindex="-1"'+(a.disabled?' disabled':'')+(a.danger?' class="danger"':'')+' onclick="rowMenuRun('+i+')">'
+      +esc(a.label)+(a.hint?'<small>'+esc(a.hint)+'</small>':'')+'</button>';
+  }).join('');
+  _rowMenuBtn=btn; btn.setAttribute('aria-expanded','true');
+  m.classList.add('on'); document.getElementById('rowmenu-bk').classList.add('on');
+  if(window.innerWidth>768){            // จอกว้าง: ลอยใต้ปุ่ม (พลิกขึ้นถ้าล้นขอบล่าง)
+    var b=btn.getBoundingClientRect(), w=m.offsetWidth, h=m.offsetHeight;
+    var left=Math.max(8, Math.min(b.right-w, window.innerWidth-w-8));
+    var top=b.bottom+4; if(top+h>window.innerHeight-8) top=Math.max(8, b.top-h-4);
+    m.style.left=left+'px'; m.style.top=top+'px';
+  }
+  var first=m.querySelector('button:not([disabled])'); if(first) first.focus();
+}
+function rowMenuRun(i){
+  var a=_rowMenuActs[i]; closeRowMenu();
+  if(a && !a.disabled) a.run();
+}
+/* แป้นพิมพ์ทั่วแอป: Enter/Space บนรายการเมนู, Esc ปิดโมดัล (ถ้าไม่มีเมนูแถวเปิดอยู่) */
+document.addEventListener('keydown',function(e){
+  var navEl = e.target && e.target.closest && e.target.closest('#sidebar-nav .nav-item');
+  if(navEl && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); navEl.click(); return; }
+  if(e.key==='Escape'){
+    var rm=document.getElementById('rowmenu');
+    if(rm && rm.classList.contains('on')) return;               // ให้ตัวจัดการเมนูแถวด้านล่างจัดการ
+    var cm=document.getElementById('confirm-mdl'), mv=document.getElementById('mov');
+    if(cm && cm.classList.contains('on')){ closeConfirmMdl(); return; }
+    if(mv && mv.classList.contains('on')){ closeMdl(); return; }
+  }
+});
+document.addEventListener('keydown',function(e){
+  var m=document.getElementById('rowmenu'); if(!m || !m.classList.contains('on')) return;
+  if(e.key==='Escape'){ e.preventDefault(); closeRowMenu(true); return; }
+  if(e.key==='Tab'){ closeRowMenu(); return; }
+  if(e.key==='ArrowDown' || e.key==='ArrowUp'){
+    e.preventDefault();
+    var items=[].slice.call(m.querySelectorAll('button:not([disabled])')); if(!items.length) return;
+    var i=items.indexOf(document.activeElement);
+    i = e.key==='ArrowDown' ? (i+1)%items.length : (i<=0 ? items.length-1 : i-1);
+    items[i].focus();
+  }
+});
+window.addEventListener('scroll',function(){ if(window.innerWidth>768) closeRowMenu(); },true);
+window.addEventListener('resize',function(){ closeRowMenu(); });
 
 function doFilter(){
   var q=document.getElementById('fs').value.toLowerCase();
@@ -2108,10 +2353,14 @@ function doFilter(){
   var filtered=adminRecs.filter(function(r){
     return(!q||(r.customerName||'').toLowerCase().includes(q)||(r.id||'').toLowerCase().includes(q)||(r.creatorName||'').toLowerCase().includes(q))
       &&(!uid||r.lineUID===uid)
-      &&(!st||r.status===st)
+      &&(!st||(st==='__mine' ? _inMyQueue(r) : r.status===st))
       &&(!dt||(r.createdAt||'').startsWith(dt));
   });
   paginateAdmin(filtered);
+  syncStatCards();
+  // หัวตารางบอกตัวกรองปัจจุบันและจำนวน (หลังกรองทุกเงื่อนไข)
+  var t=document.getElementById('adm-title');
+  if(t) t.textContent = 'รายการ CN — ' + (st==='__mine' ? 'รอคุณ' : (st || 'ทั้งหมด')) + ' (' + filtered.length + ')';
 }
 
 function doDelete(id){
@@ -2150,11 +2399,11 @@ function _imgGalleryHtml(urlStr, label){
     var thumb = fid ? 'https://drive.google.com/thumbnail?id='+fid+'&sz=w200' : url;
     return '<a href="'+esc(url)+'" target="_blank" rel="noopener" style="display:block;width:90px;text-decoration:none;">'
       +'<img src="'+thumb+'" style="width:90px;height:90px;object-fit:cover;border-radius:6px;border:1px solid var(--border);display:block;" alt="รูป '+(i+1)+'" loading="lazy"/>'
-      +'<div style="font-size:.6rem;color:var(--muted);text-align:center;margin-top:2px;padding:0 2px;">รูป '+(i+1)+'</div>'
+      +'<div style="font-size:var(--fs-meta);color:var(--muted);text-align:center;margin-top:2px;padding:0 2px;">รูป '+(i+1)+'</div>'
       +'</a>';
   }).join('');
   return '<div><div class="lbl" style="margin-top:10px;">'+label
-    +(urls.length>1?' <span style="color:var(--muted);font-weight:400;font-size:.7rem;">('+urls.length+' รูป)</span>':'')
+    +(urls.length>1?' <span style="color:var(--muted);font-weight:400;font-size:var(--fs-meta);">('+urls.length+' รูป)</span>':'')
     +'</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">'+grid+'</div>'
     +'</div>';
@@ -2165,14 +2414,14 @@ function _reviewNoteHtml(r){
   if(!r.reviewNote || r.status!=='กำลังดำเนินการ') return '';
   var n = {}; try{ n = JSON.parse(r.reviewNote); }catch(e){ return ''; }
   if(!n.reason) return '';
-  return '<div style="background:var(--amber-dim);border:1px solid var(--amber-b);color:var(--amber);border-radius:var(--r);padding:10px 12px;font-size:.8rem;line-height:1.6;">'
+  return '<div style="background:var(--amber-dim);border:1px solid var(--amber-b);color:var(--amber);border-radius:var(--r);padding:10px 12px;font-size:var(--fs-ui);line-height:1.6;">'
     +'↩ <b>ถูกส่งกลับแก้ไข</b> โดย '+esc(n.by||'-')+(n.at ? ' · '+fDateFull(n.at) : '')+'<br/>เหตุผล: '+esc(n.reason)+'</div>';
 }
 
 function _intakeDetailHtml(r){
   if(!r.intakeData && !r.intakePdfUrl) return '';
   var d = {}; try{ d = JSON.parse(r.intakeData || '{}'); }catch(e){}
-  var th = 'background:var(--surface2);padding:4px 7px;border:1px solid var(--border);font-weight:700;color:var(--muted);font-size:.68rem;';
+  var th = 'background:var(--surface2);padding:4px 7px;border:1px solid var(--border);font-weight:700;color:var(--muted);font-size:var(--fs-meta);';
   var td = 'padding:4px 7px;border:1px solid var(--border);';
   var rows = (d.lines || []).map(function(L){
     return '<tr><td style="'+td+'text-align:center;">'+esc(L.no)+'</td>'
@@ -2182,13 +2431,13 @@ function _intakeDetailHtml(r){
       +'<td style="'+td+'">'+esc(L.unit)+'</td></tr>';
   }).join('');
   return '<div><div class="lbl" style="margin-top:10px;">📦 นำสินค้าเข้าคลัง'
-    +(d.version>1 ? ' <span style="color:var(--muted);font-weight:400;font-size:.7rem;">(แก้ไขครั้งที่ '+(d.version-1)+')</span>' : '')+'</div>'
-    +(rows ? '<table style="width:100%;border-collapse:collapse;font-size:.78rem;margin-top:4px;"><thead><tr>'
+    +(d.version>1 ? ' <span style="color:var(--muted);font-weight:400;font-size:var(--fs-meta);">(แก้ไขครั้งที่ '+(d.version-1)+')</span>' : '')+'</div>'
+    +(rows ? '<table style="width:100%;border-collapse:collapse;font-size:var(--fs-meta);margin-top:4px;"><thead><tr>'
         +'<th style="'+th+'">เลขที่คลัง</th><th style="'+th+'">สินค้า</th><th style="'+th+'">วันหมดอายุ</th><th style="'+th+'">จำนวน</th><th style="'+th+'">หน่วย</th></tr></thead><tbody>'+rows+'</tbody></table>' : '')
-    +(d.remark ? '<div style="font-size:.78rem;color:var(--ink2);margin-top:6px;">หมายเหตุ: '+esc(d.remark)+'</div>' : '')
-    +(d.submittedBy ? '<div style="font-size:.74rem;color:var(--muted);margin-top:6px;">ส่งตรวจสอบโดย '+esc(d.submittedBy)+(d.submittedAt ? ' · '+fDateFull(d.submittedAt) : '')+'</div>' : '')
-    +(d.checkedBy ? '<div style="font-size:.74rem;color:var(--teal);margin-top:2px;">ตรวจสินค้าโดย '+esc(d.checkedBy)+(d.checkedAt ? ' · '+fDateFull(d.checkedAt) : '')+'</div>' : '')
-    +(d.reviewedBy ? '<div style="font-size:.74rem;color:var(--green);margin-top:2px;">ตรวจสอบเอกสาร/อนุมัติโดย '+esc(d.reviewedBy)+(d.reviewedAt ? ' · '+fDateFull(d.reviewedAt) : '')+'</div>' : '')
+    +(d.remark ? '<div style="font-size:var(--fs-meta);color:var(--ink2);margin-top:6px;">หมายเหตุ: '+esc(d.remark)+'</div>' : '')
+    +(d.submittedBy ? '<div style="font-size:var(--fs-meta);color:var(--muted);margin-top:6px;">ส่งตรวจสอบโดย '+esc(d.submittedBy)+(d.submittedAt ? ' · '+fDateFull(d.submittedAt) : '')+'</div>' : '')
+    +(d.checkedBy ? '<div style="font-size:var(--fs-meta);color:var(--teal);margin-top:2px;">ตรวจสินค้าโดย '+esc(d.checkedBy)+(d.checkedAt ? ' · '+fDateFull(d.checkedAt) : '')+'</div>' : '')
+    +(d.reviewedBy ? '<div style="font-size:var(--fs-meta);color:var(--green);margin-top:2px;">ตรวจสอบเอกสาร/อนุมัติโดย '+esc(d.reviewedBy)+(d.reviewedAt ? ' · '+fDateFull(d.reviewedAt) : '')+'</div>' : '')
     +(r.intakePdfUrl ? '<a class="btn btn-outline btn-sm" style="margin-top:8px;" href="'+esc(r.intakePdfUrl)+'" target="_blank" rel="noopener">📄 เปิด PDF นำสินค้าเข้า</a>' : '')
     +'</div>';
 }
@@ -2199,12 +2448,12 @@ function cnDetailBodyHtml(r, opts){
   opts = opts || {};
   var items=parseItems(r.items||'');
   var itHtml=items.length
-    ?'<table style="width:100%;border-collapse:collapse;font-size:.78rem;margin-top:4px;">'
+    ?'<table style="width:100%;border-collapse:collapse;font-size:var(--fs-meta);margin-top:4px;">'
       +'<thead><tr>'
-      +'<th style="background:var(--surface2);padding:4px 7px;border:1px solid var(--border);font-weight:700;color:var(--muted);font-size:.68rem;">#</th>'
-      +'<th style="background:var(--surface2);padding:4px 7px;border:1px solid var(--border);font-weight:700;color:var(--muted);font-size:.68rem;">ชื่อสินค้า</th>'
-      +'<th style="background:var(--surface2);padding:4px 7px;border:1px solid var(--border);font-weight:700;color:var(--muted);font-size:.68rem;">ยอด</th>'
-      +'<th style="background:var(--surface2);padding:4px 7px;border:1px solid var(--border);font-weight:700;color:var(--muted);font-size:.68rem;">หน่วย</th>'
+      +'<th style="background:var(--surface2);padding:4px 7px;border:1px solid var(--border);font-weight:700;color:var(--muted);font-size:var(--fs-meta);">#</th>'
+      +'<th style="background:var(--surface2);padding:4px 7px;border:1px solid var(--border);font-weight:700;color:var(--muted);font-size:var(--fs-meta);">ชื่อสินค้า</th>'
+      +'<th style="background:var(--surface2);padding:4px 7px;border:1px solid var(--border);font-weight:700;color:var(--muted);font-size:var(--fs-meta);">ยอด</th>'
+      +'<th style="background:var(--surface2);padding:4px 7px;border:1px solid var(--border);font-weight:700;color:var(--muted);font-size:var(--fs-meta);">หน่วย</th>'
       +'</tr></thead><tbody>'
       +items.map(function(it,i){return '<tr>'
         +'<td style="padding:4px 7px;border:1px solid var(--border);text-align:center;color:var(--muted);">'+(i+1)+'</td>'
@@ -2220,24 +2469,24 @@ function cnDetailBodyHtml(r, opts){
             + (opts.forIntake ? '' : _imgGalleryHtml(r.imageUrl, '✅ หลักฐานการดำเนินการ'));
   return '<div style="display:grid;gap:11px;">'
     +'<div class="g2" style="gap:10px;">'
-    +'<div><div class="lbl">เลขที่</div><div class="mono" style="font-size:.84rem;color:var(--blue);">'+r.id+'</div></div>'
+    +'<div><div class="lbl">เลขที่</div><div class="mono" style="font-size:var(--fs-ui);color:var(--blue);">'+r.id+'</div></div>'
     +'<div><div class="lbl">วันที่</div><div style="color:var(--ink);">'+fDate(r.createdAt)+'</div></div>'
     +'</div>'
     +'<div><div class="lbl">บริษัท</div><div style="color:var(--ink);">'+esc(r.company)+'</div></div>'
     +'<div><div class="lbl">ประเภท</div><div>'+esc(r.docType)+'</span></div></div>'
     +'<div class="g2" style="gap:10px;">'
-    +'<div><div class="lbl">ลูกค้า</div><div style="color:var(--ink);font-weight:500;">'+esc(r.customerName)+(r.customerCode?' <span class="mono" style="color:var(--muted);font-size:.76rem;font-weight:400;">('+esc(r.customerCode)+')</span>':'')+'</div></div>'
+    +'<div><div class="lbl">ลูกค้า</div><div style="color:var(--ink);font-weight:500;">'+esc(r.customerName)+(r.customerCode?' <span class="mono" style="color:var(--muted);font-size:var(--fs-meta);font-weight:400;">('+esc(r.customerCode)+')</span>':'')+'</div></div>'
     +'<div><div class="lbl">จังหวัด / เขต</div><div style="color:var(--ink);">'+esc(r.province)+(r.district?' / '+esc(r.district):'')+'</div></div>'
     +'</div>'
     +'<div><div class="lbl">รายการสินค้า</div>'+itHtml+'</div>'
-    +'<div><div class="lbl">สาเหตุ</div><div style="white-space:pre-wrap;color:var(--ink2);font-size:.82rem;">'+esc(r.reason||'-')+'</div></div>'
+    +'<div><div class="lbl">สาเหตุ</div><div style="white-space:pre-wrap;color:var(--ink2);font-size:var(--fs-ui);">'+esc(r.reason||'-')+'</div></div>'
     +(r.billRef?'<div><div class="lbl">ตัดบิลเลขที่</div><div class="mono">'+esc(r.billRef)+'</div></div>':'')
     +(r.exchangeTo?'<div><div class="lbl">เปลี่ยนเป็น</div><div style="color:var(--ink);">'+esc(r.exchangeTo)+'</div></div>':'')
     +'<div class="g2" style="gap:10px;">'
     +'<div><div class="lbl">สถานะ</div>'+badge(r.status)+'</div>'
-    +(r.processingAt?'<div><div class="lbl">เริ่มดำเนินการ</div><div style="color:var(--blue);font-size:.82rem;">'+fDateFull(r.processingAt)+'</div></div>':'<div></div>')
+    +(r.processingAt?'<div><div class="lbl">เริ่มดำเนินการ</div><div style="color:var(--blue);font-size:var(--fs-ui);">'+fDateFull(r.processingAt)+'</div></div>':'<div></div>')
     +'</div>'
-    +(r.completedAt?'<div><div class="lbl">วันที่เสร็จสิ้น</div><div style="color:var(--green);font-size:.82rem;">'+fDateFull(r.completedAt)+'</div></div>':'')
+    +(r.completedAt?'<div><div class="lbl">วันที่เสร็จสิ้น</div><div style="color:var(--green);font-size:var(--fs-ui);">'+fDateFull(r.completedAt)+'</div></div>':'')
     +(opts.forIntake ? '' : _reviewNoteHtml(r))
     +(opts.forIntake ? '' : _intakeDetailHtml(r))
     +proof
@@ -2871,7 +3120,7 @@ function makeUploader(cfg){
         +'<img src="'+src+'" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border);" />'
         +(item.url ? '<div style="position:absolute;top:2px;right:2px;background:var(--green);border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--on-accent);">✓</div>' : '')
         +'<button type="button" onclick="UP.'+cfg.name+'.remove('+i+')" title="ลบรูปนี้" style="position:absolute;top:2px;left:2px;background:rgba(0,0,0,.6);border:none;border-radius:50%;width:16px;height:16px;cursor:pointer;color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;padding:0;">✕</button>'
-        +'<div style="font-size:.6rem;color:var(--muted);text-align:center;margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">~'+kb+'KB</div>'
+        +'<div style="font-size:var(--fs-meta);color:var(--muted);text-align:center;margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">~'+kb+'KB</div>'
         +'</div>';
     }).join('');
     var done = $('done'); if(done) done.style.display='none';
@@ -3062,33 +3311,33 @@ function openStatusModal(id, currentStatus){
       +' style="position:absolute;opacity:0;width:0;height:0;"/>'
       +'<span style="font-size:1.35rem;line-height:1;flex-shrink:0;">'+cfg.icon+'</span>'
       +'<span style="flex:1;">'
-      +'<span style="display:block;font-weight:700;font-size:.88rem;color:'+(active?cfg.color:'var(--ink)')+';">'+s+'</span>'
-      +'<span style="display:block;font-size:.72rem;color:var(--muted);margin-top:2px;">'
-      +(disabled&&!active?'<span style="color:var(--red);font-size:.68rem;">🔒 '+disabledReason+'</span>':cfg.sub)
+      +'<span style="display:block;font-weight:700;font-size:var(--fs-ui);color:'+(active?cfg.color:'var(--ink)')+';">'+s+'</span>'
+      +'<span style="display:block;font-size:var(--fs-meta);color:var(--muted);margin-top:2px;">'
+      +(disabled&&!active?'<span style="color:var(--red);font-size:var(--fs-meta);">🔒 '+disabledReason+'</span>':cfg.sub)
       +'</span>'
       +'</span>'
-      +(active?'<span style="color:'+cfg.color+';font-size:1rem;">●</span>':'<span style="color:var(--border);font-size:1rem;">○</span>')
+      +(active?'<span style="color:'+cfg.color+';font-size:var(--fs-body);">●</span>':'<span style="color:var(--border);font-size:var(--fs-body);">○</span>')
       +'</label>';
   }).join('');
 
   // ถ้า lock ทั้งหมด แสดง banner แจ้ง
   var lockedBanner = isLocked
     ? '<div style="background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.35);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">'
-      +'<span style="font-size:1.1rem;">🔒</span>'
-      +'<span style="font-size:.82rem;color:var(--red);font-weight:600;">รายการนี้ถูก Lock แล้ว — ไม่สามารถเปลี่ยนสถานะได้อีก</span>'
+      +'<span style="font-size:var(--fs-lead);">🔒</span>'
+      +'<span style="font-size:var(--fs-ui);color:var(--red);font-weight:600;">รายการนี้ถูก Lock แล้ว — ไม่สามารถเปลี่ยนสถานะได้อีก</span>'
       +'</div>' : '';
 
   // คำอธิบายตอนเลือก "เสร็จสิ้น" — ต้องกรอกฟอร์มนำสินค้าเข้าก่อน (ไม่มีช่องแนบรูปใน modal นี้แล้ว)
   var uploadHtml = isLocked ? '' :
-    '<div id="status-modal-hint" style="display:'+((currentStatus==='เสร็จสิ้น'||isReviewStatus(currentStatus))?'block':'none')+';margin-top:4px;padding:10px 12px;background:var(--green-dim);border:1px solid var(--green-b);border-radius:8px;font-size:.78rem;color:var(--green);line-height:1.6;">'
+    '<div id="status-modal-hint" style="display:'+((currentStatus==='เสร็จสิ้น'||isReviewStatus(currentStatus))?'block':'none')+';margin-top:4px;padding:10px 12px;background:var(--green-dim);border:1px solid var(--green-b);border-radius:8px;font-size:var(--fs-meta);color:var(--green);line-height:1.6;">'
     +'ℹ️ <b>"รอตรวจสอบสินค้า"</b> = เปิดฟอร์มนำสินค้าเข้าเพื่อส่งตรวจ | <b>"รอตรวจสอบเอกสาร"</b> = เปิดหน้าตรวจสินค้า (เฉพาะ Checker/Admin) | <b>"เสร็จสิ้น"</b> = เปิดหน้าตรวจสอบ/อนุมัติ (เฉพาะ Warehouse Supervisor/Admin) — ตั้งสถานะตรง ๆ ไม่ได้</div>';
 
   openMdl(
     'เปลี่ยนสถานะรายการ',
     '<input type="hidden" id="status-modal-cid" value="'+cid+'"/>'
     +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:9px 12px;background:var(--surface2);border-radius:8px;">'
-    +'<span style="font-size:.72rem;color:var(--muted);">เลขที่เอกสาร</span>'
-    +'<span style="font-family:var(--mono);color:var(--blue);font-weight:700;font-size:.85rem;">'+cid+'</span>'
+    +'<span style="font-size:var(--fs-meta);color:var(--muted);">เลขที่เอกสาร</span>'
+    +'<span style="font-family:var(--mono);color:var(--blue);font-weight:700;font-size:var(--fs-ui);">'+cid+'</span>'
     +'</div>'
     +lockedBanner
     +radios
@@ -3264,8 +3513,8 @@ function openIntakeForm(cnId){
   document.getElementById('intake-id-badge').textContent = cnId;
   var rn = null; try{ rn = rec.reviewNote ? JSON.parse(rec.reviewNote) : null; }catch(e){ rn = null; }
   var warnHtml = '';
-  if(rec.status==='เสร็จสิ้น') warnHtml += '<div style="color:var(--amber);font-size:.8rem;margin-bottom:10px;">⚠️ รายการนี้เสร็จสิ้นแล้ว — บันทึกใหม่จะสร้าง PDF ฉบับใหม่ (ไฟล์เดิมยังคงอยู่ใน Drive)</div>';
-  if(rn && rn.reason) warnHtml += '<div style="background:var(--amber-dim);border:1px solid var(--amber-b);color:var(--amber);border-radius:var(--r);padding:10px 12px;font-size:.8rem;margin-bottom:12px;line-height:1.6;">'
+  if(rec.status==='เสร็จสิ้น') warnHtml += '<div style="color:var(--amber);font-size:var(--fs-ui);margin-bottom:10px;">⚠️ รายการนี้เสร็จสิ้นแล้ว — บันทึกใหม่จะสร้าง PDF ฉบับใหม่ (ไฟล์เดิมยังคงอยู่ใน Drive)</div>';
+  if(rn && rn.reason) warnHtml += '<div style="background:var(--amber-dim);border:1px solid var(--amber-b);color:var(--amber);border-radius:var(--r);padding:10px 12px;font-size:var(--fs-ui);margin-bottom:12px;line-height:1.6;">'
     +'↩ <b>ถูกส่งกลับแก้ไข</b> โดย '+esc(rn.by||'-')+(rn.at ? ' · '+fDateFull(rn.at) : '')+'<br/>เหตุผล: '+esc(rn.reason)+'</div>';
   document.getElementById('intake-warn').innerHTML = warnHtml;
   var saveB = document.getElementById('intake-save-btn');
@@ -3482,29 +3731,29 @@ function openMonthReport(){
   }
 
   var modeHtml='<div style="margin-bottom:14px;">'
-    +'<div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">รูปแบบรายงาน</div>'
+    +'<div style="font-size:var(--fs-meta);font-weight:700;color:var(--muted);margin-bottom:8px;">รูปแบบรายงาน</div>'
     +'<div style="display:flex;gap:8px;">'
-    +'<label style="display:flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;flex:1;font-size:.82rem;">'
+    +'<label style="display:flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;flex:1;font-size:var(--fs-ui);">'
     +'<input type="radio" name="reportMode" value="all" checked onchange="onReportModeChange(this.value)" style="accent-color:var(--blue);"/> 📋 ทั้งหมด</label>'
-    +'<label style="display:flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;flex:1;font-size:.82rem;">'
+    +'<label style="display:flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;flex:1;font-size:var(--fs-ui);">'
     +'<input type="radio" name="reportMode" value="person" onchange="onReportModeChange(this.value)" style="accent-color:var(--blue);"/> 👤 รายบุคคล</label>'
     +'</div>'
     +'<div id="report-user-select" style="display:none;margin-top:10px;">'
-    +'<select id="report-uid-sel" class="fc" style="font-size:.82rem;">'
+    +'<select id="report-uid-sel" class="fc" style="font-size:var(--fs-ui);">'
     +'<option value="">-- เลือกผู้ทำรายการ --</option>'
     +allUsers.map(function(u){return '<option value="'+u.uid+'">'+esc(u.name)+'</option>';}).join('')
     +'</select></div></div>';
 
-  var grid='<div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">เลือกเดือน</div>'
+  var grid='<div style="font-size:var(--fs-meta);font-weight:700;color:var(--muted);margin-bottom:8px;">เลือกเดือน</div>'
     +'<div class="month-grid">';
   keys.forEach(function(mk){
     var labelRaw = thMonth(mk+'-01');
     var cnt = months[mk];
     var done = adminRecs.filter(function(r2){return getMonthKey(r2.createdAt)===mk&&r2.status==='เสร็จสิ้น';}).length;
     grid+='<div class="month-btn" onclick="printMonthReport(\''+mk+'\')">'
-      +'<div style="font-size:1rem;margin-bottom:3px;">📅</div>'
-      +'<div style="font-weight:700;font-size:.83rem;color:var(--ink);">'+labelRaw+'</div>'
-      +'<div style="font-size:.68rem;color:var(--muted);margin-top:3px;">ทั้งหมด '+cnt+' | เสร็จ '+done+'</div>'
+      +'<div style="font-size:var(--fs-body);margin-bottom:3px;">📅</div>'
+      +'<div style="font-weight:700;font-size:var(--fs-ui);color:var(--ink);">'+labelRaw+'</div>'
+      +'<div style="font-size:var(--fs-meta);color:var(--muted);margin-top:3px;">ทั้งหมด '+cnt+' | เสร็จ '+done+'</div>'
       +'</div>';
   });
   grid+='</div>';
@@ -3624,25 +3873,25 @@ function buildIntakeReport(recs,f){
 }
 /* IR-PURE-END */
 
-var IR_CSS='.rpt{width:100%;border-collapse:collapse;margin:6px 0 14px;font-size:.8rem}'
+var IR_CSS='.rpt{width:100%;border-collapse:collapse;margin:6px 0 14px;font-size:var(--fs-ui,.8rem)}'
   +'.rpt th{background:#1c1c1c;color:#fff;padding:5px 7px;text-align:left;font-weight:700;border:1px solid #333;white-space:nowrap}'
   +'.rpt td{padding:4px 7px;border:1px solid var(--border,#ddd);color:var(--ink,#000)}'
   +'.rpt .n{text-align:right;font-variant-numeric:tabular-nums}'
   +'.rpt tr.tot td{font-weight:700;background:var(--surface2,#f1f1f1)}'
-  +'.rp-h{font-size:.95rem;font-weight:700;margin:18px 0 4px;color:var(--ink,#000)}'
-  +'.rp-sub{font-size:.8rem;font-weight:700;margin:12px 0 2px;color:var(--ink2,#333)}'
-  +'.rp-empty,.rp-stat{color:var(--muted,#666);font-size:.82rem;padding:6px 0}'
+  +'.rp-h{font-size:var(--fs-body,.95rem);font-weight:700;margin:18px 0 4px;color:var(--ink,#000)}'
+  +'.rp-sub{font-size:var(--fs-ui,.8rem);font-weight:700;margin:12px 0 2px;color:var(--ink2,#333)}'
+  +'.rp-empty,.rp-stat{color:var(--muted,#666);font-size:var(--fs-ui,.82rem);padding:6px 0}'
   +'.rp-scroll{overflow-x:auto}'
   +'.rp-cards{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 6px}'
   +'.rp-card{flex:1;min-width:120px;border:1px solid var(--border,#ddd);border-radius:8px;padding:9px 12px;background:var(--surface2,#f6f6f6)}'
   +'.rp-card b{display:block;font-size:1.25rem;line-height:1.2;color:var(--ink,#000)}'
-  +'.rp-card span{font-size:.72rem;color:var(--muted,#666)}'
-  +'.rp-note{font-size:.76rem;color:var(--muted,#666);margin:0 0 6px;line-height:1.6}'
-  +'.rp-sec>summary{cursor:pointer;list-style:none;font-size:.95rem;font-weight:700;margin:18px 0 4px;color:var(--ink,#000)}'
+  +'.rp-card span{font-size:var(--fs-meta,.72rem);color:var(--muted,#666)}'
+  +'.rp-note{font-size:var(--fs-meta,.76rem);color:var(--muted,#666);margin:0 0 6px;line-height:1.6}'
+  +'.rp-sec>summary{cursor:pointer;list-style:none;font-size:var(--fs-body,.95rem);font-weight:700;margin:18px 0 4px;color:var(--ink,#000)}'
   +'.rp-sec>summary::-webkit-details-marker{display:none}'
   +'.rp-sec>summary::before{content:"▾ ";color:var(--muted,#666)}'
   +'.rp-sec:not([open])>summary::before{content:"▸ "}'
-  +'.rp-grp>summary{cursor:pointer;font-size:.84rem;font-weight:700;margin:10px 0 2px;color:var(--ink,#000)}'
+  +'.rp-grp>summary{cursor:pointer;font-size:var(--fs-ui,.84rem);font-weight:700;margin:10px 0 2px;color:var(--ink,#000)}'
   +'.rp-grp>summary small{font-weight:400;color:var(--muted,#666)}';
 var _rpTs=null, _rpLast=null, _rpF=null;
 
@@ -4585,10 +4834,17 @@ function copyQRLink(){
 function toast(msg, type, duration){
   type = type || 'success'; // 'success' | 'error' | 'info' | 'warn'
   duration = duration || (type==='error' ? 5000 : type==='warn' ? 4000 : 3000);
-  var icons = { success:'✅', error:'❌', info:'ℹ️', warn:'⚠️' };
+  // ไอคอนวาดเอง (เส้นเดียวกันทั้งชุด) แทนอีโมจิ — แต่ละชนิดต่างกันที่รูปทรง ไม่พึ่งสีอย่างเดียว
+  var icons = {
+    success:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/></svg>',
+    error:  '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>',
+    info:   '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+    warn:   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg>'
+  };
   var wrap = document.getElementById('toast-wrap');
   var el   = document.createElement('div');
   el.className = 'toast toast-' + type;
+  el.setAttribute('role', type==='error' ? 'alert' : 'status');   // อ่านออกเสียงโดย screen reader
   el.innerHTML = '<span class="toast-icon">' + icons[type] + '</span><span>' + msg + '</span>';
   wrap.appendChild(el);
   setTimeout(function(){
@@ -4742,11 +4998,11 @@ function renderUsersTbl(users){
       ? '<button class="btn btn-danger btn-xs" onclick="deleteUser(\''+u.lineUID+'\',\''+esc((u.firstName||'')+' '+(u.lastName||''))+'\')" title="ลบผู้ใช้">🗑</button>'
       : '';
     return '<tr style="height:46px;">'
-      +'<td style="color:var(--muted);text-align:center;font-size:.78rem;">'+(i+1)+'</td>'
+      +'<td style="color:var(--muted);text-align:center;font-size:var(--fs-meta);">'+(i+1)+'</td>'
       +'<td style="font-weight:600;color:var(--ink);">'+(u.firstName||'')+' '+(u.lastName||'')+'</td>'
-      +'<td class="mono" style="font-size:.7rem;color:var(--muted);">'+u.lineUID+'</td>'
+      +'<td class="mono" style="font-size:var(--fs-meta);color:var(--muted);">'+u.lineUID+'</td>'
       +'<td>'+roleCell+'</td>'
-      +'<td style="font-size:.76rem;color:var(--muted);">'+fDate(u.createdAt)+'</td>'
+      +'<td style="font-size:var(--fs-meta);color:var(--muted);">'+fDate(u.createdAt)+'</td>'
       +'<td style="text-align:center;font-weight:600;">'+(cnCount[u.lineUID]||0)+'</td>'
       +'<td><div style="display:flex;gap:5px;">'+editBtn+delBtn+'</div></td>'
       +'</tr>';
@@ -4771,9 +5027,9 @@ async function changeUserRole(lineUID, newRole){
 function editUserName(lineUID, firstName, lastName){
   // แสดง inline prompt ผ่าน openConfirmMdl
   var html = '<div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">'
-    +'<div><label style="font-size:.74rem;color:var(--muted);display:block;margin-bottom:4px;">ชื่อ</label>'
+    +'<div><label style="font-size:var(--fs-meta);color:var(--muted);display:block;margin-bottom:4px;">ชื่อ</label>'
     +'<input id="edit-fn" class="fc" value="'+firstName+'" placeholder="ชื่อ" style="width:100%;"/></div>'
-    +'<div><label style="font-size:.74rem;color:var(--muted);display:block;margin-bottom:4px;">นามสกุล</label>'
+    +'<div><label style="font-size:var(--fs-meta);color:var(--muted);display:block;margin-bottom:4px;">นามสกุล</label>'
     +'<input id="edit-ln" class="fc" value="'+lastName+'" placeholder="นามสกุล" style="width:100%;"/></div>'
     +'</div>';
   openConfirmMdl({
@@ -4850,7 +5106,7 @@ function renderAdminPage(){
     btns += '<button class="btn btn-'+(active?'primary':'ghost')+' btn-xs" onclick="_adminPage='+p+';renderAdminPage();">'+p+'</button>';
   }
   pgWrap.innerHTML = '<div style="display:flex;align-items:center;gap:5px;padding:10px 14px;border-top:1px solid var(--border);">'
-    +'<span style="font-size:.75rem;color:var(--muted);flex:1;">แสดง '+(start+1)+'-'+Math.min(start+_adminPageSize,total)+' จาก '+total+' รายการ</span>'
+    +'<span style="font-size:var(--fs-meta);color:var(--muted);flex:1;">แสดง '+(start+1)+'-'+Math.min(start+_adminPageSize,total)+' จาก '+total+' รายการ</span>'
     +btns+'</div>';
 }
 
@@ -4901,11 +5157,11 @@ function renderArchiveTbl(recs){
     window[key] = r;
     return '<tr>'
       +'<td class="mono">'+esc(r.id)+'</td>'
-      +'<td style="font-size:.76rem;color:var(--txt2);">'+fDate(r.createdAt)+'</td>'
-      +'<td style="font-size:.76rem;color:var(--blue);">'+esc(r.creatorName)+'</td>'
+      +'<td style="font-size:var(--fs-meta);color:var(--txt2);">'+fDate(r.createdAt)+'</td>'
+      +'<td style="font-size:var(--fs-meta);color:var(--blue);">'+esc(r.creatorName)+'</td>'
       +'<td style="font-weight:500;color:var(--ink);">'+esc(r.customerName)+'</td>'
-      +'<td style="font-size:.76rem;">'+esc(r.docType)+'</td>'
-      +'<td style="font-size:.76rem;color:var(--txt2);">'+fDate(r.archivedAt)+'</td>'
+      +'<td style="font-size:var(--fs-meta);">'+esc(r.docType)+'</td>'
+      +'<td style="font-size:var(--fs-meta);color:var(--txt2);">'+fDate(r.archivedAt)+'</td>'
       +'<td><div style="display:flex;gap:3px;">'
       +(isAdminLevel()
         ? '<button class="btn btn-out btn-xs" onclick="doRestoreArchive(\''+r.id+'\')" title="คืนกลับ CN_Records">↩ Restore</button>'
@@ -5059,14 +5315,14 @@ function renderBackupTbl(backups){
         : '<span class="badge bd">👤 Manual</span>';
     var driveCell = bk.driveUrl
       ? '<a href="'+esc(bk.driveUrl)+'" target="_blank" class="btn btn-ghost btn-xs" style="color:var(--blue);padding:2px 7px;">📂 Drive</a>'
-      : '<span style="color:var(--muted);font-size:.72rem;">-</span>';
+      : '<span style="color:var(--muted);font-size:var(--fs-meta);">-</span>';
     return '<tr>'
-      +'<td class="mono" style="font-size:.73rem;">'+esc(bk.backupId)+'</td>'
-      +'<td style="font-size:.76rem;color:var(--txt2);">'+fDate(bk.createdAt)+'</td>'
+      +'<td class="mono" style="font-size:var(--fs-meta);">'+esc(bk.backupId)+'</td>'
+      +'<td style="font-size:var(--fs-meta);color:var(--txt2);">'+fDate(bk.createdAt)+'</td>'
       +'<td>'+typeLabel+'</td>'
       +'<td style="text-align:center;font-weight:600;color:var(--ink);">'+esc(bk.recordCount)+'</td>'
-      +'<td style="font-size:.76rem;color:var(--txt2);">'+esc(bk.note||'-')+'</td>'
-      +'<td class="mono" style="font-size:.7rem;color:var(--txt3);">'+esc(bk.driveFileName||bk.sheetName||'-')+'</td>'
+      +'<td style="font-size:var(--fs-meta);color:var(--txt2);">'+esc(bk.note||'-')+'</td>'
+      +'<td class="mono" style="font-size:var(--fs-meta);color:var(--txt3);">'+esc(bk.driveFileName||bk.sheetName||'-')+'</td>'
       +'<td style="text-align:center;">'+driveCell+'</td>'
       +'</tr>';
   }).join('');
@@ -5182,7 +5438,13 @@ document.addEventListener('DOMContentLoaded',function(){
   window.saveCN = saveCN;
   window.goBack = goBack;
   window.exportCSV = exportCSV;
+  window.setStatusFilter = setStatusFilter;
   window.checkReview = checkReview;
+  window.rowPrimary = rowPrimary;
+  window.rowClick = rowClick;
+  window.openRowMenu = openRowMenu;
+  window.closeRowMenu = closeRowMenu;
+  window.rowMenuRun = rowMenuRun;
   window.irRun = irRun;
   window.irToggleAll = irToggleAll;
   window.irXlsx = irXlsx;
