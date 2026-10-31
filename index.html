@@ -548,6 +548,9 @@ button.stat-card[aria-pressed="true"] {
 .bd { background: var(--green-dim); color: var(--green); border-color: var(--green-b); }
 .bv { background: var(--purple-dim); color: var(--purple); border-color: var(--purple-b); }
 .bk { background: var(--teal-dim); color: var(--teal); border-color: var(--teal-b); }
+/* tag "พิมพ์แล้ว ×n" — ข้างป้ายสถานะ ใช้เทาเรียบ ไม่แย่งสีของสถานะ */
+.ptag { display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding:2px 8px; border-radius:20px;
+  font-size:var(--fs-meta); font-weight:600; color:var(--muted); background:var(--surface2); border:1px solid var(--border); white-space:nowrap; }
 
 /* Table */
 .tw { overflow-x: auto; }
@@ -1084,6 +1087,11 @@ select.fc option { background: var(--surface2); }
                   <option value="รอตรวจสอบสินค้า">รอตรวจสอบสินค้า</option>
                   <option value="รอตรวจสอบเอกสาร">รอตรวจสอบเอกสาร</option>
                   <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                </select>
+                <select id="fpr" class="fc" style="max-width:150px;" aria-label="กรองตามการพิมพ์" onchange="doFilter()">
+                  <option value="">ทุกการพิมพ์</option>
+                  <option value="no">ยังไม่พิมพ์</option>
+                  <option value="yes">พิมพ์แล้ว</option>
                 </select>
                 <input type="date" id="fdt" class="fc" style="max-width:145px;" onchange="doFilter()"/>
               </div>
@@ -1703,6 +1711,18 @@ function fitPt(text, widthPt, maxPt, minPt){
   var n = String(text == null ? '' : text).length || 1;
   return Math.max(minPt, Math.min(maxPt, Math.round(widthPt / (n * 0.5) * 10) / 10));
 }
+/* printInfo (JSON ในคอลัมน์ Y) → {count,lastBy,lastAt} หรือ null ถ้ายังไม่เคยพิมพ์/อ่านไม่ได้ */
+function printInfoOf(r){
+  if(!r || !r.printInfo) return null;
+  try{ var p = typeof r.printInfo === 'string' ? JSON.parse(r.printInfo) : r.printInfo; return p && p.count > 0 ? p : null; }
+  catch(e){ return null; }
+}
+function printTag(r){
+  var p = printInfoOf(r); if(!p) return '';
+  return '<span class="ptag" title="พิมพ์ล่าสุดโดย '+esc(p.lastBy||'-')+'">'
+    +'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="9" rx="2"/><path d="M7 14h10v7H7z"/></svg>'
+    +'พิมพ์แล้ว ×'+p.count+'</span>';
+}
 function badge(s){
   var cls={'รอของ':'bw','กำลังดำเนินการ':'bp','รอตรวจสอบสินค้า':'bk','รอตรวจสอบเอกสาร':'bv','เสร็จสิ้น':'bd'};
   var dotColor={'รอของ':'var(--amber)','กำลังดำเนินการ':'var(--blue)','รอตรวจสอบสินค้า':'var(--teal)','รอตรวจสอบเอกสาร':'var(--purple)','เสร็จสิ้น':'var(--green)'};
@@ -2202,7 +2222,7 @@ function renderAdminTbl(recs){
     // ถ้า adminRecs ก็ว่างด้วย แสดงว่ายังไม่มีข้อมูลเลย (ไม่ใช่ filter ไม่เจอ)
     var isEmpty = !adminRecs.length;
     var fstEl = document.getElementById('fst');
-    if(!isEmpty && fstEl && fstEl.value==='__mine' && !document.getElementById('fs').value && !document.getElementById('fuser').value && !document.getElementById('fdt').value){
+    if(!isEmpty && fstEl && fstEl.value==='__mine' && !document.getElementById('fs').value && !document.getElementById('fuser').value && !document.getElementById('fdt').value && !document.getElementById('fpr').value){
       // คิวของฉันว่างจริง (ไม่ใช่เพราะค้นหา/กรองอื่น) → บอกชัดและมีทางไปดูทั้งหมด
       tb.innerHTML='<tr><td colspan="8"><div class="empty-state">'
         +'<div class="empty-title">ไม่มีรายการรอคุณ</div>'
@@ -2236,7 +2256,7 @@ function renderAdminTbl(recs){
       +'<td class="c-type" style="font-size:var(--fs-meta);">'+r.docType+'</td>'
       +'<td class="c-cust" style="font-weight:600;color:var(--ink);font-size:var(--fs-ui);">'+esc(r.customerName)+'</td>'
       +'<td class="c-prov" style="font-size:var(--fs-meta);color:var(--muted);">'+esc(r.province)+(r.district?' / '+esc(r.district):'')+'</td>'
-      +'<td class="c-st">'+badge(r.status)+'</td>'
+      +'<td class="c-st">'+badge(r.status)+printTag(r)+'</td>'
       +'<td class="c-act"><div style="display:flex;gap:8px;flex-wrap:nowrap;align-items:center;">'
       +primaryBtn+moreBtn
       +'</div></td>'
@@ -2350,10 +2370,12 @@ function doFilter(){
   var uid=document.getElementById('fuser').value;
   var st=document.getElementById('fst').value;
   var dt=document.getElementById('fdt').value;
+  var pr=document.getElementById('fpr').value;
   var filtered=adminRecs.filter(function(r){
     return(!q||(r.customerName||'').toLowerCase().includes(q)||(r.id||'').toLowerCase().includes(q)||(r.creatorName||'').toLowerCase().includes(q))
       &&(!uid||r.lineUID===uid)
       &&(!st||(st==='__mine' ? _inMyQueue(r) : r.status===st))
+      &&(!pr||(pr==='yes' ? !!printInfoOf(r) : (r.status!=='รอของ' && !printInfoOf(r))))
       &&(!dt||(r.createdAt||'').startsWith(dt));
   });
   paginateAdmin(filtered);
@@ -2487,6 +2509,7 @@ function cnDetailBodyHtml(r, opts){
     +(r.processingAt?'<div><div class="lbl">เริ่มดำเนินการ</div><div style="color:var(--blue);font-size:var(--fs-ui);">'+fDateFull(r.processingAt)+'</div></div>':'<div></div>')
     +'</div>'
     +(r.completedAt?'<div><div class="lbl">วันที่เสร็จสิ้น</div><div style="color:var(--green);font-size:var(--fs-ui);">'+fDateFull(r.completedAt)+'</div></div>':'')
+    +(opts.forIntake || !printInfoOf(r) ? '' : '<div><div class="lbl">การพิมพ์</div><div style="color:var(--ink2);font-size:var(--fs-ui);">พิมพ์แล้ว '+printInfoOf(r).count+' ครั้ง ล่าสุดโดย '+esc(printInfoOf(r).lastBy||'-')+' เมื่อ '+fDateFull(printInfoOf(r).lastAt)+'</div></div>')
     +(opts.forIntake ? '' : _reviewNoteHtml(r))
     +(opts.forIntake ? '' : _intakeDetailHtml(r))
     +proof
@@ -3576,7 +3599,9 @@ async function submitIntake(){
     await loadAdmin(true);
     showView('view-admin-dash', _intakeDashTitle());
     if(!isRedo){
-      toast('ส่งตรวจแล้ว — รอผู้ตรวจสินค้า (Checker ฝ่ายบัญชี) ตรวจสินค้า','success');
+      toast(d.status==='รอตรวจสอบเอกสาร'
+        ? 'ส่งตรวจแล้ว — รอ Warehouse Supervisor ตรวจสอบเอกสาร'
+        : 'ส่งตรวจแล้ว — รอผู้ตรวจสินค้า (Checker ฝ่ายบัญชี) ตรวจสินค้า','success');
       return;
     }
     toast('บันทึกข้อมูลนำสินค้าเข้าฉบับใหม่แล้ว','success');
@@ -4593,12 +4618,37 @@ body{background:#525659;}
   return html;
 }
 
+/* พิมพ์ใบ CN: ถ้าเคยพิมพ์แล้วถามยืนยันก่อน | นับ "พิมพ์แล้ว" เมื่อกดพิมพ์ในหน้าต่าง (beforeprint) ครั้งเดียวต่อหน้าต่าง */
 function printCNForm(r){
   if(!r){ alert('ไม่พบข้อมูล'); return; }
+  var p = printInfoOf(r);
+  if(p){
+    openConfirmMdl({
+      icon:'🖨', title:'พิมพ์ซ้ำ — '+r.id,
+      body:'ใบนี้เคยพิมพ์แล้ว ต้องการพิมพ์อีกครั้งหรือไม่',
+      detail:'พิมพ์แล้ว '+p.count+' ครั้ง ล่าสุดโดย '+(p.lastBy||'-')+' เมื่อ '+fDateFull(p.lastAt),
+      okLabel:'พิมพ์อีกครั้ง', okClass:'btn-pri',
+      onOk:function(){ _openPrintWindow(r); }
+    });
+    return;
+  }
+  _openPrintWindow(r);
+}
+function _openPrintWindow(r){
   var w=window.open('','_blank','width=920,height=900,toolbar=0,scrollbars=1');
   if(!w){alert('กรุณาอนุญาต popup เพื่อปริ้นท์');return;}
   w.document.write(buildCNFormHtml(r));
   w.document.close();
+  var counted = false;
+  w.addEventListener('beforeprint', function(){ if(counted) return; counted = true; recordPrint(r.id); });
+}
+/* บันทึกว่าพิมพ์แล้ว — ล้มเหลวเงียบ ๆ (ไม่ขวางการพิมพ์) */
+function recordPrint(id){
+  apiPost({action:'markPrinted', id:id}).then(function(d){
+    if(!d || !d.success) return;
+    var rec = _recById(id);
+    if(rec){ rec.printInfo = JSON.stringify(d.printInfo); invalidateCache('view-admin-dash'); renderAdminPage(); }
+  }).catch(function(){});
 }
 
 /* ══════════════════════════════════════════
