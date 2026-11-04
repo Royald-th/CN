@@ -4466,7 +4466,7 @@ body{background:#525659;}
     +(opts.pdf ? '' :
       '<div class="preview-toolbar no-print">'
       +'<span class="ptxt">👁 ตัวอย่างก่อนพิมพ์ — ตรวจสอบข้อมูลให้ครบถ้วนก่อนกดพิมพ์</span>'
-      +'<button class="pb-print" onclick="window.print()">🖨 พิมพ์เอกสาร</button>'
+      +'<button class="pb-print" onclick="try{window.opener.recordPrintOnce(window,\''+esc(r.id||'')+'\')}catch(e){}window.print()">🖨 พิมพ์เอกสาร</button>'
       +'<button class="pb-close" onclick="window.close()">✕ ปิดหน้าต่าง</button>'
       +'</div>')
     +'<div class="doc-page">';
@@ -4639,16 +4639,22 @@ function _openPrintWindow(r){
   if(!w){alert('กรุณาอนุญาต popup เพื่อปริ้นท์');return;}
   w.document.write(buildCNFormHtml(r));
   w.document.close();
-  var counted = false;
-  w.addEventListener('beforeprint', function(){ if(counted) return; counted = true; recordPrint(r.id); });
+  // ปุ่ม "พิมพ์เอกสาร" ในหน้าต่างเรียก recordPrintOnce ตรง ๆ | beforeprint เป็นตัวสำรอง (Ctrl+P) — ใช้แฟล็กเดียวกันกันนับซ้ำ
+  w.addEventListener('beforeprint', function(){ recordPrintOnce(w, r.id); });
 }
-/* บันทึกว่าพิมพ์แล้ว — ล้มเหลวเงียบ ๆ (ไม่ขวางการพิมพ์) */
+function recordPrintOnce(win, id){
+  if(win.__cnCounted) return;
+  win.__cnCounted = true;
+  recordPrint(id);
+}
+/* บันทึกว่าพิมพ์แล้ว — ไม่ขวางการพิมพ์ แต่ถ้าบันทึกไม่ได้ให้แจ้งเตือน (ไม่เงียบ) */
 function recordPrint(id){
+  var fail = function(msg){ console.warn('markPrinted failed:', msg); toast('บันทึกสถานะ "พิมพ์แล้ว" ไม่สำเร็จ: '+msg,'error'); };
   apiPost({action:'markPrinted', id:id}).then(function(d){
-    if(!d || !d.success) return;
+    if(!d || !d.success){ fail((d && d.message) || 'ไม่ทราบสาเหตุ'); return; }
     var rec = _recById(id);
     if(rec){ rec.printInfo = JSON.stringify(d.printInfo); invalidateCache('view-admin-dash'); renderAdminPage(); }
-  }).catch(function(){});
+  }).catch(function(e){ fail(e && e.message || e); });
 }
 
 /* ══════════════════════════════════════════
@@ -5464,6 +5470,7 @@ document.addEventListener('DOMContentLoaded',function(){
   window.viewDetail = viewDetail;
   window.doDelete = doDelete;
   window.printCNForm = printCNForm;
+  window.recordPrintOnce = recordPrintOnce;   // เรียกจากปุ่มในหน้าต่างพิมพ์ผ่าน window.opener
   window.printMonthReport = printMonthReport;
   window.openMonthReport = openMonthReport;
   window.onDtChange = onDtChange;
