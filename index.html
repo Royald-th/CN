@@ -1151,7 +1151,7 @@ select.fc option { background: var(--surface2); }
                 </div>
                 <div class="itw">
                   <table class="ith">
-                    <thead><tr><th class="itn">#</th><th>ชื่อสินค้า</th><th class="itq">ยอดสินค้า</th><th class="itu">หน่วย</th><th class="itd"></th></tr></thead>
+                    <thead><tr><th class="itn">#</th><th>ชื่อสินค้า</th><th class="itq">ยอดสินค้า <span class="req">*</span></th><th class="itu">หน่วย <span class="req">*</span></th><th class="itd"></th></tr></thead>
                     <tbody id="itbody"></tbody>
                   </table>
                 </div>
@@ -2569,8 +2569,8 @@ function addRow(nm,qty,unit){
   tr.id='ir-'+idx;
   tr.innerHTML='<td class="itn">'+(tb.rows.length+1)+'</td>'
     +'<td><select id="in-'+idx+'"></select></td>'
-    +'<td class="itq"><input type="text" id="iq-'+idx+'" placeholder="จำนวน" value="'+esc(qty)+'" style="text-align:center;"/></td>'
-    +'<td class="itu"><input type="text" id="iu-'+idx+'" placeholder="หน่วย" value="'+esc(unit)+'"/></td>'
+    +'<td class="itq"><input type="text" id="iq-'+idx+'" placeholder="จำนวน" aria-required="true" value="'+esc(qty)+'" style="text-align:center;"/></td>'
+    +'<td class="itu"><input type="text" id="iu-'+idx+'" placeholder="หน่วย" aria-required="true" value="'+esc(unit)+'"/></td>'
     +'<td class="itd"><button type="button" class="btn btn-danger btn-icon-only" onclick="delRow('+idx+')" title="ลบรายการนี้" aria-label="ลบรายการสินค้า">🗑</button></td>';
   tb.appendChild(tr);
   initProductSelect('in-'+idx, nm);
@@ -2639,6 +2639,22 @@ function getItems(){
            qty :(document.getElementById('iq-'+id)||{value:''}).value.trim(),
            unit:(document.getElementById('iu-'+id)||{value:''}).value.trim()};
   }).filter(function(x){return x.name;});
+}
+/* ตรวจรายการสินค้าในฟอร์มสร้าง/แก้ CN: ทุกแถวที่มีข้อมูลต้องมี สินค้า + ยอดสินค้า + หน่วย ครบ
+   คืนข้อความ error (พร้อม focus ช่องที่ว่าง) หรือ '' ถ้าผ่าน — แถวว่างทั้งแถวข้าม */
+function validateItems(){
+  var rows = document.querySelectorAll('#itbody tr');
+  for(var i=0;i<rows.length;i++){
+    var id = rows[i].id.replace('ir-','');
+    var nmEl=document.getElementById('in-'+id), qEl=document.getElementById('iq-'+id), uEl=document.getElementById('iu-'+id);
+    var nm=(nmEl&&nmEl.value||'').trim(), q=(qEl&&qEl.value||'').trim(), u=(uEl&&uEl.value||'').trim();
+    if(!nm && !q && !u) continue;
+    var tag = 'รายการสินค้าที่ '+(i+1)+': ';
+    if(!nm){ if(nmEl&&nmEl.tomselect) nmEl.tomselect.focus(); return tag+'เลือกสินค้า'; }
+    if(!q){ if(qEl) qEl.focus(); return tag+'กรอกยอดสินค้า'; }
+    if(!u){ if(uEl) uEl.focus(); return tag+'กรอกหน่วย'; }
+  }
+  return '';
 }
 function serItems(its){return its.map(function(i){return i.name+'|'+i.qty+'|'+i.unit;}).join('\n');}
 function parseItems(s){
@@ -3021,6 +3037,8 @@ async function saveCN(){
     return;
   }
 
+  var itemErr = validateItems();
+  if(itemErr){ showErr('form-err', itemErr); return; }
   if(!co||!dt||!cust||!custCode||!prov||!district||!reason||!items.length){
     showErr('form-err','กรุณากรอกข้อมูลที่จำเป็นให้ครบ (รหัสลูกค้า, จังหวัด, เขต/อำเภอ) และเพิ่มรายการสินค้าอย่างน้อย 1 รายการ');
     return;
